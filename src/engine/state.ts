@@ -53,5 +53,6 @@ export function createInitialState(
     report: null,
     unlockedRegions,
     currentRegion,
+    achievements: [],
   };
 }

@@ -16,6 +16,7 @@ import type {
   ResourcePool,
   IndustryDef,
   RegionDef,
+  AchievementDef,
 } from './types';
 import { applyDelta, aggregateTownMetrics, METRIC_KEYS, METRIC_LABELS } from './metrics';
 import { createInitialState, LABOR_PER_TURN } from './state';
@@ -30,6 +31,8 @@ export interface GameContent {
   industries?: IndustryDef[];
   /** 地区档案（可选，地区优先世界用） */
   regions?: RegionDef[];
+  /** 成就定义（可选） */
+  achievements?: AchievementDef[];
 }
 
 /** 解锁一个新地区的费用（文） */
@@ -361,8 +364,29 @@ function generateReport(state: GameState): GameReport {
   return { title, summary, finalMetrics: { ...m }, survivingCrafts, highlights };
 }
 
+/** 检测并解锁新达成的成就（在每次 action 结算后调用） */
+function checkAchievements(state: GameState, content: GameContent): GameState {
+  const defs = content.achievements ?? [];
+  if (defs.length === 0) return state;
+  const unlocked = new Set(state.achievements);
+  const newly = defs.filter((a) => !unlocked.has(a.id) && a.predicate(state));
+  if (newly.length === 0) return state;
+  let log = state.log;
+  for (const a of newly) log = pushLog(log, `★ 解锁成就「${a.name}」——${a.desc}`);
+  return { ...state, achievements: [...state.achievements, ...newly.map((a) => a.id)], log };
+}
+
 /** 顶层 reducer */
 export function gameReducer(
+  state: GameState,
+  action: GameAction,
+  content: GameContent,
+): GameState {
+  return checkAchievements(reduce(state, action, content), content);
+}
+
+/** 内部规则分发（不含成就检测） */
+function reduce(
   state: GameState,
   action: GameAction,
   content: GameContent,

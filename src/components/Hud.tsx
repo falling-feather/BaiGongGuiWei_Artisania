@@ -2,7 +2,19 @@ import { useGameStore } from '../store/gameStore';
 import { METRIC_KEYS, METRIC_LABELS, zoneOf, type Metrics } from '../engine';
 
 /** 叠加在游戏画面上的抬头显示：四维数值 + 提示 + 镇务按钮 */
-export function Hud({ hint, onOpenPanel }: { hint: string | null; onOpenPanel: () => void }) {
+export function Hud({
+  hint,
+  onOpenPanel,
+  onOpenMap,
+  onOpenBag,
+  onOpenAchievements,
+}: {
+  hint: string | null;
+  onOpenPanel: () => void;
+  onOpenMap: () => void;
+  onOpenBag: () => void;
+  onOpenAchievements: () => void;
+}) {
   const metrics = useGameStore((s) => s.state.metrics);
   const turn = useGameStore((s) => s.state.turn);
   const maxTurns = useGameStore((s) => s.state.maxTurns);
@@ -27,6 +39,15 @@ export function Hud({ hint, onOpenPanel }: { hint: string | null; onOpenPanel: (
         </div>
         <div className="hud__season">
           第 {turn} / {maxTurns} 季
+          <button className="btn btn--sm" onClick={onOpenMap}>
+            大地图
+          </button>
+          <button className="btn btn--sm" onClick={onOpenBag}>
+            背包
+          </button>
+          <button className="btn btn--sm" onClick={onOpenAchievements}>
+            成就
+          </button>
           <button className="btn btn--sm" disabled={!playing} onClick={onOpenPanel}>
             镇务行脚
           </button>

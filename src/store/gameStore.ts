@@ -14,7 +14,7 @@ import {
   type GameAction,
   type GameContent,
 } from '../engine';
-import { CRAFTS, STARTING_APPRENTICES, EVENTS, INDUSTRIES, REGIONS } from '../data';
+import { CRAFTS, STARTING_APPRENTICES, EVENTS, INDUSTRIES, REGIONS, ACHIEVEMENTS } from '../data';
 import { localStorageAdapter } from '../storage/localStorageAdapter';
 
 const content: GameContent = {
@@ -23,6 +23,7 @@ const content: GameContent = {
   events: EVENTS,
   industries: INDUSTRIES,
   regions: REGIONS,
+  achievements: ACHIEVEMENTS,
 };
 
 interface GameStore {

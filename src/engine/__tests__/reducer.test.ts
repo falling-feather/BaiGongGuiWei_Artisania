@@ -7,6 +7,7 @@ import { STARTING_APPRENTICES } from '../../data/apprentices';
 import { EVENTS } from '../../data/events';
 import { INDUSTRIES } from '../../data/industries';
 import { REGIONS } from '../../data/regions';
+import { ACHIEVEMENTS } from '../../data/achievements';
 
 const content: GameContent = {
   crafts: CRAFTS,
@@ -14,6 +15,7 @@ const content: GameContent = {
   events: EVENTS,
   industries: INDUSTRIES,
   regions: REGIONS,
+  achievements: ACHIEVEMENTS,
 };
 
 function freshState() {
@@ -91,5 +93,13 @@ describe('gameReducer', () => {
     // 雪域与江南不相邻
     const s1 = gameReducer(s, { type: 'UNLOCK_REGION', regionId: 'xueyu' }, content);
     expect(s1.unlockedRegions).not.toContain('xueyu');
+  });
+
+  it('成就：完成首批出品后解锁「初执匠作」', () => {
+    const s0 = freshState();
+    expect(s0.achievements).toEqual([]);
+    const craftId = s0.crafts[0].craftId;
+    const s1 = gameReducer(s0, { type: 'RUN_PROCESS', craftId, skipStepIds: [] }, content);
+    expect(s1.achievements).toContain('first-step');
   });
 });

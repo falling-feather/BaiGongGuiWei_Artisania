@@ -128,6 +128,8 @@ export interface GameState {
   unlockedRegions: RegionId[];
   /** 玩家当前所在地区 id（采料/产业在此地进行） */
   currentRegion: RegionId;
+  /** 已解锁的成就 id 列表 */
+  achievements: string[];
 }
 
 /** 结局命运报告 */
@@ -231,4 +233,14 @@ export interface RegionDef {
   traits: string[];
   /** 是否首发即解锁 */
   startUnlocked: boolean;
+}
+
+/** 成就定义（数据驱动：predicate 为纯函数，满足即解锁） */
+export interface AchievementDef {
+  id: string;
+  name: string;
+  /** 一句话说明（解锁条件/意义） */
+  desc: string;
+  /** 该成就是否达成（只读当前状态） */
+  predicate: (state: GameState) => boolean;
 }
