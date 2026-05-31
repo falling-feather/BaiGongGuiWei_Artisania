@@ -143,3 +143,82 @@ export type GameAction =
   | { type: 'HOLD_EXHIBITION' }
   | { type: 'RESOLVE_EVENT'; choiceId: string }
   | { type: 'END_TURN' };
+
+// ───────────────────────────────────────────────────────────────────────────
+// 地区 · 资源 · 供应链（地区优先世界设计，详见 doc/项目规划.md 第三部分）
+// 以下为「世界主干」的数据模型；目前为静态数据层，尚未接入 reducer 结算逻辑。
+// ───────────────────────────────────────────────────────────────────────────
+
+/** 工序 / 产业微交互小游戏类型（与规划 §13 对齐） */
+export type MiniGameType =
+  | 'rhythm' // 节奏点击：锻打/投梭/刻版
+  | 'drag_path' // 描线运笔：刺绣/雕刻/画
+  | 'ratio_mix' // 配比调和：染液/釉料/配色
+  | 'timing_hold' // 火候时机：烧窑/炒茶/发酵
+  | 'aim_place' // 定位摆放：掐丝/镶嵌/扎结
+  | 'repeat_endure'; // 重复耐心：浸染/髹漆/捞纸
+
+/** 资源分层：raw 原矿/天然物 → material 半成品/可运输材料 → product 成品 */
+export type ResourceTier = 'raw' | 'material' | 'product';
+
+/** 资源定义（数据驱动，键对应 ResourcePool 的键） */
+export interface ResourceDef {
+  id: string;
+  name: string;
+  tier: ResourceTier;
+  blurb: string;
+  /** 上游资源键（material/product 由其加工而来；raw 为空） */
+  refinedFrom?: string[];
+}
+
+/** 基础产业：产出原料/半成品的上游活动（手艺的上游） */
+export interface IndustryDef {
+  id: string;
+  name: string;
+  blurb: string;
+  /** 产业小游戏类型 */
+  miniGame: MiniGameType;
+  /** 消耗的资源（采集类可为空，仅耗工时） */
+  input: ResourcePool;
+  /** 产出的资源键 */
+  output: string;
+  /** 每次基准产出量 */
+  yield: number;
+  /** 消耗人力（工时点数） */
+  laborCost: number;
+}
+
+/** 地貌主题：驱动地图美术与地形机制（规划 §19） */
+export interface TerrainTheme {
+  /** 地形基底（如「水网+石板街」「山地梯田」） */
+  base: string;
+  /** 障碍 / 地貌元素 */
+  obstacles: string[];
+  /** 地标 / 功能建筑 */
+  landmarks: string[];
+  /** 主色调（hex 或描述） */
+  palette: string[];
+}
+
+export type RegionId = string;
+
+/** 地区定义（世界主干，规划 §17） */
+export interface RegionDef {
+  id: RegionId;
+  name: string;
+  /** 地貌一句话 */
+  blurb: string;
+  terrain: TerrainTheme;
+  /** 本地基础产业 id 列表（指向 INDUSTRIES） */
+  industries: string[];
+  /** 本地特产资源键（raw / material） */
+  localResources: string[];
+  /** 本地招牌手艺 craftId 列表（部分为规划中、尚未实现） */
+  signatureCrafts: string[];
+  /** 相邻地区（驿道 / 商路连接），用于解锁与运输 */
+  neighbors: RegionId[];
+  /** 地区性格标签 */
+  traits: string[];
+  /** 是否首发即解锁 */
+  startUnlocked: boolean;
+}
