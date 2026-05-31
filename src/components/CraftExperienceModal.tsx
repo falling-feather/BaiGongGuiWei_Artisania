@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { METRIC_LABELS } from '../engine';
+import { METRIC_LABELS, orderPrice } from '../engine';
 import { RESOURCE_INDEX } from '../data';
 
 /** 手艺体验弹窗：玩家在街上进入某体验点后弹出，可勾选省略工序并开工。 */
@@ -42,6 +42,14 @@ export function CraftExperienceModal({
   );
   const canCraft = playing && !laborShort && !materialShort;
   const resName = (id: string) => RESOURCE_INDEX[id]?.name ?? id;
+
+  // 订单交付闭环：必须有成品库存才能接单，售价随该手艺传承品质浮动
+  const outputId = def.outputResourceId;
+  const stock = outputId ? (resources[outputId] ?? 0) : 0;
+  const orderQuote = outputId
+    ? orderPrice(RESOURCE_INDEX[outputId]?.value ?? 12, state.metrics.heritage)
+    : 0;
+  const canDeliver = playing && !!outputId && stock >= 1;
 
   const run = (action: 'RUN_PROCESS' | 'TAKE_ORDER') => {
     if (action === 'RUN_PROCESS') {
@@ -118,6 +126,8 @@ export function CraftExperienceModal({
               <span className="craft-supply__chip craft-supply__chip--out">
                 {resName(def.outputResourceId)} ×1
               </span>
+              <span className="craft-supply__chip">库存 {stock}</span>
+              <span className="craft-supply__chip craft-supply__chip--out">订单价 {orderQuote} 文</span>
             </div>
           )}
           {!canCraft && playing && (
@@ -131,8 +141,19 @@ export function CraftExperienceModal({
           <button className="btn btn--bamboo" disabled={!canCraft} onClick={() => run('RUN_PROCESS')}>
             亲手制作
           </button>
-          <button className="btn btn--ghost" disabled={!playing} onClick={() => run('TAKE_ORDER')}>
-            接订单
+          <button
+            className="btn btn--ghost"
+            disabled={!canDeliver}
+            title={
+              !outputId
+                ? '此体验点不产成品'
+                : stock < 1
+                  ? '暂无成品可交付，先亲手制作一件'
+                  : `交付 1 件，进账约 ${orderQuote} 文`
+            }
+            onClick={() => run('TAKE_ORDER')}
+          >
+            接订单{outputId && stock >= 1 ? ` · ${orderQuote}文` : ''}
           </button>
           <button className="btn btn--ghost" onClick={onClose}>
             离开

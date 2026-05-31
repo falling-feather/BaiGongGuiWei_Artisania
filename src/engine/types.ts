@@ -221,6 +221,8 @@ export interface ResourceDef {
   blurb: string;
   /** 上游资源键（material/product 由其加工而来；raw 为空） */
   refinedFrom?: string[];
+  /** 成品基准售价（文）。仅 product 层用于接订单交付定价；缺省视为 0。 */
+  value?: number;
 }
 
 /** 基础产业：产出原料/半成品的上游活动（手艺的上游） */

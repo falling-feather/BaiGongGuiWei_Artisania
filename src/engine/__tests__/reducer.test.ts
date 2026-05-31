@@ -9,6 +9,8 @@ import { INDUSTRIES } from '../../data/industries';
 import { REGIONS } from '../../data/regions';
 import { ACHIEVEMENTS } from '../../data/achievements';
 import { STORY_BEATS, renderStoryLine } from '../../data/story';
+import { RESOURCES } from '../../data/resources';
+import { orderPrice } from '../reducer';
 
 const content: GameContent = {
   crafts: CRAFTS,
@@ -17,6 +19,7 @@ const content: GameContent = {
   industries: INDUSTRIES,
   regions: REGIONS,
   achievements: ACHIEVEMENTS,
+  resources: RESOURCES,
 };
 
 function freshState() {
@@ -39,6 +42,30 @@ describe('gameReducer', () => {
     const after = s1.crafts.find((c) => c.craftId === craftId)!;
     expect(after.produced).toBe(before.produced + 1);
     expect(s1.resources.labor).toBeLessThan(s0.resources.labor);
+  });
+
+  it('TAKE_ORDER 交付成品：消耗 1 件库存并按品质入账', () => {
+    let s = freshState();
+    // 备好一件蓝染成品
+    s = { ...s, resources: { ...s.resources, indigoCloth: 1, coin: 0 } };
+    const s1 = gameReducer(s, { type: 'TAKE_ORDER', craftId: 'indigo-dyeing' }, content);
+    const heritage = s.crafts.find((c) => c.craftId === 'indigo-dyeing')!.metrics.heritage;
+    const expected = orderPrice(20, heritage); // indigoCloth value=20
+    expect(s1.resources.indigoCloth).toBe(0);
+    expect(s1.resources.coin).toBe(expected);
+  });
+
+  it('TAKE_ORDER 无成品时拒绝交付且不进账', () => {
+    let s = freshState();
+    s = { ...s, resources: { ...s.resources, indigoCloth: 0, coin: 5 } };
+    const s1 = gameReducer(s, { type: 'TAKE_ORDER', craftId: 'indigo-dyeing' }, content);
+    expect(s1.resources.coin).toBe(5);
+    expect(s1.resources.indigoCloth ?? 0).toBe(0);
+  });
+
+  it('orderPrice 随传承品质单调上升', () => {
+    expect(orderPrice(20, 100)).toBeGreaterThan(orderPrice(20, 0));
+    expect(orderPrice(20, 50)).toBe(20);
   });
 
   it('END_TURN 推进季节并补给资源', () => {

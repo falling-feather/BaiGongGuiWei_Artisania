@@ -52,14 +52,14 @@ export const RESOURCES: ResourceDef[] = [
   { id: 'bambooSplit', name: '竹篾', tier: 'material', blurb: '刮青剖丝后的细篾，编织所需。', refinedFrom: ['bambooRaw'] },
 
   // ── 成品（product）：订单交付 / 展览 / 馈赠 ──
-  { id: 'celadonWare', name: '青瓷', tier: 'product', blurb: '龙泉窑温润如玉的青瓷。', refinedFrom: ['porcelainClay'] },
-  { id: 'treasureSword', name: '宝剑', tier: 'product', blurb: '龙泉锻制的名剑。', refinedFrom: ['ironIngot'] },
-  { id: 'silverOrnament', name: '银饰', tier: 'product', blurb: '苗家錾打的银饰盛装。', refinedFrom: ['silverStock'] },
-  { id: 'cloisonne', name: '景泰蓝', tier: 'product', blurb: '铜胎掐丝点蓝的珐琅重器。', refinedFrom: ['copperStock', 'pigmentRefined'] },
-  { id: 'indigoCloth', name: '蓝染布', tier: 'product', blurb: '扎染浸染而成的蓝白之布。', refinedFrom: ['indigoVat'] },
-  { id: 'bambooWare', name: '竹编器', tier: 'product', blurb: '经纬编织的竹编精品。', refinedFrom: ['bambooSplit'] },
-  { id: 'brocade', name: '织锦', tier: 'product', blurb: '云锦蜀锦等提花织物。', refinedFrom: ['dyedThread'] },
-  { id: 'thangka', name: '唐卡', tier: 'product', blurb: '矿物颜料绘就的藏传卷轴画。', refinedFrom: ['pigmentRefined', 'paperSheet'] },
+  { id: 'celadonWare', name: '青瓷', tier: 'product', blurb: '龙泉窑温润如玉的青瓷。', refinedFrom: ['porcelainClay'], value: 32 },
+  { id: 'treasureSword', name: '宝剑', tier: 'product', blurb: '龙泉锻制的名剑。', refinedFrom: ['ironIngot'], value: 36 },
+  { id: 'silverOrnament', name: '银饰', tier: 'product', blurb: '苗家錾打的银饰盛装。', refinedFrom: ['silverStock'], value: 28 },
+  { id: 'cloisonne', name: '景泰蓝', tier: 'product', blurb: '铜胎掐丝点蓝的珐琅重器。', refinedFrom: ['copperStock', 'pigmentRefined'], value: 40 },
+  { id: 'indigoCloth', name: '蓝染布', tier: 'product', blurb: '扎染浸染而成的蓝白之布。', refinedFrom: ['indigoVat'], value: 20 },
+  { id: 'bambooWare', name: '竹编器', tier: 'product', blurb: '经纬编织的竹编精品。', refinedFrom: ['bambooSplit'], value: 18 },
+  { id: 'brocade', name: '织锦', tier: 'product', blurb: '云锦蜀锦等提花织物。', refinedFrom: ['dyedThread'], value: 34 },
+  { id: 'thangka', name: '唐卡', tier: 'product', blurb: '矿物颜料绘就的藏传卷轴画。', refinedFrom: ['pigmentRefined', 'paperSheet'], value: 38 },
 ];
 
 /** 资源索引：id -> ResourceDef */

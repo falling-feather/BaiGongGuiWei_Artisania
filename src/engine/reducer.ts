@@ -52,6 +52,15 @@ const TURN_RESOURCE_REGEN: Record<string, number> = {
 
 const MAX_LOG = 50;
 
+/**
+ * 订单交付定价：成品基准售价随该手艺当前传承度浮动，形成「品质→售价」闭环。
+ * 传承 0 → 0.6×，传承 50 → 1.0×，传承 100 → 1.4×。
+ */
+export function orderPrice(baseValue: number, heritage: number): number {
+  const h = Math.max(0, Math.min(100, heritage));
+  return Math.max(1, Math.round(baseValue * (0.6 + (h / 100) * 0.8)));
+}
+
 function pushLog(log: string[], message: string): string[] {
   return [message, ...log].slice(0, MAX_LOG);
 }
@@ -473,10 +482,23 @@ function reduce(
       if (state.status !== 'playing') return state;
       const craftDef = content.crafts.find((c) => c.id === action.craftId);
       const name = craftDef?.name ?? '手艺';
+      const outputId = craftDef?.outputResourceId;
+      // 闭环交付：必须已亲手制作出成品库存，方能交付订单换取市场收入
+      if (!outputId || (state.resources[outputId] ?? 0) < 1) {
+        return {
+          ...state,
+          log: pushLog(state.log, `「${name}」还没有可交付的成品，先去亲手制作一件再接单。`),
+        };
+      }
+      const product = content.resources?.find((r) => r.id === outputId);
+      const productName = product?.name ?? outputId;
+      const craftState = findCraftState(state, action.craftId);
+      const heritage = craftState?.metrics.heritage ?? 50;
+      const price = orderPrice(product?.value ?? 12, heritage);
       return applyEffect(state, {
-        resources: { coin: 12 },
-        craftMetrics: { [action.craftId]: { market: 7, heritage: -4, spirit: -3 } },
-        logMessage: `接下一笔「${name}」商业订单，进账 12 文，传统工序有所让步。`,
+        resources: { coin: price, [outputId]: -1 },
+        craftMetrics: { [action.craftId]: { market: 6, heritage: 2, spirit: 1 } },
+        logMessage: `交付一笔「${name}」订单，售出「${productName}」×1，进账 ${price} 文，真品口碑使市场看好。`,
       });
     }
 
