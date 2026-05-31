@@ -45,8 +45,8 @@ export function App() {
   }, [loadFromStorage]);
 
   // 主菜单入口
-  function startNew() {
-    newGame();
+  function startNew(playerName: string) {
+    newGame(undefined, playerName);
     setView('playing');
     lastSigRef.current = '';
     syncRegion();

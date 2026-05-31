@@ -102,4 +102,30 @@ describe('gameReducer', () => {
     const s1 = gameReducer(s0, { type: 'RUN_PROCESS', craftId, skipStepIds: [] }, content);
     expect(s1.achievements).toContain('first-step');
   });
+
+  it('开发者模式：fallingfeather 解锁全境并获得海量资源', () => {
+    const dev = gameReducer(
+      freshState(),
+      { type: 'NEW_GAME', seed: 1, playerName: 'FallingFeather' },
+      content,
+    );
+    expect(dev.devMode).toBe(true);
+    expect(dev.playerName).toBe('FallingFeather');
+    expect(dev.unlockedRegions.length).toBe(content.regions!.length);
+    expect(dev.resources.coin).toBeGreaterThan(9999);
+
+    // 推进季节后人力仍保持无限（不被重置为每季预算）
+    const next = gameReducer(dev, { type: 'END_TURN' }, content);
+    expect(next.resources.labor).toBeGreaterThan(9999);
+  });
+
+  it('普通玩家：名字不触发开发者模式', () => {
+    const normal = gameReducer(
+      freshState(),
+      { type: 'NEW_GAME', seed: 1, playerName: '阿青' },
+      content,
+    );
+    expect(normal.devMode).toBe(false);
+    expect(normal.unlockedRegions.length).toBeLessThan(content.regions!.length);
+  });
 });

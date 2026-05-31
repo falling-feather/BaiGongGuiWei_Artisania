@@ -194,8 +194,11 @@ function endTurn(state: GameState, content: GameContent): GameState {
     };
   }
 
-  // 资源补给 + 人力重置
-  const resources: ResourcePool = { ...state.resources, labor: LABOR_PER_TURN };
+  // 资源补给 + 人力重置（开发者模式保持无限人力）
+  const resources: ResourcePool = {
+    ...state.resources,
+    labor: state.devMode ? state.resources.labor : LABOR_PER_TURN,
+  };
   for (const [key, amount] of Object.entries(TURN_RESOURCE_REGEN)) {
     resources[key] = (resources[key] ?? 0) + amount;
   }
@@ -399,6 +402,7 @@ function reduce(
         action.seed ?? Date.now() % 2147483647,
         state.maxTurns,
         content.regions ?? [],
+        action.playerName ?? '',
       );
 
     case 'RUN_PROCESS':

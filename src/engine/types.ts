@@ -130,6 +130,10 @@ export interface GameState {
   currentRegion: RegionId;
   /** 已解锁的成就 id 列表 */
   achievements: string[];
+  /** 玩家名（开局输入，影响后续剧情系统） */
+  playerName: string;
+  /** 开发者模式：资源无限、全量解锁 */
+  devMode: boolean;
 }
 
 /** 结局命运报告 */
@@ -143,7 +147,7 @@ export interface GameReport {
 
 /** 所有可派发的行动（被 reducer 消费） */
 export type GameAction =
-  | { type: 'NEW_GAME'; seed?: number }
+  | { type: 'NEW_GAME'; seed?: number; playerName?: string }
   | { type: 'RUN_PROCESS'; craftId: string; skipStepIds: string[] }
   | { type: 'TAKE_ORDER'; craftId: string }
   | { type: 'HOLD_EXHIBITION' }

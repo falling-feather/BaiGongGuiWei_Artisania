@@ -34,7 +34,7 @@ interface GameStore {
   /** 从存档恢复；无存档则保持新局 */
   loadFromStorage: () => Promise<void>;
   /** 开新局并清档 */
-  newGame: (seed?: number) => void;
+  newGame: (seed?: number, playerName?: string) => void;
 }
 
 function bootstrapState(): GameState {
@@ -62,8 +62,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (saved) set({ state: saved });
   },
 
-  newGame: (seed) => {
-    const next = gameReducer(get().state, { type: 'NEW_GAME', seed }, get().content);
+  newGame: (seed, playerName) => {
+    const next = gameReducer(get().state, { type: 'NEW_GAME', seed, playerName }, get().content);
     set({ state: next });
     void localStorageAdapter.save(next);
   },

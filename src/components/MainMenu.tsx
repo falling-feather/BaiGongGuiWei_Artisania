@@ -1,13 +1,23 @@
-/** 主菜单 / 开局页：标题幕布 + 开始/继续入口。 */
+/** 主菜单 / 开局页：标题幕布 + 命名 + 开始/继续入口。 */
+import { useState } from 'react';
+import { DEV_NAME } from '../engine';
+
 export function MainMenu({
   hasSave,
   onNew,
   onContinue,
 }: {
   hasSave: boolean;
-  onNew: () => void;
+  onNew: (playerName: string) => void;
   onContinue: () => void;
 }) {
+  const [name, setName] = useState('');
+  const isDev = name.trim().toLowerCase() === DEV_NAME;
+
+  function start() {
+    onNew(name.trim());
+  }
+
   return (
     <div className="menu">
       <div className="menu__panel">
@@ -18,8 +28,26 @@ export function MainMenu({
           行脚九州，打通商路，采料、开工、守艺。<br />
           在市场与传承之间，写下属于你的一种回答。
         </p>
+        <div className="menu__field">
+          <label className="menu__label" htmlFor="player-name">
+            为自己取一个名号
+          </label>
+          <input
+            id="player-name"
+            className="menu__input"
+            type="text"
+            value={name}
+            maxLength={16}
+            placeholder="无名匠人"
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') start();
+            }}
+          />
+          {isDev && <p className="menu__dev-hint">★ 开发者印记已识别——资源无虞，全境通行</p>}
+        </div>
         <div className="menu__actions">
-          <button className="btn btn--bamboo menu__btn" onClick={onNew}>
+          <button className="btn btn--bamboo menu__btn" onClick={start}>
             开启新局
           </button>
           <button
