@@ -819,3 +819,117 @@ body {
   50% { box-shadow: 0 0 0 5px rgba(184, 137, 59, 0); }
 }
 
+/* ===== 主菜单 / 开局页 ===== */
+.menu {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(46, 74, 107, 0.35), transparent 60%),
+    rgba(28, 24, 19, 0.92);
+  font-family: 'Noto Serif SC', 'Songti SC', serif;
+}
+
+.menu__panel {
+  text-align: center;
+  padding: 36px 48px 30px;
+  color: var(--paper);
+}
+
+.menu__seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  background: var(--vermilion);
+  color: var(--paper);
+  font-size: 26px;
+  letter-spacing: 2px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+.menu__title {
+  font-size: 46px;
+  letter-spacing: 10px;
+  margin: 6px 0 4px;
+  color: var(--paper);
+}
+
+.menu__subtitle {
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: var(--gold);
+  margin: 0 0 18px;
+}
+
+.menu__blurb {
+  font-size: 14px;
+  line-height: 2;
+  color: rgba(244, 236, 224, 0.78);
+  margin: 0 0 26px;
+}
+
+.menu__actions {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.menu__btn {
+  min-width: 120px;
+  padding: 10px 22px;
+  font-size: 15px;
+}
+
+.menu__hint {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: rgba(244, 236, 224, 0.45);
+  margin: 0;
+}
+
+/* ===== 新手引导 ===== */
+.tut {
+  width: min(440px, 90vw);
+}
+
+.tut__progress {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.tut__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line);
+}
+
+.tut__dot--on {
+  background: var(--vermilion);
+}
+
+.tut__body {
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--ink);
+  margin: 6px 0 18px;
+}
+
+.tut__row {
+  justify-content: space-between;
+}
+
+.tut__nav {
+  display: flex;
+  gap: 8px;
+}
+

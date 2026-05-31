@@ -17,4 +17,6 @@ export interface StorageAdapter {
   save(state: GameState): Promise<void>;
   load(): Promise<GameState | null>;
   clear(): Promise<void>;
+  /** 是否存在可用（版本兼容）的存档 */
+  hasSave(): Promise<boolean>;
 }

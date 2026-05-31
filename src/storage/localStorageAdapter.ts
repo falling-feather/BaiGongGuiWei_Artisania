@@ -36,6 +36,10 @@ export class LocalStorageAdapter implements StorageAdapter {
   async clear(): Promise<void> {
     localStorage.removeItem(STORAGE_KEY);
   }
+
+  async hasSave(): Promise<boolean> {
+    return (await this.load()) !== null;
+  }
 }
 
 export const localStorageAdapter = new LocalStorageAdapter();
