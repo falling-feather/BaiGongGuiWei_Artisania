@@ -1,5 +1,6 @@
 import { useGameStore } from '../store/gameStore';
 import { RESOURCE_INDEX } from '../data';
+import { emitBus } from '../game/EventBus';
 import type { IndustryDef } from '../engine';
 
 /** 资源键 → 中文名（无定义则原样显示） */
@@ -98,7 +99,10 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
                 <button
                   className="btn btn--sm btn--bamboo"
                   disabled={!playing || !canGather(ind)}
-                  onClick={() => dispatch({ type: 'GATHER_RESOURCE', industryId: ind.id })}
+                  onClick={() => {
+                    emitBus({ type: 'interact-industry', industryId: ind.id });
+                    onClose();
+                  }}
                 >
                   采料
                 </button>

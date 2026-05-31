@@ -426,6 +426,73 @@ body {
   margin: 10px 0 14px;
 }
 
+/* timing_hold / repeat_endure 用的水平进度条 */
+.mg-gauge {
+  position: relative;
+  height: 22px;
+  margin: 16px 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #e9dcc2;
+  overflow: hidden;
+}
+
+.mg-gauge__band {
+  position: absolute;
+  left: 65%;
+  width: 20%;
+  top: 0;
+  bottom: 0;
+  background: rgba(90, 140, 90, 0.45);
+}
+
+.mg-gauge__fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--vermilion);
+  opacity: 0.7;
+}
+
+/* aim_place 靶面 */
+.mg-aim {
+  position: relative;
+  margin: 14px auto 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: repeating-linear-gradient(45deg, #ece2cd, #ece2cd 8px, #e3d7bd 8px, #e3d7bd 16px);
+  cursor: crosshair;
+}
+
+.mg-aim__target {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--vermilion) 0 30%, transparent 32%),
+    radial-gradient(circle, transparent 0 55%, var(--vermilion) 56% 70%, transparent 72%);
+}
+
+/* ratio_mix / drag_path 滑杆 */
+.mg-ratio {
+  position: relative;
+  margin: 18px 0 6px;
+  padding-top: 10px;
+}
+
+.mg-ratio__target {
+  position: absolute;
+  top: 0;
+  width: 0;
+  height: 18px;
+  border-left: 2px solid var(--bamboo);
+  transform: translateX(-50%);
+}
+
+.mg-ratio__slider {
+  width: 100%;
+}
+
 .zone-good { color: var(--healthy); }
 .zone-bad { color: var(--vermilion); }
 
