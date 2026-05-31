@@ -8,12 +8,14 @@ export function Hud({
   onOpenMap,
   onOpenBag,
   onOpenAchievements,
+  onOpenSettings,
 }: {
   hint: string | null;
   onOpenPanel: () => void;
   onOpenMap: () => void;
   onOpenBag: () => void;
   onOpenAchievements: () => void;
+  onOpenSettings: () => void;
 }) {
   const metrics = useGameStore((s) => s.state.metrics);
   const turn = useGameStore((s) => s.state.turn);
@@ -26,6 +28,14 @@ export function Hud({
     <>
       <div className="hud hud--top">
         <div className="hud__metrics">
+          <button
+            className="hud__settings"
+            onClick={onOpenSettings}
+            title="设置 (Esc)"
+            aria-label="设置"
+          >
+            ⚙
+          </button>
           {METRIC_KEYS.map((key) => {
             const value = metrics[key as keyof Metrics];
             const zone = zoneOf(value);

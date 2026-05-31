@@ -1080,3 +1080,112 @@ body {
   gap: 8px;
 }
 
+/* ===== 设置面板 ===== */
+.hud__settings {
+  pointer-events: auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: rgba(244, 236, 224, 0.92);
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.hud__settings:hover { opacity: 0.8; }
+
+.modal--settings {
+  max-width: 380px;
+}
+
+.settings__hint {
+  margin: 16px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--indigo-soft);
+}
+
+/* ===== 小地图 ===== */
+.minimap {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 6;
+  width: min(220px, 36vw);
+  padding: 8px;
+  background: rgba(20, 16, 12, 0.78);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  pointer-events: auto;
+  font-family: 'Noto Serif SC', 'Songti SC', serif;
+}
+
+.minimap__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--paper);
+  margin-bottom: 6px;
+}
+
+.minimap__zoom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.minimap__zbtn {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: rgba(244, 236, 224, 0.9);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.minimap__zbtn:hover { opacity: 0.8; }
+
+.minimap__zval {
+  font-size: 11px;
+  color: rgba(244, 236, 224, 0.7);
+  min-width: 38px;
+  text-align: center;
+}
+
+.minimap__canvas {
+  position: relative;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(111, 139, 82, 0.16), transparent 60%),
+    var(--paper-2);
+  overflow: hidden;
+}
+
+.minimap__dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+.minimap__player {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--vermilion);
+  border: 2px solid #fff;
+  box-shadow: 0 0 6px rgba(196, 67, 47, 0.9);
+  z-index: 2;
+}
+

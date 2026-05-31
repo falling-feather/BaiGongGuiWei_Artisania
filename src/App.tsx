@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from './store/gameStore';
-import { onBus, emitCommand } from './game/EventBus';
+import { onBus, emitCommand, type MiniMapPoint } from './game/EventBus';
 import { buildRegionSpec } from './game/regionSpec';
 import { ACHIEVEMENT_INDEX } from './data';
 import { PhaserGame } from './game/PhaserGame';
@@ -16,6 +16,8 @@ import { Tutorial } from './components/Tutorial';
 import { StoryModal } from './components/StoryModal';
 import { EventModal } from './components/EventModal';
 import { GameOverReport } from './components/GameOverReport';
+import { SettingsModal } from './components/SettingsModal';
+import { Minimap, type PlayerPos } from './components/Minimap';
 import { localStorageAdapter } from './storage/localStorageAdapter';
 
 const TUTORIAL_SEEN_KEY = 'artisania:tutorial-seen';
@@ -34,6 +36,10 @@ export function App() {
   const [bagOpen, setBagOpen] = useState(false);
   const [achOpen, setAchOpen] = useState(false);
   const [achToast, setAchToast] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [playerPos, setPlayerPos] = useState<PlayerPos | null>(null);
+  const [mapPoints, setMapPoints] = useState<MiniMapPoint[]>([]);
+  const [zoom, setZoom] = useState(2);
   const sceneReadyRef = useRef(false);
   const lastSigRef = useRef('');
   const knownAchRef = useRef<Set<string>>(new Set());
@@ -80,6 +86,10 @@ export function App() {
       if (payload.type === 'hint') setHint(payload.text);
       else if (payload.type === 'interact-craft') setActiveCraftId(payload.craftId);
       else if (payload.type === 'interact-industry') setActiveIndustryId(payload.industryId);
+      else if (payload.type === 'player-pos')
+        setPlayerPos({ tx: payload.tx, ty: payload.ty, mapW: payload.mapW, mapH: payload.mapH });
+      else if (payload.type === 'region-points') setMapPoints(payload.points);
+      else if (payload.type === 'zoom-changed') setZoom(payload.zoom);
       else if (payload.type === 'interact-gate') {
         const dispatch = useGameStore.getState().dispatch;
         if (payload.unlocked) {
@@ -96,6 +106,17 @@ export function App() {
         syncRegion();
       }
     });
+  }, []);
+
+  // Esc 唤出/收起全局设置（仅在游戏中）
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return;
+      if (useGameStore.getState().state.status !== 'playing') return;
+      setSettingsOpen((v) => !v);
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   // 状态变化时尝试同步地图（仅在地区/解锁集变化时真正重建），并探测新成就
@@ -129,6 +150,7 @@ export function App() {
             onOpenMap={() => setMapOpen(true)}
             onOpenBag={() => setBagOpen(true)}
             onOpenAchievements={() => setAchOpen(true)}
+            onOpenSettings={() => setSettingsOpen(true)}
           />
           <CraftExperienceModal craftId={activeCraftId} onClose={() => setActiveCraftId(null)} />
           <MiniGameModal industryId={activeIndustryId} onClose={() => setActiveIndustryId(null)} />
@@ -141,6 +163,20 @@ export function App() {
           {achToast && <div className="ach-toast">★ 解锁成就「{achToast}」</div>}
           <EventModal />
           <GameOverReport />
+          <Minimap
+            player={playerPos}
+            points={mapPoints}
+            zoom={zoom}
+            onZoom={(delta) => emitCommand({ type: 'zoom', delta })}
+          />
+          <SettingsModal
+            open={settingsOpen}
+            onClose={() => setSettingsOpen(false)}
+            onReturnHome={() => {
+              setSettingsOpen(false);
+              setView('menu');
+            }}
+          />
         </>
       )}
     </div>
