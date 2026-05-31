@@ -8,3 +8,5 @@ export { REGIONS, REGION_INDEX } from './regions';
 export { REGION_MAP_POS } from './mapLayout';
 export { ACHIEVEMENTS, ACHIEVEMENT_INDEX } from './achievements';
 export { STORY_BEATS, renderStoryLine } from './story';
+export { NPCS, NPC_INDEX, npcsForRegion } from './npcs';
+export { QUESTS, QUEST_INDEX, questsForNpc } from './quests';

@@ -10,6 +10,8 @@ import { REGIONS } from '../../data/regions';
 import { ACHIEVEMENTS } from '../../data/achievements';
 import { STORY_BEATS, renderStoryLine } from '../../data/story';
 import { RESOURCES } from '../../data/resources';
+import { NPCS } from '../../data/npcs';
+import { QUESTS } from '../../data/quests';
 import { orderPrice } from '../reducer';
 
 const content: GameContent = {
@@ -20,6 +22,8 @@ const content: GameContent = {
   regions: REGIONS,
   achievements: ACHIEVEMENTS,
   resources: RESOURCES,
+  npcs: NPCS,
+  quests: QUESTS,
 };
 
 function freshState() {
@@ -243,5 +247,41 @@ describe('gameReducer', () => {
     expect(s.report?.epilogue).toContain('阿青');
     expect(s.report?.epilogue).toContain('守正');
     expect(s.report?.epilogue).toContain('不随波');
+  });
+
+  it('TALK_NPC 提升好感度并封顶 100', () => {
+    const npcId = NPCS[0].id;
+    let s = freshState();
+    expect(s.npcAffinity[npcId] ?? 0).toBe(0);
+    s = gameReducer(s, { type: 'TALK_NPC', npcId }, content);
+    expect(s.npcAffinity[npcId]).toBe(8);
+    // 反复攀谈不超过 100
+    for (let i = 0; i < 30; i++) s = gameReducer(s, { type: 'TALK_NPC', npcId }, content);
+    expect(s.npcAffinity[npcId]).toBe(100);
+  });
+
+  it('COMPLETE_QUEST：好感不足时拒绝交付', () => {
+    const quest = QUESTS[0];
+    let s = freshState();
+    // 满足成品条件，但好感为 0
+    s = { ...s, resources: { ...s.resources, bambooWare: 1, indigoCloth: 1 } };
+    s = gameReducer(s, { type: 'COMPLETE_QUEST', questId: quest.id }, content);
+    expect(s.completedQuests).not.toContain(quest.id);
+  });
+
+  it('COMPLETE_QUEST：好感+条件满足时交付领赏并记完成', () => {
+    const quest = QUESTS.find((q) => q.id === 'q-bamboo-basket')!;
+    let s = freshState();
+    s = { ...s, resources: { ...s.resources, bambooWare: 1 } };
+    // 攀谈至好感达门槛
+    for (let i = 0; i < 3; i++) s = gameReducer(s, { type: 'TALK_NPC', npcId: quest.npcId }, content);
+    expect(s.npcAffinity[quest.npcId]).toBeGreaterThanOrEqual(quest.requireAffinity);
+    const coinBefore = s.resources.coin ?? 0;
+    s = gameReducer(s, { type: 'COMPLETE_QUEST', questId: quest.id }, content);
+    expect(s.completedQuests).toContain(quest.id);
+    expect(s.resources.coin).toBe(coinBefore + (quest.reward.coin ?? 0));
+    // 重复交付无效
+    const again = gameReducer(s, { type: 'COMPLETE_QUEST', questId: quest.id }, content);
+    expect(again.resources.coin).toBe(s.resources.coin);
   });
 });

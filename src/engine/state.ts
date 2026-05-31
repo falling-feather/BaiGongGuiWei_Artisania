@@ -77,5 +77,7 @@ export function createInitialState(
     flags: [],
     playerName: playerName.trim(),
     devMode,
+    npcAffinity: {},
+    completedQuests: [],
   };
 }

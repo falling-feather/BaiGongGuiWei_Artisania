@@ -3,13 +3,22 @@
  * 让 Phaser 场景与数据层解耦：场景只认 RegionMapSpec。
  */
 import type { GameState, IndustryDef } from '../engine';
-import { INDUSTRIES, INDUSTRY_INDEX, REGION_INDEX, CRAFT_INDEX, RESOURCE_INDEX } from '../data';
-import type { RegionMapSpec, IndustryTier } from './EventBus';
+import { INDUSTRIES, INDUSTRY_INDEX, REGION_INDEX, CRAFT_INDEX, RESOURCE_INDEX, npcsForRegion } from '../data';
+import type { RegionMapSpec, IndustryTier, TerrainKind } from './EventBus';
 
 /** 按「输入是否为空 / 产出资源层级」推断产业层级 */
 function industryTier(ind: IndustryDef): IndustryTier {
   if (Object.keys(ind.input).length === 0) return 'harvest';
   return RESOURCE_INDEX[ind.output]?.tier === 'product' ? 'product' : 'refine';
+}
+
+/** 由地区地貌基底关键字推断地形类型，驱动地图河流/山石/海岸生成 */
+function terrainKind(base: string, obstacles: string[]): TerrainKind {
+  const text = base + obstacles.join('');
+  if (/海|岸|码头|港|骑楼/.test(text)) return 'coast';
+  if (/山|梯田|栈道|峡谷|岭|坡/.test(text)) return 'mountain';
+  if (/水|河|江|湖|渡|荡|船|桥/.test(text)) return 'water';
+  return 'plain';
 }
 
 /** 组装某地区在当前状态下的地图规格；地区不存在时返回 null */
@@ -53,8 +62,15 @@ export function buildRegionSpec(regionId: string, state: GameState): RegionMapSp
     regionId: region.id,
     name: region.name,
     palette: region.terrain.palette.slice(0, 2) as [string, string],
+    terrain: terrainKind(region.terrain.base, region.terrain.obstacles),
     industries,
     crafts,
     gates,
+    npcs: npcsForRegion(region.id).map((n) => ({
+      id: n.id,
+      name: n.name,
+      role: n.role,
+      anchorId: n.anchorCraftId,
+    })),
   };
 }

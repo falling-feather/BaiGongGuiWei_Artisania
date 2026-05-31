@@ -9,15 +9,34 @@ import Phaser from 'phaser';
 /** 地图上一个产业交互点的层级（用于配色/图标） */
 export type IndustryTier = 'harvest' | 'refine' | 'product';
 
+/** 地区地貌类型——驱动地图地形生成（河流/山石/海岸/街巷） */
+export type TerrainKind = 'water' | 'mountain' | 'coast' | 'plain';
+
+/** 地图上的 NPC 角色类别 */
+export type NpcRole = 'tourist' | 'vendor';
+
+/** React 下发给场景的「地图 NPC」——游客随机游走，关联人物驻守店铺前 */
+export interface RegionNpcSpec {
+  id: string;
+  name: string;
+  role: NpcRole;
+  /** 关联的手艺/产业点 id（vendor 驻守其旁）；游客不填 */
+  anchorId?: string;
+}
+
 /** React 下发给场景的「地区地图规格」——场景据此摆点，无需 import 数据层 */
 export interface RegionMapSpec {
   regionId: string;
   name: string;
   /** [地面色, 点缀色] hex */
   palette: [string, string];
+  /** 地貌类型，决定河流/山石/海岸布局 */
+  terrain: TerrainKind;
   industries: { id: string; name: string; tier: IndustryTier }[];
   crafts: { id: string; name: string }[];
   gates: { regionId: string; name: string; unlocked: boolean }[];
+  /** 本地 NPC（游客 + 店铺关联人物） */
+  npcs: RegionNpcSpec[];
 }
 
 /** 小地图上的一个标记点（瓦片坐标 + 类别） */
@@ -34,6 +53,8 @@ export type GameBusEvent =
   | { type: 'interact-industry'; industryId: string }
   /** 玩家走近并触发某个地区出入口 */
   | { type: 'interact-gate'; regionId: string; unlocked: boolean }
+  /** 玩家走近并触发某个 NPC */
+  | { type: 'interact-npc'; npcId: string }
   /** 玩家进入/离开某交互点的感应范围（用于提示「按 E」） */
   | { type: 'hint'; text: string | null }
   /** 场景已就绪（可以接收第一条 enter-region 命令） */

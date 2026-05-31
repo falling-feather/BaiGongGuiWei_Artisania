@@ -19,6 +19,8 @@ import type {
   AchievementDef,
   StoryBeat,
   ResourceDef,
+  NpcDef,
+  QuestDef,
 } from './types';
 import { applyDelta, aggregateTownMetrics, METRIC_KEYS, METRIC_LABELS } from './metrics';
 import { createInitialState, LABOR_PER_TURN } from './state';
@@ -39,6 +41,10 @@ export interface GameContent {
   story?: StoryBeat[];
   /** 资源词典（可选，仅用于日志/展示的名称查找） */
   resources?: ResourceDef[];
+  /** NPC 目录（可选，街市人物系统用） */
+  npcs?: NpcDef[];
+  /** 任务定义（可选，街市人物系统用） */
+  quests?: QuestDef[];
 }
 
 /** 解锁一个新地区的费用（文） */
@@ -556,7 +562,63 @@ function reduce(
       };
     }
 
+    case 'TALK_NPC':
+      if (state.status !== 'playing') return state;
+      return talkNpc(state, content, action.npcId);
+
+    case 'COMPLETE_QUEST':
+      if (state.status !== 'playing') return state;
+      return completeQuest(state, content, action.questId);
+
     default:
       return state;
   }
+}
+
+/** 每次对话好感度增量与上限 */
+const AFFINITY_PER_TALK = 8;
+const AFFINITY_MAX = 100;
+
+/** 与 NPC 对话一次：好感度上升（封顶 100），并记录寒暄日志 */
+function talkNpc(state: GameState, content: GameContent, npcId: string): GameState {
+  const npc = (content.npcs ?? []).find((n) => n.id === npcId);
+  if (!npc) return state;
+  const cur = state.npcAffinity[npcId] ?? 0;
+  const next = Math.min(AFFINITY_MAX, cur + AFFINITY_PER_TALK);
+  const greeting = npc.greetings[Math.floor(Math.random() * Math.max(1, npc.greetings.length))] ?? '';
+  return {
+    ...state,
+    npcAffinity: { ...state.npcAffinity, [npcId]: next },
+    log: pushLog(state.log, `与「${npc.name}」攀谈：${greeting}（好感 ${cur}→${next}）`),
+  };
+}
+
+/** 交付一个任务：校验好感度门槛与达成条件，发放奖励并标记完成 */
+function completeQuest(state: GameState, content: GameContent, questId: string): GameState {
+  const quest = (content.quests ?? []).find((q) => q.id === questId);
+  if (!quest) return state;
+  if (state.completedQuests.includes(questId)) return state;
+  const npc = (content.npcs ?? []).find((n) => n.id === quest.npcId);
+  const npcName = npc?.name ?? quest.npcId;
+  const affinity = state.npcAffinity[quest.npcId] ?? 0;
+  if (affinity < quest.requireAffinity) {
+    return {
+      ...state,
+      log: pushLog(state.log, `「${npcName}」尚未足够信任你（好感 ${affinity}/${quest.requireAffinity}），暂不便托付。`),
+    };
+  }
+  if (!quest.condition(state)) {
+    return { ...state, log: pushLog(state.log, `任务「${quest.title}」的条件尚未达成。`) };
+  }
+  // 发放奖励
+  const effect: GameEffect = {
+    resources: {
+      ...(quest.reward.coin ? { coin: quest.reward.coin } : {}),
+      ...(quest.reward.resources ?? {}),
+    },
+    metrics: quest.reward.metrics,
+    logMessage: quest.completeLog.replace(/\{name\}/g, state.playerName.trim() || '无名匠人'),
+  };
+  const rewarded = applyEffect(state, effect);
+  return { ...rewarded, completedQuests: [...rewarded.completedQuests, questId] };
 }

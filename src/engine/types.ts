@@ -166,6 +166,55 @@ export interface GameState {
   playerName: string;
   /** 开发者模式：资源无限、全量解锁 */
   devMode: boolean;
+  /** 各 NPC 好感度（npcId -> 0–100），缺省视为 0 */
+  npcAffinity: Record<string, number>;
+  /** 已完成的任务 id 列表 */
+  completedQuests: string[];
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// NPC · 好感度 · 任务（街市人物系统，规划 §人物）
+// ───────────────────────────────────────────────────────────────────────────
+
+/** NPC 角色类别：游客（随机游走）/ 关联人物（驻守店铺，承载剧情任务） */
+export type NpcRole = 'tourist' | 'vendor';
+
+/** NPC 定义（静态数据，来自 src/data/npcs.ts） */
+export interface NpcDef {
+  id: string;
+  name: string;
+  role: NpcRole;
+  regionId: string;
+  /** vendor 关联的手艺点 id（驻守其旁） */
+  anchorCraftId?: string;
+  /** 寒暄台词池（对话时随机选一句） */
+  greetings: string[];
+}
+
+/** 任务奖励 */
+export interface QuestReward {
+  coin?: number;
+  /** 指定资源键 -> 数量 */
+  resources?: ResourcePool;
+  /** 镇级四维变化 */
+  metrics?: Partial<Metrics>;
+}
+
+/** 任务定义（数据驱动；condition 为纯函数，满足即可交付） */
+export interface QuestDef {
+  id: string;
+  /** 发布任务的 NPC id */
+  npcId: string;
+  title: string;
+  desc: string;
+  /** 解锁该任务所需的最低好感度（对 npcId） */
+  requireAffinity: number;
+  /** 是否满足交付条件（只读当前状态） */
+  condition: (state: GameState) => boolean;
+  /** 交付奖励 */
+  reward: QuestReward;
+  /** 完成后追加的日志（支持 {name} 占位符） */
+  completeLog: string;
 }
 
 /** 结局命运报告 */
@@ -194,7 +243,11 @@ export type GameAction =
   /** 花费解锁一个与已解锁地区相邻的新地区 */
   | { type: 'UNLOCK_REGION'; regionId: string }
   /** 标记一个剧情节点已阅读；choiceId 为分支选择时一并应用其标记/日志 */
-  | { type: 'SEEN_STORY'; storyId: string; choiceId?: string };
+  | { type: 'SEEN_STORY'; storyId: string; choiceId?: string }
+  /** 与 NPC 对话一次（提升好感度） */
+  | { type: 'TALK_NPC'; npcId: string }
+  /** 交付/领取一个任务奖励 */
+  | { type: 'COMPLETE_QUEST'; questId: string };
 
 // ───────────────────────────────────────────────────────────────────────────
 // 地区 · 资源 · 供应链（地区优先世界设计，详见 doc/项目规划.md 第三部分）

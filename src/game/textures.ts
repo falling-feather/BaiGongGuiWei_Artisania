@@ -23,6 +23,17 @@ export const TEX = {
   indProduct: 'tex-ind-product',
   craft: 'tex-craft',
   gate: 'tex-gate',
+  // 地貌元素（M·地貌差异化）
+  water: 'tex-water',
+  bridge: 'tex-bridge',
+  fence: 'tex-fence',
+  tree: 'tex-tree',
+  rock: 'tex-rock',
+  // NPC（游客 / 关联人物）
+  npcTourist: 'tex-npc-tourist',
+  npcVendor: 'tex-npc-vendor',
+  // 寻路目标光环
+  moveTarget: 'tex-move-target',
 } as const;
 
 /** 在 BootScene 中调用，生成全部占位纹理 */
@@ -40,6 +51,14 @@ export function generatePlaceholderTextures(scene: Phaser.Scene) {
   drawGate(scene); // 地区出入口·牌坊
   drawPlayer(scene);
   drawMarker(scene);
+  drawWater(scene); // 河面 / 海面
+  drawBridge(scene); // 石桥（过河通道）
+  drawFence(scene); // 栅栏（地块边界）
+  drawTree(scene); // 树木（地貌点缀·阻挡）
+  drawRock(scene); // 山石（地貌点缀·阻挡）
+  drawTourist(scene); // 游客 NPC
+  drawVendor(scene); // 摊贩 / 关联人物 NPC
+  drawMoveTarget(scene); // 点击寻路目标光环
 }
 
 /** 带细微噪点的地砖 */
@@ -100,5 +119,90 @@ function drawMarker(scene: Phaser.Scene) {
   g.fillStyle(0xb8893b, 1);
   g.fillTriangle(8, 0, 16, 12, 0, 12); // 向下三角
   g.generateTexture(TEX.marker, 16, 12);
+  g.destroy();
+}
+
+/** 河面 / 海面（单格，半透明波纹） */
+function drawWater(scene: Phaser.Scene) {
+  const g = scene.add.graphics();
+  g.fillStyle(0x3a6b8c, 1).fillRect(0, 0, TILE, TILE);
+  g.fillStyle(0x4f80a3, 1).fillRect(0, 6, TILE, 4);
+  g.fillStyle(0x5d92b6, 1).fillRect(0, 18, TILE, 4);
+  g.fillStyle(0x82b0cf, 0.7).fillRect(6, 12, 6, 2);
+  g.fillRect(20, 24, 6, 2);
+  g.generateTexture(TEX.water, TILE, TILE);
+  g.destroy();
+}
+
+/** 石桥（横跨河面的可通行通道） */
+function drawBridge(scene: Phaser.Scene) {
+  const g = scene.add.graphics();
+  g.fillStyle(0x9c8460, 1).fillRect(0, 0, TILE, TILE);
+  g.fillStyle(0x7d6747, 1).fillRect(0, 2, TILE, 3); // 上栏
+  g.fillRect(0, TILE - 5, TILE, 3); // 下栏
+  g.fillStyle(0x8a734f, 1).fillRect(6, 10, TILE - 12, 12); // 桥板纹
+  g.generateTexture(TEX.bridge, TILE, TILE);
+  g.destroy();
+}
+
+/** 栅栏（地块边界·阻挡，单格） */
+function drawFence(scene: Phaser.Scene) {
+  const g = scene.add.graphics();
+  g.fillStyle(0x000000, 0);
+  g.fillRect(0, 0, TILE, TILE);
+  g.fillStyle(0x8a6a3a, 1).fillRect(2, 14, TILE - 4, 4); // 横档
+  g.fillRect(4, 8, 4, TILE - 10); // 立柱
+  g.fillRect(TILE - 8, 8, 4, TILE - 10);
+  g.fillRect(TILE / 2 - 2, 8, 4, TILE - 10);
+  g.generateTexture(TEX.fence, TILE, TILE);
+  g.destroy();
+}
+
+/** 树木（地貌点缀·阻挡） */
+function drawTree(scene: Phaser.Scene) {
+  const g = scene.add.graphics();
+  g.fillStyle(0x6a4a2a, 1).fillRect(TILE / 2 - 3, TILE - 12, 6, 12); // 树干
+  g.fillStyle(0x3e6b3a, 1).fillCircle(TILE / 2, TILE / 2 - 2, 11); // 树冠
+  g.fillStyle(0x4f8048, 1).fillCircle(TILE / 2 - 4, TILE / 2 - 4, 6);
+  g.generateTexture(TEX.tree, TILE, TILE);
+  g.destroy();
+}
+
+/** 山石（地貌点缀·阻挡） */
+function drawRock(scene: Phaser.Scene) {
+  const g = scene.add.graphics();
+  g.fillStyle(0x7c7268, 1).fillTriangle(2, TILE - 2, TILE - 2, TILE - 2, TILE / 2, 6);
+  g.fillStyle(0x968b80, 1).fillTriangle(8, TILE - 2, 22, TILE - 2, 15, 12);
+  g.generateTexture(TEX.rock, TILE, TILE);
+  g.destroy();
+}
+
+/** 游客 NPC（青衫小人） */
+function drawTourist(scene: Phaser.Scene) {
+  const g = scene.add.graphics();
+  g.fillStyle(0x4a6b8a, 1).fillRect(8, 10, 16, 16); // 身体·青衫
+  g.fillStyle(0xf4d8b0, 1).fillRect(10, 2, 12, 10); // 头
+  g.fillStyle(0x2b2620, 1).fillRect(8, 26, 6, 6).fillRect(18, 26, 6, 6); // 脚
+  g.generateTexture(TEX.npcTourist, TILE, TILE);
+  g.destroy();
+}
+
+/** 摊贩 / 关联人物 NPC（赭衣，头戴笠） */
+function drawVendor(scene: Phaser.Scene) {
+  const g = scene.add.graphics();
+  g.fillStyle(0x9c6a3a, 1).fillRect(8, 10, 16, 16); // 身体·赭衣
+  g.fillStyle(0xf4d8b0, 1).fillRect(10, 4, 12, 9); // 头
+  g.fillStyle(0x6a5230, 1).fillRect(6, 2, 20, 4); // 斗笠
+  g.fillStyle(0x2b2620, 1).fillRect(8, 26, 6, 6).fillRect(18, 26, 6, 6); // 脚
+  g.generateTexture(TEX.npcVendor, TILE, TILE);
+  g.destroy();
+}
+
+/** 点击寻路目标光环 */
+function drawMoveTarget(scene: Phaser.Scene) {
+  const g = scene.add.graphics();
+  g.lineStyle(2, 0xf0d9a0, 0.9).strokeCircle(TILE / 2, TILE / 2, TILE / 2 - 3);
+  g.lineStyle(2, 0xf0d9a0, 0.5).strokeCircle(TILE / 2, TILE / 2, TILE / 2 - 8);
+  g.generateTexture(TEX.moveTarget, TILE, TILE);
   g.destroy();
 }

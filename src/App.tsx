@@ -6,6 +6,9 @@ import { ACHIEVEMENT_INDEX } from './data';
 import { PhaserGame } from './game/PhaserGame';
 import { Hud } from './components/Hud';
 import { CraftExperienceModal } from './components/CraftExperienceModal';
+import { CraftPage } from './components/CraftPage';
+import { hasCraftPage } from './components/craftPageThemes';
+import { NpcDialogModal } from './components/NpcDialogModal';
 import { MiniGameModal } from './components/MiniGameModal';
 import { RegionPanel } from './components/RegionPanel';
 import { WorldMapModal } from './components/WorldMapModal';
@@ -30,6 +33,8 @@ export function App() {
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
   const [activeCraftId, setActiveCraftId] = useState<string | null>(null);
+  const [activeCraftPageId, setActiveCraftPageId] = useState<string | null>(null);
+  const [activeNpcId, setActiveNpcId] = useState<string | null>(null);
   const [activeIndustryId, setActiveIndustryId] = useState<string | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
@@ -84,8 +89,12 @@ export function App() {
   useEffect(() => {
     return onBus((payload) => {
       if (payload.type === 'hint') setHint(payload.text);
-      else if (payload.type === 'interact-craft') setActiveCraftId(payload.craftId);
-      else if (payload.type === 'interact-industry') setActiveIndustryId(payload.industryId);
+      else if (payload.type === 'interact-craft') {
+        // 已登记独立页的手艺走整页工坊，其余回退到通用弹窗
+        if (hasCraftPage(payload.craftId)) setActiveCraftPageId(payload.craftId);
+        else setActiveCraftId(payload.craftId);
+      } else if (payload.type === 'interact-industry') setActiveIndustryId(payload.industryId);
+      else if (payload.type === 'interact-npc') setActiveNpcId(payload.npcId);
       else if (payload.type === 'player-pos')
         setPlayerPos({ tx: payload.tx, ty: payload.ty, mapW: payload.mapW, mapH: payload.mapH });
       else if (payload.type === 'region-points') setMapPoints(payload.points);
@@ -154,6 +163,7 @@ export function App() {
           />
           <CraftExperienceModal craftId={activeCraftId} onClose={() => setActiveCraftId(null)} />
           <MiniGameModal industryId={activeIndustryId} onClose={() => setActiveIndustryId(null)} />
+          <NpcDialogModal npcId={activeNpcId} onClose={() => setActiveNpcId(null)} />
           <RegionPanel open={panelOpen} onClose={() => setPanelOpen(false)} />
           <WorldMapModal open={mapOpen} onClose={() => setMapOpen(false)} />
           <InventoryModal open={bagOpen} onClose={() => setBagOpen(false)} />
@@ -177,6 +187,9 @@ export function App() {
               setView('menu');
             }}
           />
+          {activeCraftPageId && (
+            <CraftPage craftId={activeCraftPageId} onClose={() => setActiveCraftPageId(null)} />
+          )}
         </>
       )}
     </div>

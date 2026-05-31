@@ -314,7 +314,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  z-index: 10;
+  z-index: 70;
 }
 
 .modal {
@@ -1187,5 +1187,186 @@ body {
   border: 2px solid #fff;
   box-shadow: 0 0 6px rgba(196, 67, 47, 0.9);
   z-index: 2;
+}
+
+/* ── NPC 对话面板（好感度 / 委托） ───────────────────────────── */
+.npc-affinity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 12px;
+}
+.npc-affinity__label {
+  font-size: 12px;
+  color: var(--indigo-soft);
+}
+.npc-affinity__bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.npc-affinity__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--bamboo), #a9608f);
+  transition: width 0.3s ease;
+}
+.npc-affinity__num {
+  font-size: 11px;
+  color: rgba(43, 38, 32, 0.7);
+  min-width: 48px;
+  text-align: right;
+}
+
+.npc-quests {
+  margin-bottom: 12px;
+}
+.npc-quests__title {
+  margin: 4px 0 6px;
+  font-size: 13px;
+  color: var(--indigo);
+}
+.npc-quest {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  background: var(--paper-2);
+}
+.npc-quest__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.npc-quest__name {
+  font-weight: 600;
+  font-size: 13px;
+}
+.npc-quest__done {
+  font-size: 11px;
+  color: var(--bamboo);
+}
+.npc-quest__desc {
+  margin: 4px 0;
+  font-size: 12px;
+  opacity: 0.85;
+}
+.npc-quest__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.npc-quest__req {
+  font-size: 11px;
+  color: rgba(43, 38, 32, 0.7);
+}
+
+/* ── 工艺独立页（整页工坊） ───────────────────────────── */
+.craft-page {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(circle at 18% 12%, color-mix(in srgb, var(--page-accent) 28%, transparent), transparent 45%),
+    linear-gradient(160deg, var(--paper), var(--paper-2));
+  color: var(--ink);
+  overflow: hidden;
+}
+.craft-page__bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(244, 236, 224, 0.6);
+}
+.craft-page__title {
+  margin: 0;
+  font-size: 20px;
+}
+.craft-page__title small {
+  font-size: 12px;
+  color: var(--indigo-soft);
+}
+.craft-page__metrics {
+  margin-left: auto;
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+.craft-page__body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding: 24px;
+  overflow: auto;
+}
+.craft-page__story {
+  display: flex;
+  flex-direction: column;
+}
+.craft-page__hero {
+  height: 200px;
+  border-radius: 10px;
+  border: 1px dashed color-mix(in srgb, var(--page-accent) 55%, var(--line));
+  background:
+    repeating-linear-gradient(45deg, color-mix(in srgb, var(--page-accent) 12%, transparent) 0 12px, transparent 12px 24px),
+    color-mix(in srgb, var(--page-accent) 8%, var(--paper-2));
+  display: flex;
+  align-items: flex-end;
+  padding: 10px;
+  margin-bottom: 14px;
+}
+.craft-page__hero-tag {
+  font-size: 11px;
+  color: rgba(43, 38, 32, 0.55);
+  background: rgba(244, 236, 224, 0.7);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.craft-page__tagline {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--page-accent);
+  margin: 0 0 10px;
+}
+.craft-page__para {
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 0 0 8px;
+}
+.craft-page__tips {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+.craft-page__tips li {
+  margin-bottom: 4px;
+}
+.craft-page__work {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px;
+  background: rgba(244, 236, 224, 0.55);
+}
+.craft-page__work h3 {
+  margin: 0 0 4px;
+}
+.craft-page__work-desc {
+  margin: 0 0 12px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+@media (max-width: 860px) {
+  .craft-page__body {
+    grid-template-columns: 1fr;
+  }
 }
 
