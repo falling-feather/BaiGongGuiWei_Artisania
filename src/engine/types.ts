@@ -77,6 +77,8 @@ export interface GameEffect {
   craftMetrics?: Record<string, Partial<Metrics>>;
   /** 追加到事件/操作日志的文本 */
   logMessage?: string;
+  /** 写入的叙事标记（供后续剧情分支读取） */
+  setFlags?: string[];
 }
 
 /** 事件中的一个选项 */
@@ -97,15 +99,27 @@ export interface GameEvent {
 }
 
 /**
- * 剧情节点（叙事卡）。与随机事件不同：由状态条件触发、只呈现一次、无选项。
+ * 剧情节点（叙事卡）。与随机事件不同：由状态条件触发、只呈现一次。
  * `lines` 里的 `{name}` 占位符会被玩家名号替换。
+ * 可选 `choices`：玩家的选择会写入叙事标记，从而决定后续剧情分支；无 choices 时仅一个「继续」。
  */
+export interface StoryChoice {
+  id: string;
+  label: string;
+  /** 选中后写入的叙事标记 */
+  setFlags?: string[];
+  /** 选中后追加的日志文本（支持 {name} 占位符） */
+  logMessage?: string;
+}
+
 export interface StoryBeat {
   id: string;
   title: string;
   lines: string[];
   /** 该节点是否应出现（纯函数，只读 GameState） */
   trigger: (state: GameState) => boolean;
+  /** 可选的分支选项；省略则为单按钮「继续」 */
+  choices?: StoryChoice[];
 }
 
 /** 某门手艺在一局游戏中的动态状态 */
@@ -144,6 +158,8 @@ export interface GameState {
   achievements: string[];
   /** 已呈现过的剧情节点 id（每个只出现一次） */
   seenStory: string[];
+  /** 叙事标记（事件/剧情选择写入，驱动剧情分支） */
+  flags: string[];
   /** 玩家名（开局输入，影响后续剧情系统） */
   playerName: string;
   /** 开发者模式：资源无限、全量解锁 */
@@ -173,8 +189,8 @@ export type GameAction =
   | { type: 'TRAVEL'; regionId: string }
   /** 花费解锁一个与已解锁地区相邻的新地区 */
   | { type: 'UNLOCK_REGION'; regionId: string }
-  /** 标记一个剧情节点已阅读 */
-  | { type: 'SEEN_STORY'; storyId: string };
+  /** 标记一个剧情节点已阅读；choiceId 为分支选择时一并应用其标记/日志 */
+  | { type: 'SEEN_STORY'; storyId: string; choiceId?: string };
 
 // ───────────────────────────────────────────────────────────────────────────
 // 地区 · 资源 · 供应链（地区优先世界设计，详见 doc/项目规划.md 第三部分）

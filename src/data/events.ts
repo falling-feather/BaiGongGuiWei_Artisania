@@ -17,6 +17,7 @@ export const EVENTS: GameEvent[] = [
         effect: {
           metrics: { market: 8, heritage: -6, spirit: -4 },
           logMessage: '你顺应了潮流，订单回暖，但老匠人摇头叹息。',
+          setFlags: ['chased-trend'],
         },
       },
       {
@@ -25,6 +26,7 @@ export const EVENTS: GameEvent[] = [
         effect: {
           metrics: { heritage: 6, spirit: 4, market: -5 },
           logMessage: '你坚持了传统，口碑在小圈子里更硬，但生意冷清了些。',
+          setFlags: ['kept-tradition'],
         },
       },
     ],

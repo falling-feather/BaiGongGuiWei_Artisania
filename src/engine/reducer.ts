@@ -98,6 +98,12 @@ function applyEffect(state: GameState, effect: GameEffect): GameState {
     next = { ...next, log: pushLog(next.log, effect.logMessage) };
   }
 
+  if (effect.setFlags && effect.setFlags.length > 0) {
+    const flags = new Set(next.flags);
+    for (const f of effect.setFlags) flags.add(f);
+    next = { ...next, flags: [...flags] };
+  }
+
   return recompute(next);
 }
 
@@ -469,9 +475,23 @@ function reduce(
       if (state.status !== 'playing') return state;
       return unlockRegion(state, content, action.regionId);
 
-    case 'SEEN_STORY':
+    case 'SEEN_STORY': {
       if (state.seenStory.includes(action.storyId)) return state;
-      return { ...state, seenStory: [...state.seenStory, action.storyId] };
+      const seenStory = [...state.seenStory, action.storyId];
+      // 分支选择：查找该节点选项，应用其标记与日志
+      const beat = (content.story ?? []).find((b) => b.id === action.storyId);
+      const choice = beat?.choices?.find((c) => c.id === action.choiceId);
+      if (!choice) return { ...state, seenStory };
+      const flags = new Set(state.flags);
+      for (const f of choice.setFlags ?? []) flags.add(f);
+      const msg = choice.logMessage?.replace(/\{name\}/g, state.playerName.trim() || '无名匠人');
+      return {
+        ...state,
+        seenStory,
+        flags: [...flags],
+        log: msg ? pushLog(state.log, msg) : state.log,
+      };
+    }
 
     default:
       return state;

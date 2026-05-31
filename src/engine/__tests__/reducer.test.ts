@@ -145,4 +145,39 @@ describe('gameReducer', () => {
     expect(renderStoryLine('{name}启程', '阿青')).toBe('阿青启程');
     expect(renderStoryLine('{name}启程', '   ')).toBe('无名匠人启程');
   });
+
+  it('剧情分支：抉择写入 flag，第4季触发对应分支节点', () => {
+    const withStory: GameContent = { ...content, story: STORY_BEATS };
+    let s = gameReducer(freshState(), { type: 'NEW_GAME', seed: 1, playerName: '阿青' }, withStory);
+    // 读楔子
+    s = gameReducer(s, { type: 'SEEN_STORY', storyId: 'prologue' }, withStory);
+    // 立心：选守正
+    s = gameReducer(s, { type: 'SEEN_STORY', storyId: 'oath', choiceId: 'tradition' }, withStory);
+    expect(s.flags).toContain('oath-tradition');
+
+    // 推进到第 4 季
+    while (s.turn < 4) {
+      s = gameReducer(s, { type: 'RESOLVE_EVENT', choiceId: 'resist' }, withStory); // 清掉可能的事件
+      if (s.pendingEvent) s = { ...s, pendingEvent: null };
+      s = gameReducer(s, { type: 'END_TURN' }, withStory);
+    }
+    const beat = nextStoryBeat(s, withStory);
+    expect(beat?.id).toBe('path-tradition');
+  });
+
+  it('剧情分支：事件选项写入 flag，触发回响节点', () => {
+    const withStory: GameContent = { ...content, story: STORY_BEATS };
+    let s = gameReducer(freshState(), { type: 'NEW_GAME', seed: 1, playerName: '阿青' }, withStory);
+    s = { ...s, flags: [...s.flags, 'chased-trend'] };
+    // 看过早期节点，确保 after-trend 能被选中
+    s = { ...s, seenStory: ['prologue', 'oath', 'first-craft'] };
+    const ids: string[] = [];
+    let beat = nextStoryBeat(s, withStory);
+    while (beat) {
+      ids.push(beat.id);
+      s = gameReducer(s, { type: 'SEEN_STORY', storyId: beat.id }, withStory);
+      beat = nextStoryBeat(s, withStory);
+    }
+    expect(ids).toContain('after-trend');
+  });
 });

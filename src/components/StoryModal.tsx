@@ -28,12 +28,26 @@ export function StoryModal() {
           ))}
         </div>
         <div className="modal__choices">
-          <button
-            className="btn btn--bamboo"
-            onClick={() => dispatch({ type: 'SEEN_STORY', storyId: beat.id })}
-          >
-            继续
-          </button>
+          {beat.choices && beat.choices.length > 0 ? (
+            beat.choices.map((choice) => (
+              <button
+                key={choice.id}
+                className="btn"
+                onClick={() =>
+                  dispatch({ type: 'SEEN_STORY', storyId: beat.id, choiceId: choice.id })
+                }
+              >
+                {choice.label}
+              </button>
+            ))
+          ) : (
+            <button
+              className="btn btn--bamboo"
+              onClick={() => dispatch({ type: 'SEEN_STORY', storyId: beat.id })}
+            >
+              继续
+            </button>
+          )}
         </div>
       </div>
     </div>
