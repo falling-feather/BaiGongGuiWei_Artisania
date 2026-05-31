@@ -79,6 +79,7 @@ export function createInitialState(
     unlockedRegions,
     currentRegion,
     achievements: [],
+    seenStory: [],
     playerName: playerName.trim(),
     devMode,
   };

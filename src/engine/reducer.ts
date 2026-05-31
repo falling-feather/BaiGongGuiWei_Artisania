@@ -17,6 +17,7 @@ import type {
   IndustryDef,
   RegionDef,
   AchievementDef,
+  StoryBeat,
 } from './types';
 import { applyDelta, aggregateTownMetrics, METRIC_KEYS, METRIC_LABELS } from './metrics';
 import { createInitialState, LABOR_PER_TURN } from './state';
@@ -33,6 +34,8 @@ export interface GameContent {
   regions?: RegionDef[];
   /** 成就定义（可选） */
   achievements?: AchievementDef[];
+  /** 剧情节点（可选） */
+  story?: StoryBeat[];
 }
 
 /** 解锁一个新地区的费用（文） */
@@ -388,6 +391,16 @@ export function gameReducer(
   return checkAchievements(reduce(state, action, content), content);
 }
 
+/**
+ * 选择「当前应当呈现的下一个剧情节点」：第一个已触发且尚未看过的节点。
+ * 纯函数，供 UI 调用决定是否弹出剧情卡。
+ */
+export function nextStoryBeat(state: GameState, content: GameContent): StoryBeat | null {
+  const beats = content.story ?? [];
+  const seen = new Set(state.seenStory);
+  return beats.find((b) => !seen.has(b.id) && b.trigger(state)) ?? null;
+}
+
 /** 内部规则分发（不含成就检测） */
 function reduce(
   state: GameState,
@@ -455,6 +468,10 @@ function reduce(
     case 'UNLOCK_REGION':
       if (state.status !== 'playing') return state;
       return unlockRegion(state, content, action.regionId);
+
+    case 'SEEN_STORY':
+      if (state.seenStory.includes(action.storyId)) return state;
+      return { ...state, seenStory: [...state.seenStory, action.storyId] };
 
     default:
       return state;

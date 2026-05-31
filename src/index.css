@@ -292,6 +292,36 @@ body {
   gap: 10px;
 }
 
+/* ===== 剧情叙事卡 ===== */
+.story {
+  max-width: 540px;
+  background:
+    linear-gradient(180deg, rgba(38, 32, 26, 0.04), rgba(38, 32, 26, 0)) ,
+    var(--paper);
+  border-left: 4px solid var(--indigo);
+}
+
+.story__title {
+  color: var(--vermilion);
+  text-align: center;
+}
+
+.story__body {
+  margin: 6px 0 22px;
+}
+
+.story__line {
+  font-size: 15px;
+  line-height: 2.05;
+  margin: 0 0 6px;
+  color: var(--ink);
+  text-indent: 2em;
+}
+
+.story__line:first-child {
+  text-indent: 0;
+}
+
 /* ===== 镇务行脚面板 ===== */
 .modal--wide {
   max-width: 640px;

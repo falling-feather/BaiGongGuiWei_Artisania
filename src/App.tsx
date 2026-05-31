@@ -13,6 +13,7 @@ import { InventoryModal } from './components/InventoryModal';
 import { AchievementsModal } from './components/AchievementsModal';
 import { MainMenu } from './components/MainMenu';
 import { Tutorial } from './components/Tutorial';
+import { StoryModal } from './components/StoryModal';
 import { EventModal } from './components/EventModal';
 import { GameOverReport } from './components/GameOverReport';
 import { localStorageAdapter } from './storage/localStorageAdapter';
@@ -136,6 +137,7 @@ export function App() {
           <InventoryModal open={bagOpen} onClose={() => setBagOpen(false)} />
           <AchievementsModal open={achOpen} onClose={() => setAchOpen(false)} />
           <Tutorial open={tutorialOpen} onClose={() => setTutorialOpen(false)} />
+          {!tutorialOpen && <StoryModal />}
           {achToast && <div className="ach-toast">★ 解锁成就「{achToast}」</div>}
           <EventModal />
           <GameOverReport />

@@ -96,6 +96,18 @@ export interface GameEvent {
   weight: number;
 }
 
+/**
+ * 剧情节点（叙事卡）。与随机事件不同：由状态条件触发、只呈现一次、无选项。
+ * `lines` 里的 `{name}` 占位符会被玩家名号替换。
+ */
+export interface StoryBeat {
+  id: string;
+  title: string;
+  lines: string[];
+  /** 该节点是否应出现（纯函数，只读 GameState） */
+  trigger: (state: GameState) => boolean;
+}
+
 /** 某门手艺在一局游戏中的动态状态 */
 export interface CraftState {
   craftId: string;
@@ -130,6 +142,8 @@ export interface GameState {
   currentRegion: RegionId;
   /** 已解锁的成就 id 列表 */
   achievements: string[];
+  /** 已呈现过的剧情节点 id（每个只出现一次） */
+  seenStory: string[];
   /** 玩家名（开局输入，影响后续剧情系统） */
   playerName: string;
   /** 开发者模式：资源无限、全量解锁 */
@@ -158,7 +172,9 @@ export type GameAction =
   /** 前往一个已解锁的地区 */
   | { type: 'TRAVEL'; regionId: string }
   /** 花费解锁一个与已解锁地区相邻的新地区 */
-  | { type: 'UNLOCK_REGION'; regionId: string };
+  | { type: 'UNLOCK_REGION'; regionId: string }
+  /** 标记一个剧情节点已阅读 */
+  | { type: 'SEEN_STORY'; storyId: string };
 
 // ───────────────────────────────────────────────────────────────────────────
 // 地区 · 资源 · 供应链（地区优先世界设计，详见 doc/项目规划.md 第三部分）

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { gameReducer } from '../reducer';
+import { gameReducer, nextStoryBeat } from '../reducer';
 import { createInitialState } from '../state';
 import type { GameContent } from '../reducer';
 import { CRAFTS } from '../../data/crafts';
@@ -8,6 +8,7 @@ import { EVENTS } from '../../data/events';
 import { INDUSTRIES } from '../../data/industries';
 import { REGIONS } from '../../data/regions';
 import { ACHIEVEMENTS } from '../../data/achievements';
+import { STORY_BEATS, renderStoryLine } from '../../data/story';
 
 const content: GameContent = {
   crafts: CRAFTS,
@@ -127,5 +128,21 @@ describe('gameReducer', () => {
     );
     expect(normal.devMode).toBe(false);
     expect(normal.unlockedRegions.length).toBeLessThan(content.regions!.length);
+  });
+
+  it('剧情：开局触发楔子，SEEN_STORY 后接续下一节点', () => {
+    const withStory: GameContent = { ...content, story: STORY_BEATS };
+    const s0 = gameReducer(freshState(), { type: 'NEW_GAME', seed: 1, playerName: '阿青' }, withStory);
+    const first = nextStoryBeat(s0, withStory);
+    expect(first?.id).toBe('prologue');
+
+    const s1 = gameReducer(s0, { type: 'SEEN_STORY', storyId: 'prologue' }, withStory);
+    expect(s1.seenStory).toContain('prologue');
+    expect(nextStoryBeat(s1, withStory)?.id).not.toBe('prologue');
+  });
+
+  it('剧情：renderStoryLine 用玩家名替换占位符，空名回退', () => {
+    expect(renderStoryLine('{name}启程', '阿青')).toBe('阿青启程');
+    expect(renderStoryLine('{name}启程', '   ')).toBe('无名匠人启程');
   });
 });
