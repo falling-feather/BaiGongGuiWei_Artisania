@@ -8,8 +8,9 @@ export function createGameConfig(parent: HTMLElement): Phaser.Types.Core.GameCon
   return {
     type: Phaser.AUTO,
     parent,
-    width: 480,
-    height: 320,
+    // 基准分辨率：放大可视范围（配合 zoom 2 保持整数缩放、像素锐利）
+    width: 800,
+    height: 500,
     pixelArt: true,
     backgroundColor: '#2b2620',
     scale: {
