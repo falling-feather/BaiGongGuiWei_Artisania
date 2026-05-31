@@ -1,0 +1,60 @@
+/**
+ * 地区地图规格装配器 —— 把「内容数据 + 当前状态」翻译成一份场景可用的 RegionMapSpec。
+ * 让 Phaser 场景与数据层解耦：场景只认 RegionMapSpec。
+ */
+import type { GameState, IndustryDef } from '../engine';
+import { INDUSTRIES, INDUSTRY_INDEX, REGION_INDEX, CRAFT_INDEX, RESOURCE_INDEX } from '../data';
+import type { RegionMapSpec, IndustryTier } from './EventBus';
+
+/** 按「输入是否为空 / 产出资源层级」推断产业层级 */
+function industryTier(ind: IndustryDef): IndustryTier {
+  if (Object.keys(ind.input).length === 0) return 'harvest';
+  return RESOURCE_INDEX[ind.output]?.tier === 'product' ? 'product' : 'refine';
+}
+
+/** 组装某地区在当前状态下的地图规格；地区不存在时返回 null */
+export function buildRegionSpec(regionId: string, state: GameState): RegionMapSpec | null {
+  const region = REGION_INDEX[regionId];
+  if (!region) return null;
+
+  // 显式列入的产业
+  const explicit = region.industries
+    .map((id) => INDUSTRY_INDEX[id])
+    .filter((i): i is IndustryDef => Boolean(i));
+
+  // 本地特产授权的采集业（采集业 = 输入为空，且产出是本地特产）
+  const harvests = INDUSTRIES.filter(
+    (i) => Object.keys(i.input).length === 0 && region.localResources.includes(i.output),
+  );
+
+  // 去重合并
+  const seen = new Set<string>();
+  const industries = [...harvests, ...explicit]
+    .filter((i) => (seen.has(i.id) ? false : (seen.add(i.id), true)))
+    .map((i) => ({ id: i.id, name: i.name, tier: industryTier(i) }));
+
+  // 招牌手艺中已实现的（存在于 CRAFTS）
+  const crafts = region.signatureCrafts
+    .map((id) => CRAFT_INDEX[id])
+    .filter((c): c is NonNullable<typeof c> => Boolean(c))
+    .map((c) => ({ id: c.id, name: c.name }));
+
+  // 相邻地区中已定义的，作为出入口
+  const gates = region.neighbors
+    .map((id) => REGION_INDEX[id])
+    .filter((r): r is NonNullable<typeof r> => Boolean(r))
+    .map((r) => ({
+      regionId: r.id,
+      name: r.name,
+      unlocked: state.unlockedRegions.includes(r.id),
+    }));
+
+  return {
+    regionId: region.id,
+    name: region.name,
+    palette: region.terrain.palette.slice(0, 2) as [string, string],
+    industries,
+    crafts,
+    gates,
+  };
+}

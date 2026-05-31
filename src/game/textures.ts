@@ -17,15 +17,27 @@ export const TEX = {
   shopIndigo: 'tex-shop-indigo',
   shopBamboo: 'tex-shop-bamboo',
   marker: 'tex-marker',
+  // 产业点（按层级配色）与地区出入口
+  indHarvest: 'tex-ind-harvest',
+  indRefine: 'tex-ind-refine',
+  indProduct: 'tex-ind-product',
+  craft: 'tex-craft',
+  gate: 'tex-gate',
 } as const;
 
 /** 在 BootScene 中调用，生成全部占位纹理 */
 export function generatePlaceholderTextures(scene: Phaser.Scene) {
-  drawTile(scene, TEX.ground, 0x7fa86b, 0x6f9a5c); // 草地绿
+  if (scene.textures.exists(TEX.ground)) return; // 幂等：地区切换重建时不重复生成
+  drawTile(scene, TEX.ground, 0xffffff, 0xe6e6e6); // 纯白底，运行时按地区 palette 着色
   drawTile(scene, TEX.road, 0xc8b393, 0xbfa882); // 土路黄
   drawTile(scene, TEX.wall, 0x6b5847, 0x5a4a3a); // 墙棕
   drawShop(scene, TEX.shopIndigo, 0x2e4a6b, 0x46688f); // 蓝染坊·靛蓝
   drawShop(scene, TEX.shopBamboo, 0x6f8b52, 0x86a368); // 竹编坊·竹绿
+  drawShop(scene, TEX.indHarvest, 0x6f8b52, 0x88a86a); // 采集·绿
+  drawShop(scene, TEX.indRefine, 0xb5742f, 0xd0903f); // 精炼·橙（炉火）
+  drawShop(scene, TEX.indProduct, 0x8c4a7a, 0xa9608f); // 制作·紫（精品）
+  drawShop(scene, TEX.craft, 0x2e4a6b, 0x46688f); // 手艺坊·靛蓝
+  drawGate(scene); // 地区出入口·牌坊
   drawPlayer(scene);
   drawMarker(scene);
 }
@@ -66,6 +78,19 @@ function drawPlayer(scene: Phaser.Scene) {
   g.fillStyle(0x2b2620, 1).fillRect(8, 26, 6, 6); // 左脚
   g.fillRect(18, 26, 6, 6); // 右脚
   g.generateTexture(TEX.player, TILE, TILE);
+  g.destroy();
+}
+
+/** 地区出入口·牌坊（2x2 格） */
+function drawGate(scene: Phaser.Scene) {
+  const w = TILE * 2;
+  const h = TILE * 2;
+  const g = scene.add.graphics();
+  g.fillStyle(0x8a6a3a, 1).fillRect(6, 8, 8, h - 8); // 左柱
+  g.fillRect(w - 14, 8, 8, h - 8); // 右柱
+  g.fillStyle(0xa6342b, 1).fillRect(0, 4, w, 12); // 横额·朱红
+  g.fillStyle(0xcaa84a, 1).fillRect(w / 2 - 6, 6, 12, 8); // 匾额
+  g.generateTexture(TEX.gate, w, h);
   g.destroy();
 }
 

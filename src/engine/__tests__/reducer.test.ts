@@ -62,6 +62,14 @@ describe('gameReducer', () => {
     expect(s1.resources.labor).toBeLessThan(before);
   });
 
+  it('GATHER_RESOURCE 采集业（仅耗工时）按本地特产授权产出', () => {
+    // 江南特产 cocoonSilk → harvest-cocoon 为采集业，仅耗工时
+    const s = freshState();
+    const s1 = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'harvest-cocoon', quality: 1 }, content);
+    expect((s1.resources.cocoonSilk ?? 0)).toBeGreaterThan(0);
+    expect(s1.resources.labor).toBeLessThan(s.resources.labor);
+  });
+
   it('GATHER_RESOURCE 拒绝本地不具备的产业', () => {
     const s = freshState(); // 江南不具备 refine-silver（提银）
     const s1 = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'refine-silver' }, content);

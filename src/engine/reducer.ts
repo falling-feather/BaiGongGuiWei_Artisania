@@ -237,13 +237,19 @@ function gatherResource(
   const industry = industries.find((i) => i.id === industryId);
   if (!industry) return state;
 
-  // 校验：该产业需在当前地区可用
+  // 校验：该产业需在当前地区可用（显式列入 industries，或为本地特产的采集业）
   const region = regions.find((r) => r.id === state.currentRegion);
-  if (region && !region.industries.includes(industryId)) {
-    return {
-      ...state,
-      log: pushLog(state.log, `本地（${region.name}）不具备「${industry.name}」的条件。`),
-    };
+  if (region) {
+    const isHarvest = Object.keys(industry.input).length === 0;
+    const allowed =
+      region.industries.includes(industryId) ||
+      (isHarvest && region.localResources.includes(industry.output));
+    if (!allowed) {
+      return {
+        ...state,
+        log: pushLog(state.log, `本地（${region.name}）不具备「${industry.name}」的条件。`),
+      };
+    }
   }
 
   // 校验人力

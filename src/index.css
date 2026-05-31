@@ -384,6 +384,51 @@ body {
   gap: 8px;
 }
 
+/* ===== 采料小游戏 ===== */
+.mg-track {
+  position: relative;
+  height: 26px;
+  margin: 16px 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: linear-gradient(90deg, #d9c9a8, #f0e6d2, #d9c9a8);
+  overflow: hidden;
+}
+
+.mg-target {
+  position: absolute;
+  left: 44%;
+  width: 12%;
+  top: 0;
+  bottom: 0;
+  background: rgba(90, 140, 90, 0.45);
+  border-left: 1px solid var(--bamboo);
+  border-right: 1px solid var(--bamboo);
+}
+
+.mg-needle {
+  position: absolute;
+  top: -2px;
+  width: 3px;
+  height: 30px;
+  background: var(--vermilion);
+  transform: translateX(-50%);
+}
+
+.mg-tip {
+  font-size: 12px;
+  opacity: 0.7;
+  margin: 0 0 12px;
+}
+
+.mg-result {
+  font-size: 14px;
+  margin: 10px 0 14px;
+}
+
+.zone-good { color: var(--healthy); }
+.zone-bad { color: var(--vermilion); }
+
 .report__metrics {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
