@@ -41,6 +41,14 @@ export function GameOverReport() {
           </ul>
         )}
 
+        {report.epilogue && (
+          <div className="report__epilogue">
+            {report.epilogue.split('\n').map((line, i) => (
+              <p key={i}>{line}</p>
+            ))}
+          </div>
+        )}
+
         <div className="btn-row" style={{ marginTop: 18 }}>
           <button className="btn" onClick={() => newGame()}>
             再启新局

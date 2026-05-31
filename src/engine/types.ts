@@ -173,6 +173,8 @@ export interface GameReport {
   finalMetrics: Metrics;
   survivingCrafts: string[];
   highlights: string[];
+  /** 个性化尾声：结合玩家名号与抉择走向（守正/趋时）的收束之语 */
+  epilogue: string;
 }
 
 /** 所有可派发的行动（被 reducer 消费） */

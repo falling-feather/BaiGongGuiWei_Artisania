@@ -180,4 +180,17 @@ describe('gameReducer', () => {
     }
     expect(ids).toContain('after-trend');
   });
+
+  it('个性化结局：守正抉择 + 高传承的尾声呼应玩家名号', () => {
+    let s = gameReducer(freshState(), { type: 'NEW_GAME', seed: 1, playerName: '阿青' }, content);
+    // 立心守正 + 风向坚守
+    s = { ...s, flags: [...s.flags, 'oath-tradition', 'kept-tradition'] };
+    // 拉高传承度，并推进到终局季
+    s = { ...s, metrics: { ...s.metrics, heritage: 80 }, turn: s.maxTurns };
+    s = gameReducer(s, { type: 'END_TURN' }, content);
+    expect(s.status).toBe('ended');
+    expect(s.report?.epilogue).toContain('阿青');
+    expect(s.report?.epilogue).toContain('守正');
+    expect(s.report?.epilogue).toContain('不随波');
+  });
 });

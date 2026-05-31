@@ -373,7 +373,39 @@ function generateReport(state: GameState): GameReport {
     `历经 ${state.turn} 季的经营，这座百工镇以「${METRIC_LABELS[highest]}」立身，` +
     `却也为「${METRIC_LABELS[lowest]}」付出了代价。传承从无标准答案，这是属于你的一种回答。`;
 
-  return { title, summary, finalMetrics: { ...m }, survivingCrafts, highlights };
+  const epilogue = generateEpilogue(state, m);
+
+  return { title, summary, finalMetrics: { ...m }, survivingCrafts, highlights, epilogue };
+}
+
+/** 个性化尾声：以玩家名号与「守正/趋时」抉择走向，给出呼应或反差的收束之语 */
+function generateEpilogue(state: GameState, m: Metrics): string {
+  const name = state.playerName.trim() || '无名匠人';
+  const tradition = state.flags.includes('oath-tradition');
+  const market = state.flags.includes('oath-market');
+  const keptTradition = state.flags.includes('kept-tradition');
+  const chasedTrend = state.flags.includes('chased-trend');
+
+  let path: string;
+  if (tradition) {
+    path =
+      m.heritage >= 55
+        ? `当年灯下立心「守正」，${name}终究守住了那道不肯减的工序——传承度 ${m.heritage}，是对旧誓最体面的回答。`
+        : `当年立心「守正」，${name}却在世道里磨得退了几步；传承度只余 ${m.heritage}，老师傅的匾额，沉了些。`;
+  } else if (market) {
+    path =
+      m.market >= 55
+        ? `当年立心「趋时」，${name}让手艺先活了下来——市场度 ${m.market}，热闹是真的热闹，只是夜深时仍会想起那半边匾。`
+        : `当年立心「趋时」，${name}却没能等到回暖；市场度仅 ${m.market}，趋时也未必趋得过时势。`;
+  } else {
+    path = `${name}没有在开局许下分明的誓言，却用一季又一季的取舍，写下了自己的答案。`;
+  }
+
+  let echo = '';
+  if (keptTradition) echo = '审美风向突变那年，你选择不随波——这份固执，镇上人记得。';
+  else if (chasedTrend) echo = '审美风向突变那年，你顺势改了样式——是聪明，也是一点不得已。';
+
+  return echo ? `${path}\n${echo}` : path;
 }
 
 /** 检测并解锁新达成的成就（在每次 action 结算后调用） */

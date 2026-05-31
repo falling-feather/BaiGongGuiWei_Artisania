@@ -540,6 +540,26 @@ body {
   padding-left: 18px;
 }
 
+.report__epilogue {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--vermilion);
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 0 6px 6px 0;
+}
+
+.report__epilogue p {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  line-height: 1.9;
+  color: var(--ink);
+  text-indent: 2em;
+}
+
+.report__epilogue p:last-child {
+  margin-bottom: 0;
+}
+
 /* ===== 2D 游戏舞台与 HUD ===== */
 .stage {
   position: fixed;
