@@ -1364,6 +1364,13 @@ body {
   font-size: 12px;
   opacity: 0.8;
 }
+.industry-page__game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0 4px;
+}
 @media (max-width: 860px) {
   .craft-page__body {
     grid-template-columns: 1fr;

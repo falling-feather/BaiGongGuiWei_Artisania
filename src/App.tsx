@@ -9,7 +9,7 @@ import { CraftExperienceModal } from './components/CraftExperienceModal';
 import { CraftPage } from './components/CraftPage';
 import { hasCraftPage } from './components/craftPageThemes';
 import { NpcDialogModal } from './components/NpcDialogModal';
-import { MiniGameModal } from './components/MiniGameModal';
+import { IndustryPage } from './components/IndustryPage';
 import { RegionPanel } from './components/RegionPanel';
 import { WorldMapModal } from './components/WorldMapModal';
 import { InventoryModal } from './components/InventoryModal';
@@ -162,7 +162,6 @@ export function App() {
             onOpenSettings={() => setSettingsOpen(true)}
           />
           <CraftExperienceModal craftId={activeCraftId} onClose={() => setActiveCraftId(null)} />
-          <MiniGameModal industryId={activeIndustryId} onClose={() => setActiveIndustryId(null)} />
           <NpcDialogModal npcId={activeNpcId} onClose={() => setActiveNpcId(null)} />
           <RegionPanel open={panelOpen} onClose={() => setPanelOpen(false)} />
           <WorldMapModal open={mapOpen} onClose={() => setMapOpen(false)} />
@@ -189,6 +188,9 @@ export function App() {
           />
           {activeCraftPageId && (
             <CraftPage craftId={activeCraftPageId} onClose={() => setActiveCraftPageId(null)} />
+          )}
+          {activeIndustryId && (
+            <IndustryPage industryId={activeIndustryId} onClose={() => setActiveIndustryId(null)} />
           )}
         </>
       )}

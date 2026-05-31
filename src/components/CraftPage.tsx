@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { METRIC_LABELS, orderPrice } from '../engine';
 import { RESOURCE_INDEX } from '../data';
-import { CRAFT_PAGE_THEMES } from './craftPageThemes';
+import { getCraftPageTheme } from './craftPageThemes';
 
 /**
  * 工艺独立页 —— 整页工坊（替代弹窗）。
- * 已在 craftPageThemes 登记的手艺以此页呈现：左侧主题立绘/工坊story，右侧工坊台交互。
+ * 所有手艺均以此页呈现：左侧主题立绘/工坊story，右侧工坊台交互。
+ * 定制主题取自 craftPageThemes，未登记者由 getCraftPageTheme 自动生成通用主题。
  * 交互逻辑（亲手制作 / 接订单）与弹窗一致，走同样的 reducer 动作，保证闭环不变。
  */
 export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () => void }) {
@@ -19,7 +20,7 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
 
   const def = content.crafts.find((c) => c.id === craftId);
   const state = craftStates.find((c) => c.craftId === craftId);
-  const theme = CRAFT_PAGE_THEMES[craftId];
+  const theme = getCraftPageTheme(craftId);
   if (!def || !state || !theme) return null;
 
   const toggleSkip = (id: string) =>
