@@ -18,6 +18,7 @@ import type {
   RegionDef,
   AchievementDef,
   StoryBeat,
+  ResourceDef,
 } from './types';
 import { applyDelta, aggregateTownMetrics, METRIC_KEYS, METRIC_LABELS } from './metrics';
 import { createInitialState, LABOR_PER_TURN } from './state';
@@ -36,18 +37,17 @@ export interface GameContent {
   achievements?: AchievementDef[];
   /** 剧情节点（可选） */
   story?: StoryBeat[];
+  /** 资源词典（可选，仅用于日志/展示的名称查找） */
+  resources?: ResourceDef[];
 }
 
 /** 解锁一个新地区的费用（文） */
 const REGION_UNLOCK_COST = 30;
 
-/** 每回合自然补充的资源 */
+/** 每回合自然补充的资源（轻量半成品回补，模拟持续供料） */
 const TURN_RESOURCE_REGEN: Record<string, number> = {
-  plantDye: 2,
-  water: 4,
-  cloth: 2,
-  bamboo: 2,
-  tools: 1,
+  indigoVat: 2,
+  bambooSplit: 2,
 };
 
 const MAX_LOG = 50;
@@ -172,6 +172,15 @@ function runProcess(
   const incomeBase = 8 + stepsSkipped.length * 2;
   resources.coin = (resources.coin ?? 0) + incomeBase;
 
+  // 供应链终端：消耗 material 后产出一件成品（product 层）
+  let productNote = '';
+  const outputId = craftDef.outputResourceId;
+  if (outputId) {
+    resources[outputId] = (resources[outputId] ?? 0) + 1;
+    const productName = content.resources?.find((r) => r.id === outputId)?.name ?? outputId;
+    productNote = `，得「${productName}」×1`;
+  }
+
   const crafts = state.crafts.map((c) =>
     c.craftId === craftId ? { ...c, metrics: craftMetrics, produced: c.produced + 1 } : c,
   );
@@ -181,7 +190,7 @@ function runProcess(
     ...state,
     resources,
     crafts,
-    log: pushLog(state.log, `「${craftDef.name}」完成一批出品${skipNote}，入账 ${incomeBase} 文。`),
+    log: pushLog(state.log, `「${craftDef.name}」完成一批出品${skipNote}${productNote}，入账 ${incomeBase} 文。`),
   };
   return recompute(next);
 }

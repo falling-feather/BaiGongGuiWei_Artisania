@@ -51,6 +51,8 @@ export interface Craft {
   synergyTags: string[];
   /** 传承风险描述（用于事件/提示） */
   risks: string[];
+  /** 一批工艺产出的成品资源键（product 层）。供应链终端，缺省则不产实物。 */
+  outputResourceId?: string;
 }
 
 /** 学徒性格特质 */

@@ -181,6 +181,30 @@ describe('gameReducer', () => {
     expect(ids).toContain('after-trend');
   });
 
+  it('供应链：RUN_PROCESS 消耗半成品并产出成品', () => {
+    const s0 = freshState();
+    const before = s0.resources.indigoVat ?? 0;
+    const s1 = gameReducer(
+      s0,
+      { type: 'RUN_PROCESS', craftId: 'indigo-dyeing', skipStepIds: [] },
+      content,
+    );
+    expect(s1.resources.indigoCloth ?? 0).toBe(1);
+    expect(s1.resources.indigoVat ?? 0).toBe(before - 3);
+  });
+
+  it('供应链：半成品不足时拒绝开工，不产成品也不计数', () => {
+    let s = freshState();
+    s = { ...s, resources: { ...s.resources, indigoVat: 1 } };
+    const s1 = gameReducer(
+      s,
+      { type: 'RUN_PROCESS', craftId: 'indigo-dyeing', skipStepIds: [] },
+      content,
+    );
+    expect(s1.resources.indigoCloth ?? 0).toBe(0);
+    expect(s1.crafts.find((c) => c.craftId === 'indigo-dyeing')!.produced).toBe(0);
+  });
+
   it('个性化结局：守正抉择 + 高传承的尾声呼应玩家名号', () => {
     let s = gameReducer(freshState(), { type: 'NEW_GAME', seed: 1, playerName: '阿青' }, content);
     // 立心守正 + 风向坚守

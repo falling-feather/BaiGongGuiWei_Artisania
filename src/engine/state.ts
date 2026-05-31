@@ -10,11 +10,8 @@ export const DEFAULT_MAX_TURNS = 12;
 
 export const INITIAL_RESOURCES = {
   coin: 20,
-  plantDye: 6,
-  water: 10,
-  cloth: 6,
-  bamboo: 6,
-  tools: 3,
+  indigoVat: 6,
+  bambooSplit: 6,
   /** 每回合可用人力，回合结束时重置 */
   labor: 8,
 };
@@ -28,11 +25,8 @@ export const DEV_NAME = 'fallingfeather';
 /** 开发者模式的「无限」资源池 */
 export const DEV_RESOURCES = {
   coin: 999999,
-  plantDye: 999999,
-  water: 999999,
-  cloth: 999999,
-  bamboo: 999999,
-  tools: 999999,
+  indigoVat: 999999,
+  bambooSplit: 999999,
   labor: 999999,
 };
 
