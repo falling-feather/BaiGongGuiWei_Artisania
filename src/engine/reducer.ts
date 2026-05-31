@@ -14,6 +14,8 @@ import type {
   CraftState,
   GameReport,
   ResourcePool,
+  IndustryDef,
+  RegionDef,
 } from './types';
 import { applyDelta, aggregateTownMetrics, METRIC_KEYS, METRIC_LABELS } from './metrics';
 import { createInitialState, LABOR_PER_TURN } from './state';
@@ -24,7 +26,14 @@ export interface GameContent {
   crafts: Craft[];
   apprentices: Apprentice[];
   events: GameEvent[];
+  /** 基础产业（可选，地区优先世界用） */
+  industries?: IndustryDef[];
+  /** 地区档案（可选，地区优先世界用） */
+  regions?: RegionDef[];
 }
+
+/** 解锁一个新地区的费用（文） */
+const REGION_UNLOCK_COST = 30;
 
 /** 每回合自然补充的资源 */
 const TURN_RESOURCE_REGEN: Record<string, number> = {
@@ -216,6 +225,109 @@ function endTurn(state: GameState, content: GameContent): GameState {
   return next;
 }
 
+/** 在当前地区运行一项基础产业：消耗原料+人力，产出半成品（受 quality 缩放） */
+function gatherResource(
+  state: GameState,
+  content: GameContent,
+  industryId: string,
+  quality: number,
+): GameState {
+  const industries = content.industries ?? [];
+  const regions = content.regions ?? [];
+  const industry = industries.find((i) => i.id === industryId);
+  if (!industry) return state;
+
+  // 校验：该产业需在当前地区可用
+  const region = regions.find((r) => r.id === state.currentRegion);
+  if (region && !region.industries.includes(industryId)) {
+    return {
+      ...state,
+      log: pushLog(state.log, `本地（${region.name}）不具备「${industry.name}」的条件。`),
+    };
+  }
+
+  // 校验人力
+  if ((state.resources.labor ?? 0) < industry.laborCost) {
+    return {
+      ...state,
+      log: pushLog(state.log, `人力不足，无法进行「${industry.name}」（需 ${industry.laborCost} 工时）。`),
+    };
+  }
+  // 校验输入原料
+  for (const [key, amount] of Object.entries(industry.input)) {
+    if ((state.resources[key] ?? 0) < amount) {
+      return {
+        ...state,
+        log: pushLog(state.log, `原料不足，无法进行「${industry.name}」（缺 ${key}）。`),
+      };
+    }
+  }
+
+  // 结算：扣除输入与人力，按 quality 决定产量（1–3 倍 yield）
+  const q = Math.max(0, Math.min(1, quality));
+  const produced = Math.max(1, Math.round(industry.yield * (1 + q)));
+  const resources: ResourcePool = {
+    ...state.resources,
+    labor: state.resources.labor - industry.laborCost,
+  };
+  for (const [key, amount] of Object.entries(industry.input)) {
+    resources[key] = (resources[key] ?? 0) - amount;
+  }
+  resources[industry.output] = (resources[industry.output] ?? 0) + produced;
+
+  return {
+    ...state,
+    resources,
+    log: pushLog(
+      state.log,
+      `「${industry.name}」产出 ${produced} 份${quality >= 0.8 ? '上品' : ''}。`,
+    ),
+  };
+}
+
+/** 前往一个已解锁的地区 */
+function travel(state: GameState, content: GameContent, regionId: string): GameState {
+  if (!state.unlockedRegions.includes(regionId)) {
+    return { ...state, log: pushLog(state.log, '该地区尚未解锁，无法前往。') };
+  }
+  if (state.currentRegion === regionId) return state;
+  const region = (content.regions ?? []).find((r) => r.id === regionId);
+  return {
+    ...state,
+    currentRegion: regionId,
+    log: pushLog(state.log, `起程前往「${region?.name ?? regionId}」。`),
+  };
+}
+
+/** 花费解锁一个与已解锁地区相邻的新地区 */
+function unlockRegion(state: GameState, content: GameContent, regionId: string): GameState {
+  const regions = content.regions ?? [];
+  const target = regions.find((r) => r.id === regionId);
+  if (!target) return state;
+  if (state.unlockedRegions.includes(regionId)) return state;
+
+  // 需与某已解锁地区相邻
+  const adjacent = state.unlockedRegions.some((uid) => {
+    const r = regions.find((x) => x.id === uid);
+    return r?.neighbors.includes(regionId) || target.neighbors.includes(uid);
+  });
+  if (!adjacent) {
+    return { ...state, log: pushLog(state.log, `「${target.name}」与已探地区不相邻，无法直达。`) };
+  }
+  if ((state.resources.coin ?? 0) < REGION_UNLOCK_COST) {
+    return {
+      ...state,
+      log: pushLog(state.log, `路资不足，解锁「${target.name}」需 ${REGION_UNLOCK_COST} 文。`),
+    };
+  }
+  return {
+    ...state,
+    resources: { ...state.resources, coin: (state.resources.coin ?? 0) - REGION_UNLOCK_COST },
+    unlockedRegions: [...state.unlockedRegions, regionId],
+    log: pushLog(state.log, `打通商路，解锁新地区「${target.name}」。`),
+  };
+}
+
 /** 生成结局命运报告 */
 function generateReport(state: GameState): GameReport {
   const m = state.metrics;
@@ -256,6 +368,7 @@ export function gameReducer(
         content.apprentices,
         action.seed ?? Date.now() % 2147483647,
         state.maxTurns,
+        content.regions ?? [],
       );
 
     case 'RUN_PROCESS':
@@ -296,6 +409,18 @@ export function gameReducer(
     case 'END_TURN':
       if (state.status !== 'playing') return state;
       return endTurn(state, content);
+
+    case 'GATHER_RESOURCE':
+      if (state.status !== 'playing') return state;
+      return gatherResource(state, content, action.industryId, action.quality ?? 1);
+
+    case 'TRAVEL':
+      if (state.status !== 'playing') return state;
+      return travel(state, content, action.regionId);
+
+    case 'UNLOCK_REGION':
+      if (state.status !== 'playing') return state;
+      return unlockRegion(state, content, action.regionId);
 
     default:
       return state;

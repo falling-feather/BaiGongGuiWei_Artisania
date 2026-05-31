@@ -3,7 +3,7 @@
  * engine 保持「内容无关」：手艺/学徒数据由调用方（store 层）注入，
  * 这样 engine 可被独立单元测试，也可未来移到后端做权威结算。
  */
-import type { Craft, Apprentice, GameState, CraftState } from './types';
+import type { Craft, Apprentice, GameState, CraftState, RegionDef } from './types';
 import { aggregateTownMetrics } from './metrics';
 
 export const DEFAULT_MAX_TURNS = 12;
@@ -27,6 +27,7 @@ export function createInitialState(
   apprentices: Apprentice[],
   seed: number,
   maxTurns: number = DEFAULT_MAX_TURNS,
+  regions: RegionDef[] = [],
 ): GameState {
   const craftStates: CraftState[] = crafts.map((craft) => ({
     craftId: craft.id,
@@ -34,6 +35,9 @@ export function createInitialState(
     unlocked: true,
     produced: 0,
   }));
+
+  const unlockedRegions = regions.filter((r) => r.startUnlocked).map((r) => r.id);
+  const currentRegion = unlockedRegions[0] ?? '';
 
   return {
     seed,
@@ -47,5 +51,7 @@ export function createInitialState(
     log: ['百工镇的故事，从这一季开始。'],
     status: 'playing',
     report: null,
+    unlockedRegions,
+    currentRegion,
   };
 }

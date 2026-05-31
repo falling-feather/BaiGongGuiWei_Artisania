@@ -14,13 +14,15 @@ import {
   type GameAction,
   type GameContent,
 } from '../engine';
-import { CRAFTS, STARTING_APPRENTICES, EVENTS } from '../data';
+import { CRAFTS, STARTING_APPRENTICES, EVENTS, INDUSTRIES, REGIONS } from '../data';
 import { localStorageAdapter } from '../storage/localStorageAdapter';
 
 const content: GameContent = {
   crafts: CRAFTS,
   apprentices: STARTING_APPRENTICES,
   events: EVENTS,
+  industries: INDUSTRIES,
+  regions: REGIONS,
 };
 
 interface GameStore {
@@ -35,7 +37,13 @@ interface GameStore {
 }
 
 function bootstrapState(): GameState {
-  return createInitialState(content.crafts, content.apprentices, Date.now() % 2147483647);
+  return createInitialState(
+    content.crafts,
+    content.apprentices,
+    Date.now() % 2147483647,
+    undefined,
+    content.regions,
+  );
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({

@@ -124,6 +124,10 @@ export interface GameState {
   status: 'playing' | 'ended';
   /** 结局报告，仅在 status==='ended' 时存在 */
   report: GameReport | null;
+  /** 已解锁的地区 id 列表（地区优先世界） */
+  unlockedRegions: RegionId[];
+  /** 玩家当前所在地区 id（采料/产业在此地进行） */
+  currentRegion: RegionId;
 }
 
 /** 结局命运报告 */
@@ -142,7 +146,13 @@ export type GameAction =
   | { type: 'TAKE_ORDER'; craftId: string }
   | { type: 'HOLD_EXHIBITION' }
   | { type: 'RESOLVE_EVENT'; choiceId: string }
-  | { type: 'END_TURN' };
+  | { type: 'END_TURN' }
+  /** 在当前地区运行一项基础产业（手搓原料），quality 0–1 来自微交互 */
+  | { type: 'GATHER_RESOURCE'; industryId: string; quality?: number }
+  /** 前往一个已解锁的地区 */
+  | { type: 'TRAVEL'; regionId: string }
+  /** 花费解锁一个与已解锁地区相邻的新地区 */
+  | { type: 'UNLOCK_REGION'; regionId: string };
 
 // ───────────────────────────────────────────────────────────────────────────
 // 地区 · 资源 · 供应链（地区优先世界设计，详见 doc/项目规划.md 第三部分）
