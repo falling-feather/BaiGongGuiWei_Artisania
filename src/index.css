@@ -292,6 +292,98 @@ body {
   gap: 10px;
 }
 
+/* ===== 镇务行脚面板 ===== */
+.modal--wide {
+  max-width: 640px;
+  max-height: 84vh;
+  overflow-y: auto;
+}
+
+.panel-block {
+  margin-bottom: 18px;
+}
+
+.panel-block__title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--indigo);
+  margin: 0 0 8px;
+  border-left: 3px solid var(--bamboo);
+  padding-left: 8px;
+}
+
+.panel-empty {
+  font-size: 12px;
+  opacity: 0.6;
+  margin: 4px 0;
+}
+
+.stock-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.stock-chip {
+  font-size: 12px;
+  background: rgba(60, 90, 70, 0.1);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+
+.stock-chip b {
+  color: var(--bamboo);
+}
+
+.ind-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ind-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.ind-item__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ind-item__name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ind-item__io {
+  font-size: 11px;
+  color: var(--indigo-soft);
+}
+
+.ind-item__blurb {
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.region-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .report__metrics {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

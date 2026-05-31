@@ -2,7 +2,7 @@ import { useGameStore } from '../store/gameStore';
 import { METRIC_KEYS, METRIC_LABELS, zoneOf, type Metrics } from '../engine';
 
 /** 叠加在游戏画面上的抬头显示：四维数值 + 提示 + 镇务按钮 */
-export function Hud({ hint }: { hint: string | null }) {
+export function Hud({ hint, onOpenPanel }: { hint: string | null; onOpenPanel: () => void }) {
   const metrics = useGameStore((s) => s.state.metrics);
   const turn = useGameStore((s) => s.state.turn);
   const maxTurns = useGameStore((s) => s.state.maxTurns);
@@ -27,6 +27,9 @@ export function Hud({ hint }: { hint: string | null }) {
         </div>
         <div className="hud__season">
           第 {turn} / {maxTurns} 季
+          <button className="btn btn--sm" disabled={!playing} onClick={onOpenPanel}>
+            镇务行脚
+          </button>
           <button
             className="btn btn--sm"
             disabled={!playing || hasEvent}
