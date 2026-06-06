@@ -14,7 +14,7 @@ import { ALL_NPCS, NPCS } from '../../data/npcs';
 import { QUESTS } from '../../data/quests';
 import { ITEM_DESCRIPTOR_RULES } from '../../data/itemDescriptors';
 import { ACTIVITY_CHALLENGES } from '../../data/activityChallenges';
-import { REGION_ACTIVITIES, REGION_CONTENT } from '../../data/regionContent';
+import { REGION_ACTIVITIES, REGION_CONTENT, REGION_ROUTES } from '../../data/regionContent';
 import { localIndustriesForRegion } from '../../data/regionEconomy';
 import { orderPrice } from '../reducer';
 import { buildRegionSpec } from '../../game/regionSpec';
@@ -281,6 +281,32 @@ describe('gameReducer', () => {
     expect(spec?.activities.map((activity) => activity.id)).toContain('jn-longquan-sword-forge');
     const lu = spec?.npcs.find((npc) => npc.id === 'jn-lu-hanquan');
     expect(lu?.anchorId).toBe('jn-longquan-sword-forge');
+  });
+
+  it('每条大地区邻接都有结构化路线定义', () => {
+    const routePairs = new Set(
+      REGION_ROUTES.map((route) => [route.fromRegionId, route.toRegionId].sort().join('|')),
+    );
+    for (const region of REGIONS) {
+      for (const neighborId of region.neighbors) {
+        if (!REGIONS.some((candidate) => candidate.id === neighborId)) continue;
+        expect(routePairs.has([region.id, neighborId].sort().join('|'))).toBe(true);
+      }
+    }
+  });
+
+  it('地图出入口会携带路线名、路资和解锁提示', () => {
+    const s = freshState();
+    for (const region of REGIONS) {
+      const spec = buildRegionSpec(region.id, s);
+      expect(spec?.gates.length).toBe(region.neighbors.length);
+      for (const gate of spec?.gates ?? []) {
+        expect(gate.routeId).toBeTruthy();
+        expect(gate.routeName).toBeTruthy();
+        expect(gate.unlockCost).toBeGreaterThan(0);
+        expect(gate.unlockHint).toBeTruthy();
+      }
+    }
   });
 
   it('GATHER_RESOURCE 拒绝本地不具备的产业', () => {

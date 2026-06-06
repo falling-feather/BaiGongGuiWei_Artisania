@@ -384,8 +384,10 @@ export class StreetScene extends Phaser.Scene {
       })),
       ...spec.gates.map((g) => ({
         kind: 'gate' as const,
-        label: g.unlocked ? `往 ${g.name}` : `${g.name}·未通`,
-        hint: g.unlocked ? `按 E 前往「${g.name}」` : `按 E 开商路解锁「${g.name}」(30 文)`,
+        label: g.unlocked ? `往 ${g.name}` : `${g.routeName ?? g.name}·未通`,
+        hint: g.unlocked
+          ? `按 E 经「${g.routeName ?? '驿路'}」前往「${g.name}」`
+          : `按 E 开通「${g.routeName ?? g.name}」解锁「${g.name}」(${g.unlockCost ?? 30} 文)`,
         payload: g.regionId,
         unlocked: g.unlocked,
         tex: TEX.gate,

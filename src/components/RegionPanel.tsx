@@ -2,7 +2,7 @@ import { useGameStore } from '../store/gameStore';
 import { RESOURCE_INDEX } from '../data';
 import { localIndustriesForRegion } from '../data/regionEconomy';
 import { emitBus } from '../game/EventBus';
-import type { CropId, IndustryDef } from '../engine';
+import type { CropId, IndustryDef, RegionDef, RouteSpec } from '../engine';
 
 const CROP_OPTIONS: { id: CropId; name: string; output: string }[] = [
   { id: 'indigo', name: '靛草', output: '靛蓝草' },
@@ -22,6 +22,18 @@ const PHASE_LABEL = {
   night: '夜间',
 } as const;
 
+function routeTouches(route: RouteSpec, regionId: string): boolean {
+  return route.fromRegionId === regionId || route.toRegionId === regionId;
+}
+
+function otherRouteEnd(route: RouteSpec, regionId: string): string {
+  return route.fromRegionId === regionId ? route.toRegionId : route.fromRegionId;
+}
+
+function routeCost(route: RouteSpec): number {
+  return route.unlockCost ?? route.requirements?.coin ?? 30;
+}
+
 /** 资源键 → 中文名（无定义则原样显示） */
 function resName(key: string): string {
   return RESOURCE_INDEX[key]?.name ?? key;
@@ -37,7 +49,7 @@ function describeInput(input: Record<string, number>): string {
  * 镇务/行脚面板：让玩家在 2D 世界之外直接操作供应链。
  *  - 查看当前地区与库存
  *  - 在本地产业「采料」（GATHER_RESOURCE）
- *  - 前往已解锁地区（TRAVEL）/ 解锁相邻地区（UNLOCK_REGION）
+ *  - 查看当前场景出入口连接的路线；大地区迁移/解锁交给场景 gate 交互
  */
 export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const content = useGameStore((s) => s.content);
@@ -58,17 +70,18 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const region = regions.find((r) => r.id === currentRegion);
   const labor = resources.labor ?? 0;
   const currentSub = region?.subregions.find((s) => s.id === currentSubregion) ?? region?.subregions[0];
-  const routeSpecs = content.regionContent?.flatMap((spec) => spec.routes) ?? [];
-  const routeForTarget = (regionId: string) =>
-    routeSpecs.find((route) => (
-      route.toRegionId === regionId && unlockedRegions.includes(route.fromRegionId)
-    ) || (
-      route.fromRegionId === regionId && unlockedRegions.includes(route.toRegionId)
-    ));
-  const routeCost = (regionId: string) => {
-    const route = routeForTarget(regionId);
-    return route?.unlockCost ?? route?.requirements?.coin ?? 30;
-  };
+  const routeSpecs = Array.from(
+    new Map((content.regionContent?.flatMap((spec) => spec.routes) ?? []).map((route) => [route.id, route])).values(),
+  );
+  const currentRouteRows = routeSpecs
+    .filter((route) => routeTouches(route, currentRegion))
+    .map((route) => ({
+      route,
+      target: regions.find((r) => r.id === otherRouteEnd(route, currentRegion)),
+    }))
+    .filter((row): row is { route: RouteSpec; target: RegionDef } => Boolean(row.target));
+  const openedRouteRows = currentRouteRows.filter((row) => unlockedRegions.includes(row.target.id));
+  const frontierRouteRows = currentRouteRows.filter((row) => !unlockedRegions.includes(row.target.id));
 
   const localIndustries: IndustryDef[] = localIndustriesForRegion(region, industries);
   const currentActivities = (content.activities ?? []).filter(
@@ -89,20 +102,6 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
     if (activity.availablePhases && !activity.availablePhases.includes(calendar.phase)) return false;
     return Object.entries(activity.resourceCost ?? {}).every(([k, v]) => (resources[k] ?? 0) >= v);
   };
-
-  // 与已解锁地区相邻、但自身未解锁的地区
-  const reachable = regions.filter((r) => {
-    if (unlockedRegions.includes(r.id)) return false;
-    return unlockedRegions.some((uid) => {
-      const u = regions.find((x) => x.id === uid);
-      return u?.neighbors.includes(r.id) || r.neighbors.includes(uid);
-    });
-  });
-
-  // 已解锁、非当前的可前往地区
-  const travelTargets = regions.filter(
-    (r) => unlockedRegions.includes(r.id) && r.id !== currentRegion,
-  );
 
   // 库存中数量 > 0 的资源（含 coin/labor）
   const stock = Object.entries(resources).filter(([, v]) => v > 0);
@@ -266,44 +265,43 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
           </section>
         )}
 
-        {travelTargets.length > 0 && (
+        {openedRouteRows.length > 0 && (
           <section className="panel-block">
-            <h4 className="panel-block__title">前往已通地区</h4>
-            <div className="region-chips">
-              {travelTargets.map((r) => (
-                <button
-                  key={r.id}
-                  className="btn btn--sm btn--ghost"
-                  disabled={!playing}
-                  onClick={() => dispatch({ type: 'TRAVEL', regionId: r.id })}
-                >
-                  {r.name}
-                </button>
+            <h4 className="panel-block__title">当前出入口 · 已通路线</h4>
+            <ul className="ind-list">
+              {openedRouteRows.map(({ route, target }) => (
+                <li className="ind-item" key={route.id}>
+                  <div className="ind-item__main">
+                    <span className="ind-item__name">{route.name} · {target.name}</span>
+                    <span className="ind-item__io">已通行 · 请在当前场景寻找出入口牌坊，按 E 前往</span>
+                    <span className="ind-item__blurb">{route.preview ?? target.blurb}</span>
+                  </div>
+                </li>
               ))}
-            </div>
+            </ul>
           </section>
         )}
 
         <section className="panel-block">
-          <h4 className="panel-block__title">开拓商路 · 解锁相邻</h4>
-          {reachable.length === 0 && <p className="panel-empty">暂无可直达的新地区。</p>}
-          <div className="region-chips">
-            {reachable.map((r) => {
-              const route = routeForTarget(r.id);
-              const cost = routeCost(r.id);
+          <h4 className="panel-block__title">当前出入口 · 可开拓路线</h4>
+          {frontierRouteRows.length === 0 && <p className="panel-empty">当前地区暂无可开拓的新路线。</p>}
+          <ul className="ind-list">
+            {frontierRouteRows.map(({ route, target }) => {
+              const cost = routeCost(route);
+              const enoughCoin = (resources.coin ?? 0) >= cost;
               return (
-                <button
-                  key={r.id}
-                  className="btn btn--sm"
-                  disabled={!playing || (resources.coin ?? 0) < cost}
-                  title={route ? `${route.name}：${route.unlockHint}` : r.blurb}
-                  onClick={() => dispatch({ type: 'UNLOCK_REGION', regionId: r.id })}
-                >
-                  {route?.name ?? r.name} · {cost} 文
-                </button>
+                <li className="ind-item" key={route.id}>
+                  <div className="ind-item__main">
+                    <span className="ind-item__name">{route.name} · {target.name}</span>
+                    <span className="ind-item__io">
+                      路资 {cost} 文 · {enoughCoin ? '可在场景出入口开通' : '路资不足'}
+                    </span>
+                    <span className="ind-item__blurb">{route.unlockHint}</span>
+                  </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
         </section>
 
         <div className="btn-row">

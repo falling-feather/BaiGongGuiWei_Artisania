@@ -3,7 +3,7 @@
  * 让 Phaser 场景与数据层解耦：场景只认 RegionMapSpec。
  */
 import type { GameState, NpcDef } from '../engine';
-import { CRAFT_INDEX, INDUSTRIES, REGION_INDEX, activitiesForSubregion, npcsForRegion } from '../data';
+import { CRAFT_INDEX, INDUSTRIES, REGION_INDEX, REGION_ROUTES, activitiesForSubregion, npcsForRegion } from '../data';
 import { industryTierFor, localIndustriesForRegion } from '../data/regionEconomy';
 import type { RegionMapSpec, IndustryTier, TerrainKind, WeatherKind, WeatherSeason } from './EventBus';
 
@@ -84,15 +84,36 @@ export function buildRegionSpec(regionId: string, state: GameState): RegionMapSp
     kind: activity.kind,
   }));
 
-  // 相邻地区中已定义的，作为出入口
-  const gates = region.neighbors
-    .map((id) => REGION_INDEX[id])
-    .filter((r): r is NonNullable<typeof r> => Boolean(r))
-    .map((r) => ({
-      regionId: r.id,
-      name: r.name,
-      unlocked: state.unlockedRegions.includes(r.id),
-    }));
+  // 出入口由结构化路线驱动；neighbors 仅作为遗漏路线的兼容兜底。
+  const routeTargets = new Set<string>();
+  const gates: RegionMapSpec['gates'] = REGION_ROUTES
+    .filter((route) => route.fromRegionId === region.id || route.toRegionId === region.id)
+    .map((route) => {
+      const targetId = route.fromRegionId === region.id ? route.toRegionId : route.fromRegionId;
+      const target = REGION_INDEX[targetId];
+      if (!target) return null;
+      routeTargets.add(target.id);
+      return {
+        regionId: target.id,
+        name: target.name,
+        unlocked: state.unlockedRegions.includes(target.id),
+        routeId: route.id,
+        routeName: route.name,
+        unlockCost: route.unlockCost ?? route.requirements?.coin,
+        unlockHint: route.unlockHint,
+      };
+    })
+    .filter((gate): gate is NonNullable<typeof gate> => Boolean(gate));
+  for (const id of region.neighbors) {
+    if (routeTargets.has(id)) continue;
+    const target = REGION_INDEX[id];
+    if (!target) continue;
+    gates.push({
+      regionId: target.id,
+      name: target.name,
+      unlocked: state.unlockedRegions.includes(target.id),
+    });
+  }
 
   return {
     regionId: region.id,

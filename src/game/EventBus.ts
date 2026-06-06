@@ -46,7 +46,15 @@ export interface RegionMapSpec {
   industries: { id: string; name: string; tier: IndustryTier }[];
   crafts: { id: string; name: string }[];
   activities: { id: string; name: string; kind: ActivityKind }[];
-  gates: { regionId: string; name: string; unlocked: boolean }[];
+  gates: {
+    regionId: string;
+    name: string;
+    unlocked: boolean;
+    routeId?: string;
+    routeName?: string;
+    unlockCost?: number;
+    unlockHint?: string;
+  }[];
   /** 本地 NPC（游客 + 店铺关联人物） */
   npcs: RegionNpcSpec[];
 }
