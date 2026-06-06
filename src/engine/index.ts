@@ -7,3 +7,4 @@ export * from './metrics';
 export * from './rng';
 export * from './state';
 export * from './reducer';
+export * from './npcFunctions';

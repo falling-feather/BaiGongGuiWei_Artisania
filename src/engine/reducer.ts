@@ -33,10 +33,12 @@ import type {
   PlayerAttributes,
   RegionContentSpec,
   RouteSpec,
+  NpcFunctionKind,
 } from './types';
 import { applyDelta, aggregateTownMetrics, METRIC_KEYS, METRIC_LABELS } from './metrics';
 import { createCalendar, createInitialState, LABOR_PER_TURN, titleForRank } from './state';
 import { createRng, weightedPick } from './rng';
+import { NPC_FUNCTION_LABELS, npcFunctionNeedsItem, npcFunctionRequirement } from './npcFunctions';
 
 /** reducer 运行所需的内容包（由 store 层从 data 注入） */
 export interface GameContent {
@@ -144,6 +146,7 @@ function emptyNpcState(): NpcRuntimeState {
     lastGreetingIndex: 0,
     knownTopics: [],
     revealedIntelIds: [],
+    usedFunctionDays: {},
   };
 }
 
@@ -1099,6 +1102,10 @@ function reduce(
       if (state.status !== 'playing') return state;
       return inscribeItem(state, content, action.itemId, action.npcId, action.inscription);
 
+    case 'USE_NPC_FUNCTION':
+      if (state.status !== 'playing') return state;
+      return useNpcFunction(state, content, action.npcId, action.functionKind, action.itemId);
+
     default:
       return state;
   }
@@ -1324,6 +1331,259 @@ function inscribeItem(
     itemInstances: state.itemInstances.map((item) => (item.id === itemId ? inscribed : item)),
     log: pushLog(state.log, `${npc?.name ?? '来客'}为「${inscribed.displayName}」题跋：${inscription}`),
   }, { knowledge: 1, mind: 1 });
+}
+
+function routeNameForId(content: GameContent, routeId: string) {
+  const route = (content.regionContent ?? [])
+    .flatMap((entry) => entry.routes)
+    .find((candidate) => candidate.id === routeId);
+  return route?.name ?? routeId;
+}
+
+function currentRegionRouteIds(state: GameState, content: GameContent) {
+  const routes = (content.regionContent ?? []).flatMap((entry) => entry.routes);
+  return routes
+    .filter((route) => route.fromRegionId === state.currentRegion || route.toRegionId === state.currentRegion)
+    .map((route) => route.id);
+}
+
+function markNpcFunctionUsed(
+  runtime: NpcRuntimeState,
+  functionKind: NpcFunctionKind,
+  day: number,
+  affinity: number,
+  extra?: Partial<NpcRuntimeState>,
+): NpcRuntimeState {
+  return {
+    ...runtime,
+    ...extra,
+    affinity,
+    stage: relationshipStageForAffinity(affinity),
+    lastTalkTurn: extra?.lastTalkTurn ?? runtime.lastTalkTurn,
+    usedFunctionDays: {
+      ...(runtime.usedFunctionDays ?? {}),
+      [functionKind]: day,
+    },
+  };
+}
+
+function functionAffinityGain(functionKind: NpcFunctionKind) {
+  if (functionKind === 'collab') return 5;
+  if (functionKind === 'appraisal') return 4;
+  return 3;
+}
+
+function updateNpcAffinityAfterFunction(
+  state: GameState,
+  npcId: string,
+  runtime: NpcRuntimeState,
+  functionKind: NpcFunctionKind,
+  gain = functionAffinityGain(functionKind),
+) {
+  const cur = runtime.affinity || state.npcAffinity[npcId] || 0;
+  const nextAffinity = Math.min(AFFINITY_MAX, cur + gain);
+  return {
+    cur,
+    nextAffinity,
+    runtime: markNpcFunctionUsed(runtime, functionKind, state.calendar.day, nextAffinity, {
+      lastTalkTurn: state.turn,
+    }),
+  };
+}
+
+function itemShortName(item: ItemInstance, content: GameContent) {
+  return item.displayName ?? resourceName(content, item.resourceId);
+}
+
+function functionBaseState(
+  state: GameState,
+  npcId: string,
+  runtime: NpcRuntimeState,
+  functionKind: NpcFunctionKind,
+  flags: Iterable<string> = [],
+) {
+  const nextFlags = new Set(state.flags);
+  nextFlags.add(`npc-function:${functionKind}:${npcId}`);
+  for (const flag of flags) nextFlags.add(flag);
+  return {
+    ...state,
+    flags: [...nextFlags],
+    npcAffinity: { ...state.npcAffinity, [npcId]: runtime.affinity },
+    npcStates: { ...state.npcStates, [npcId]: runtime },
+  };
+}
+
+function useNpcFunction(
+  state: GameState,
+  content: GameContent,
+  npcId: string,
+  functionKind: NpcFunctionKind,
+  itemId?: string,
+): GameState {
+  const npc = (content.npcs ?? []).find((candidate) => candidate.id === npcId);
+  if (!npc) return state;
+  const label = NPC_FUNCTION_LABELS[functionKind] ?? functionKind;
+  if (!(npc.functions ?? []).includes(functionKind)) {
+    return { ...state, log: pushLog(state.log, `「${npc.name}」暂不能提供「${label}」。`) };
+  }
+  if (functionKind === 'quest') {
+    return { ...state, log: pushLog(state.log, `「${npc.name}」的委托已列在委托栏中，可按条件交付。`) };
+  }
+  const runtime = state.npcStates[npcId] ?? emptyNpcState();
+  const affinity = runtime.affinity || state.npcAffinity[npcId] || 0;
+  const requiredAffinity = npcFunctionRequirement(functionKind);
+  if (affinity < requiredAffinity) {
+    return {
+      ...state,
+      log: pushLog(state.log, `「${npc.name}」还不愿提供「${label}」（好感 ${affinity}/${requiredAffinity}）。`),
+    };
+  }
+  if (runtime.usedFunctionDays?.[functionKind] === state.calendar.day) {
+    return { ...state, log: pushLog(state.log, `今日已向「${npc.name}」请过「${label}」，明日再来。`) };
+  }
+  if (npcFunctionNeedsItem(functionKind) && !itemId) {
+    return { ...state, log: pushLog(state.log, `请选择一件作品，再请「${npc.name}」进行「${label}」。`) };
+  }
+
+  if (functionKind === 'mentor') {
+    const affinityResult = updateNpcAffinityAfterFunction(state, npcId, runtime, functionKind);
+    const intel = revealNpcIntel(state, npc, runtime, Math.min(AFFINITY_MAX, affinity + 8));
+    const nextRuntime = {
+      ...affinityResult.runtime,
+      knownTopics: intel.knownTopics,
+      revealedIntelIds: intel.revealedIntelIds,
+    };
+    const intelLog = intel.newlyRevealed.length ? `，并点出「${intel.newlyRevealed.join('」「')}」` : '';
+    return applyProfileXp(
+      {
+        ...functionBaseState(
+          { ...state, flags: intel.flags },
+          npcId,
+          nextRuntime,
+          functionKind,
+          [`npc-mentor:${npcId}`],
+        ),
+        log: pushLog(
+          state.log,
+          `向「${npc.name}」请教手艺${intelLog}（好感 ${affinityResult.cur}→${affinityResult.nextAffinity}）。`,
+        ),
+      },
+      { craft: 1, knowledge: 2, mind: 1 },
+    );
+  }
+
+  if (functionKind === 'route') {
+    const routeIds = [
+      ...new Set(
+        (npc.intel ?? []).flatMap((intel) => intel.routeIds ?? []).concat(currentRegionRouteIds(state, content)),
+      ),
+    ].slice(0, 4);
+    const affinityResult = updateNpcAffinityAfterFunction(state, npcId, runtime, functionKind);
+    const knownTopics = new Set(runtime.knownTopics);
+    for (const topic of npc.knowledgeTags ?? []) knownTopics.add(topic);
+    for (const routeId of routeIds) knownTopics.add(`route:${routeId}`);
+    const nextRuntime = {
+      ...affinityResult.runtime,
+      knownTopics: [...knownTopics],
+    };
+    const routeNames = routeIds.map((routeId) => routeNameForId(content, routeId)).join('、') || '本地小路';
+    return applyProfileXp(
+      {
+        ...functionBaseState(state, npcId, nextRuntime, functionKind, [`npc-route:${npcId}`]),
+        log: pushLog(
+          state.log,
+          `「${npc.name}」替你梳理路线：${routeNames}（好感 ${affinityResult.cur}→${affinityResult.nextAffinity}）。`,
+        ),
+      },
+      { knowledge: 1, commerce: 1 },
+    );
+  }
+
+  if (functionKind === 'order') {
+    const affinityResult = updateNpcAffinityAfterFunction(state, npcId, runtime, functionKind);
+    const base = functionBaseState(state, npcId, affinityResult.runtime, functionKind, [`npc-order:${npcId}`]);
+    return applyProfileXp(
+      applyEffect(base, {
+        metrics: { market: 2, life: 1 },
+        logMessage: `「${npc.name}」替你牵线一批熟客，镇上订单风声更稳（好感 ${affinityResult.cur}→${affinityResult.nextAffinity}）。`,
+      }),
+      { commerce: 2, people: 1 },
+    );
+  }
+
+  if (functionKind === 'homeVisit') {
+    const affinityResult = updateNpcAffinityAfterFunction(state, npcId, runtime, functionKind);
+    const base = functionBaseState(state, npcId, affinityResult.runtime, functionKind, [`npc-home-visit:${npcId}`]);
+    return applyProfileXp(
+      applyEffect(base, {
+        metrics: { life: 2, spirit: 1 },
+        logMessage: `已约「${npc.name}」日后来百工院走动，院中生活气更足（好感 ${affinityResult.cur}→${affinityResult.nextAffinity}）。`,
+      }),
+      { people: 2, mind: 1 },
+    );
+  }
+
+  const target = state.itemInstances.find((item) => item.id === itemId);
+  if (!target || target.status === 'gifted') {
+    return { ...state, log: pushLog(state.log, `没有可供「${npc.name}」${label}的作品。`) };
+  }
+
+  if (functionKind === 'collab') {
+    if (target.collaboratorNpcIds?.includes(npcId)) {
+      return { ...state, log: pushLog(state.log, `「${npc.name}」已经参与过「${itemShortName(target, content)}」。`) };
+    }
+    const affinityResult = updateNpcAffinityAfterFunction(state, npcId, runtime, functionKind);
+    const collaboratorNpcIds = [...new Set([...(target.collaboratorNpcIds ?? []), npcId])];
+    const bonus = affinity >= 50 ? 0.06 : 0.04;
+    const named = withNamedItem(state, content, target);
+    const collaborated: ItemInstance = {
+      ...named,
+      collaboratorNpcIds,
+      quality: Math.min(0.98, Number((target.quality + bonus).toFixed(3))),
+      appraisal: `${target.appraisal} 「${npc.name}」参与修整后，作品多了一层可辨的地方手法。`,
+    };
+    const flags = [`npc-collab:${npcId}`];
+    if (collaborated.quality >= MASTERWORK_MIN_QUALITY) flags.push('collaborative-masterwork');
+    return applyProfileXp(
+      {
+        ...functionBaseState(state, npcId, affinityResult.runtime, functionKind, flags),
+        itemInstances: state.itemInstances.map((item) => (item.id === itemId ? collaborated : item)),
+        log: pushLog(
+          state.log,
+          `与「${npc.name}」联作「${itemShortName(collaborated, content)}」，品相 ${Math.round(target.quality * 100)}→${Math.round(collaborated.quality * 100)}（好感 ${affinityResult.cur}→${affinityResult.nextAffinity}）。`,
+        ),
+      },
+      { craft: 2, people: 1 },
+    );
+  }
+
+  if (functionKind === 'appraisal') {
+    const affinityResult = updateNpcAffinityAfterFunction(state, npcId, runtime, functionKind);
+    const named = withNamedItem(state, content, target);
+    const descriptor = target.descriptors[0] ?? '可辨';
+    const verdict = `${npc.name}评曰：${descriptor}之气已成，仍须让人记得作者。`;
+    const collaboratorNpcIds = [...new Set([...(named.collaboratorNpcIds ?? []), npcId])];
+    const appraised: ItemInstance = {
+      ...named,
+      collaboratorNpcIds,
+      inscription: named.inscription ? `${named.inscription} / ${verdict}` : verdict,
+    };
+    const flags = [`npc-appraisal:${npcId}`];
+    if (target.quality >= MASTERWORK_MIN_QUALITY) flags.push('appraised-masterwork');
+    return applyProfileXp(
+      {
+        ...functionBaseState(state, npcId, affinityResult.runtime, functionKind, flags),
+        itemInstances: state.itemInstances.map((item) => (item.id === itemId ? appraised : item)),
+        log: pushLog(
+          state.log,
+          `请「${npc.name}」鉴评「${itemShortName(appraised, content)}」：${verdict}（好感 ${affinityResult.cur}→${affinityResult.nextAffinity}）。`,
+        ),
+      },
+      { knowledge: 2, commerce: 1, mind: 1 },
+    );
+  }
+
+  return state;
 }
 
 function findQuestInscribeTarget(state: GameState, quest: QuestDef): ItemInstance | null {

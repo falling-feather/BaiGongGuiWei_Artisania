@@ -571,6 +571,50 @@ describe('gameReducer', () => {
     expect(s.npcStates['jn-ning-ciqiu'].revealedIntelIds).toContain('intel-ning-stationery-route');
   });
 
+  it('USE_NPC_FUNCTION 按好感门槛和每日限制结算授艺', () => {
+    let s = freshState();
+    const blocked = gameReducer(s, { type: 'USE_NPC_FUNCTION', npcId: 'jn-bamboo-master', functionKind: 'mentor' }, content);
+    expect(blocked.flags).not.toContain('npc-mentor:jn-bamboo-master');
+
+    s = gameReducer(s, { type: 'TALK_NPC', npcId: 'jn-bamboo-master' }, content);
+    const beforeKnowledge = s.profile.attributes.knowledge;
+    s = gameReducer(s, { type: 'USE_NPC_FUNCTION', npcId: 'jn-bamboo-master', functionKind: 'mentor' }, content);
+    expect(s.flags).toContain('npc-mentor:jn-bamboo-master');
+    expect(s.npcStates['jn-bamboo-master'].usedFunctionDays?.mentor).toBe(s.calendar.day);
+    expect(s.profile.attributes.knowledge).toBeGreaterThan(beforeKnowledge);
+    const affinityAfterMentor = s.npcAffinity['jn-bamboo-master'];
+
+    const sameDay = gameReducer(s, { type: 'USE_NPC_FUNCTION', npcId: 'jn-bamboo-master', functionKind: 'mentor' }, content);
+    expect(sameDay.npcAffinity['jn-bamboo-master']).toBe(affinityAfterMentor);
+  });
+
+  it('USE_NPC_FUNCTION 路线指点会写入路线情报', () => {
+    let s = freshState();
+    s = { ...s, npcAffinity: { ...s.npcAffinity, 'jn-fang-jiheng': 8 } };
+    s = gameReducer(s, { type: 'USE_NPC_FUNCTION', npcId: 'jn-fang-jiheng', functionKind: 'route' }, content);
+    expect(s.flags).toContain('npc-route:jn-fang-jiheng');
+    expect(s.npcStates['jn-fang-jiheng'].knownTopics).toContain('route:route-jiangnan-huizhou-paper');
+    expect(s.profile.attributes.commerce).toBeGreaterThan(5);
+  });
+
+  it('USE_NPC_FUNCTION 联作和鉴评会写入作品实例', () => {
+    let s = forgeHighQualitySword().state;
+    const swordId = s.itemInstances[0].id;
+    s = { ...s, npcAffinity: { ...s.npcAffinity, 'jn-ning-ciqiu': 24 } };
+    const beforeQuality = s.itemInstances[0].quality;
+
+    s = gameReducer(s, { type: 'USE_NPC_FUNCTION', npcId: 'jn-ning-ciqiu', functionKind: 'collab', itemId: swordId }, content);
+    let sword = s.itemInstances.find((item) => item.id === swordId)!;
+    expect(sword.collaboratorNpcIds).toContain('jn-ning-ciqiu');
+    expect(sword.quality).toBeGreaterThan(beforeQuality);
+    expect(s.flags).toContain('npc-collab:jn-ning-ciqiu');
+
+    s = gameReducer(s, { type: 'USE_NPC_FUNCTION', npcId: 'jn-ning-ciqiu', functionKind: 'appraisal', itemId: swordId }, content);
+    sword = s.itemInstances.find((item) => item.id === swordId)!;
+    expect(sword.inscription).toContain('宁辞秋');
+    expect(s.flags).toContain('npc-appraisal:jn-ning-ciqiu');
+  });
+
   it('COMPLETE_QUEST：好感不足时拒绝交付', () => {
     const quest = QUESTS[0];
     let s = freshState();

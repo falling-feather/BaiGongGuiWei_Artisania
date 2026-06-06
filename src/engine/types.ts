@@ -173,6 +173,7 @@ export interface NpcRuntimeState {
   lastGreetingIndex: number;
   knownTopics: string[];
   revealedIntelIds?: string[];
+  usedFunctionDays?: Partial<Record<NpcFunctionKind, number>>;
 }
 
 export type CropId = 'indigo' | 'mulberry' | 'tea';
@@ -511,7 +512,9 @@ export type GameAction =
   /** 将一件作品赠予 NPC */
   | { type: 'GIFT_ITEM'; itemId: string; npcId: string }
   /** 为作品写题跋，通常由 NPC 人物线奖励触发 */
-  | { type: 'INSCRIBE_ITEM'; itemId: string; npcId?: string; inscription: string };
+  | { type: 'INSCRIBE_ITEM'; itemId: string; npcId?: string; inscription: string }
+  /** 使用 NPC 的功能入口：授艺、路线、订单、联作、鉴评、家园来访 */
+  | { type: 'USE_NPC_FUNCTION'; npcId: string; functionKind: NpcFunctionKind; itemId?: string };
 
 // ───────────────────────────────────────────────────────────────────────────
 // 地区 · 资源 · 供应链（地区优先世界设计，详见 doc/项目规划.md 第三部分）

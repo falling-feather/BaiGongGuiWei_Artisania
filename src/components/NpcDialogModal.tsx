@@ -1,6 +1,7 @@
 import { useGameStore } from '../store/gameStore';
 import { NPC_INDEX, RESOURCE_INDEX, questsForNpc } from '../data';
-import type { ItemInstance, NpcGiftPreference } from '../engine';
+import { NPC_FUNCTION_LABELS, npcFunctionNeedsItem, npcFunctionRequirement } from '../engine';
+import type { ItemInstance, NpcFunctionKind, NpcGiftPreference } from '../engine';
 
 const ITEM_STATUS_LABEL = {
   held: '持有',
@@ -13,16 +14,6 @@ const STAGE_LABEL = {
   familiar: '熟络',
   trusted: '信任',
   confidant: '知己',
-} as const;
-
-const FUNCTION_LABEL = {
-  mentor: '授艺',
-  quest: '委托',
-  route: '路线',
-  order: '订单',
-  collab: '联作',
-  appraisal: '鉴评',
-  homeVisit: '来访',
 } as const;
 
 function preferenceMatches(
@@ -71,6 +62,9 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
     .filter((item) => item.status !== 'gifted' && (state.resources[item.resourceId] ?? 0) > 0)
     .slice(0, 3);
   const functions = npc.functions ?? [];
+  const directFunctions = functions.filter((fn) => fn !== 'quest' && !npcFunctionNeedsItem(fn));
+  const itemFunctions = functions.filter((fn) => npcFunctionNeedsItem(fn));
+  const functionItemCandidates = state.itemInstances.filter((item) => item.status !== 'gifted').slice(0, 3);
   const preferences = npc.preferences ?? [];
   const visibleIntel = npc.intel ?? [];
   const revealedIntel = new Set(runtime?.revealedIntelIds ?? []);
@@ -78,6 +72,13 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
     preferences
       .filter((preference) => preferenceMatches(preference, item))
       .sort((a, b) => b.affinityBonus - a.affinityBonus)[0] ?? null;
+  const functionDisabledReason = (fn: NpcFunctionKind, item?: ItemInstance) => {
+    const required = npcFunctionRequirement(fn);
+    if (affinity < required) return `好感不足：${affinity}/${required}`;
+    if (runtime?.usedFunctionDays?.[fn] === state.calendar.day) return '今日已使用';
+    if (npcFunctionNeedsItem(fn) && !item) return '需要选择作品';
+    return '';
+  };
 
   return (
     <div className="modal__backdrop" onClick={onClose}>
@@ -109,7 +110,7 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
             {functions.length > 0 && (
               <div className="npc-tag-row">
                 {functions.map((fn) => (
-                  <span className="npc-tag" key={fn}>{FUNCTION_LABEL[fn]}</span>
+                  <span className="npc-tag" key={fn}>{NPC_FUNCTION_LABELS[fn]}</span>
                 ))}
               </div>
             )}
@@ -139,6 +140,60 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {(directFunctions.length > 0 || itemFunctions.length > 0) && (
+          <div className="npc-quests npc-actions">
+            <h4 className="npc-quests__title">功能行动</h4>
+            {directFunctions.length > 0 && (
+              <div className="npc-action-row">
+                {directFunctions.map((fn) => {
+                  const disabledReason = functionDisabledReason(fn);
+                  return (
+                    <button
+                      className="btn btn--bamboo btn--sm"
+                      disabled={!!disabledReason}
+                      key={fn}
+                      title={disabledReason || `请「${npc.name}」${NPC_FUNCTION_LABELS[fn]}`}
+                      onClick={() => dispatch({ type: 'USE_NPC_FUNCTION', npcId, functionKind: fn })}
+                    >
+                      {NPC_FUNCTION_LABELS[fn]}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {itemFunctions.map((fn) => (
+              <div className="npc-action-targets" key={fn}>
+                <div className="npc-quest__head">
+                  <span className="npc-quest__name">{NPC_FUNCTION_LABELS[fn]}</span>
+                  <span className="npc-quest__done">好感 {npcFunctionRequirement(fn)}</span>
+                </div>
+                {functionItemCandidates.length === 0 ? (
+                  <p className="npc-quest__desc">暂无可交给对方查看的作品。</p>
+                ) : (
+                  <div className="npc-action-row">
+                    {functionItemCandidates.map((item) => {
+                      const disabledReason = functionDisabledReason(fn, item);
+                      return (
+                        <button
+                          className="btn btn--ghost btn--sm"
+                          disabled={!!disabledReason}
+                          key={`${fn}-${item.id}`}
+                          title={disabledReason || item.appraisal}
+                          onClick={() =>
+                            dispatch({ type: 'USE_NPC_FUNCTION', npcId, functionKind: fn, itemId: item.id })
+                          }
+                        >
+                          {(item.displayName ?? RESOURCE_INDEX[item.resourceId]?.name ?? item.resourceId).slice(0, 8)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
 

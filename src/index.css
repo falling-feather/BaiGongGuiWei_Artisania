@@ -2840,6 +2840,21 @@ body {
 .npc-quest--locked .npc-quest__desc {
   color: rgba(43, 38, 32, 0.58);
 }
+.npc-actions {
+  display: grid;
+  gap: 8px;
+}
+.npc-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.npc-action-targets {
+  border: 1px solid rgba(43, 38, 32, 0.1);
+  border-radius: 8px;
+  padding: 8px;
+  background: rgba(255, 252, 241, 0.62);
+}
 .npc-quest__head {
   display: flex;
   align-items: center;
