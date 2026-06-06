@@ -43,6 +43,7 @@ import { createRng, weightedPick } from './rng';
 import { NPC_FUNCTION_LABELS, npcFunctionNeedsItem, npcFunctionRequirement } from './npcFunctions';
 import { routeCostWithIntel, routeIntelDiscount } from './routeCosts';
 import { addRegionReputation, regionReputationOf } from './regionReputation';
+import { addRouteStability, routeRiskScore, routeStabilityOf } from './routeStability';
 
 /** reducer 运行所需的内容包（由 store 层从 data 注入） */
 export interface GameContent {
@@ -459,6 +460,60 @@ function advanceTimePhase(state: GameState, content: GameContent): GameState {
   };
 }
 
+function stableTextHash(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) hash = (hash * 31 + value.charCodeAt(i)) % 1000003;
+  return hash;
+}
+
+function routePressureDelta(risk: number): number {
+  if (risk >= 54) return -4;
+  if (risk >= 44) return -2;
+  if (risk <= 18) return 1;
+  return 0;
+}
+
+function routeSupplyResource(state: GameState, content: GameContent, route: RouteSpec): string | null {
+  const regions = content.regions ?? [];
+  const fromReputation = regionReputationOf(state, route.fromRegionId);
+  const toReputation = regionReputationOf(state, route.toRegionId);
+  const strainedRegionId = fromReputation <= toReputation ? route.fromRegionId : route.toRegionId;
+  const strainedRegion = regions.find((region) => region.id === strainedRegionId);
+  const candidates = strainedRegion?.localResources ?? [];
+  return candidates.find((resourceId) => (state.resources[resourceId] ?? 0) > 0) ?? candidates[0] ?? null;
+}
+
+function settleRoutePressure(
+  state: GameState,
+  content: GameContent,
+  resources: ResourcePool,
+): { resources: ResourcePool; routeStability: Record<string, number>; logs: string[] } {
+  const unlocked = new Set(state.unlockedRegions);
+  let routeStability = { ...state.routeStability };
+  let nextResources = { ...resources };
+  const logs: string[] = [];
+  for (const route of allRouteSpecs(content)) {
+    if (!unlocked.has(route.fromRegionId) || !unlocked.has(route.toRegionId)) continue;
+    const risk = routeRiskScore({ ...state, routeStability }, route);
+    const delta = routePressureDelta(risk);
+    if (delta !== 0) routeStability = addRouteStability(routeStability, [route.id], delta);
+
+    const roll = (state.seed + state.turn * 97 + stableTextHash(route.id)) % 100;
+    if (risk < 52 || roll >= risk - 44) continue;
+    const resourceId = routeSupplyResource(state, content, route);
+    if (!resourceId) {
+      logs.push(`「${route.name}」路况吃紧，客商延误，市场人气受挫。`);
+      continue;
+    }
+    nextResources = {
+      ...nextResources,
+      [resourceId]: Math.max(0, (nextResources[resourceId] ?? 0) - 1),
+    };
+    logs.push(`「${route.name}」路况吃紧，${resourceName(content, resourceId)}补给短少 1。`);
+  }
+  return { resources: nextResources, routeStability, logs };
+}
+
 /** 推进到下一回合：补给、抽事件、判定结局 */
 function endTurn(state: GameState, content: GameContent): GameState {
   if (state.pendingEvent) {
@@ -484,10 +539,15 @@ function endTurn(state: GameState, content: GameContent): GameState {
   for (const [key, amount] of Object.entries(TURN_RESOURCE_REGEN)) {
     resources[key] = (resources[key] ?? 0) + amount;
   }
+  const routePressure = settleRoutePressure(state, content, resources);
 
   // 抽取事件
   const rng = createRng(state.seed + state.turn * 1013);
   const event = weightedPick(content.events, rng);
+  const baseLog = routePressure.logs.reduce(
+    (log, message) => pushLog(log, message),
+    pushLog(state.log, `第 ${state.turn + 1} 季到来。`),
+  );
 
   let next: GameState = {
     ...state,
@@ -498,10 +558,11 @@ function endTurn(state: GameState, content: GameContent): GameState {
         ? { ...plot, growth: Math.min(100, plot.growth + (plot.wateredToday ? 34 : 18)), wateredToday: false }
         : { ...plot, wateredToday: false },
     ),
-    resources,
+    resources: routePressure.resources,
+    routeStability: routePressure.routeStability,
     seed: rng.seed,
     pendingEvent: event ?? null,
-    log: pushLog(state.log, `第 ${state.turn + 1} 季到来。`),
+    log: baseLog,
   };
 
   // 危机判定：任一镇级数值跌至冰点
@@ -742,6 +803,33 @@ function grantRegionReputation(
   };
 }
 
+function routeStabilityGainByActivity(activity: ActivityDef, quality: number) {
+  const base = activity.kind === 'route' ? 8 : activity.kind === 'trade' ? 5 : 3;
+  const qualityBonus = quality >= 0.85 ? 3 : quality >= 0.65 ? 1 : quality < 0.5 ? -2 : 0;
+  return Math.max(1, base + qualityBonus);
+}
+
+function grantRouteStability(
+  state: GameState,
+  content: GameContent,
+  routeIds: Iterable<string> | undefined,
+  amount: number,
+  reason: string,
+): GameState {
+  const uniqueRouteIds = [...new Set(routeIds ?? [])].filter(Boolean);
+  if (uniqueRouteIds.length === 0 || amount === 0) return state;
+  const before = routeStabilityOf(state, uniqueRouteIds[0]);
+  const routeStability = addRouteStability(state.routeStability, uniqueRouteIds, amount);
+  const after = routeStabilityOf({ routeStability }, uniqueRouteIds[0]);
+  const next = { ...state, routeStability };
+  if (after === before) return next;
+  const names = routeNamesForIds(content, uniqueRouteIds).slice(0, 2).join('、');
+  return {
+    ...next,
+    log: pushLog(next.log, `${names}稳定 ${before}→${after}（${reason}）。`),
+  };
+}
+
 function routeNamesForIds(content: GameContent, routeIds: string[] | undefined) {
   return [...new Set(routeIds ?? [])].map((routeId) => routeNameForId(content, routeId));
 }
@@ -767,6 +855,13 @@ function applyActivityProgress(
     content,
     activity.regionId,
     activityReputationGain(activity, quality),
+    `完成「${activity.name}」`,
+  );
+  next = grantRouteStability(
+    next,
+    content,
+    routeIds,
+    routeStabilityGainByActivity(activity, quality),
     `完成「${activity.name}」`,
   );
 
@@ -1000,6 +1095,7 @@ function unlockRegion(state: GameState, content: GameContent, regionId: string):
     ...state,
     resources: { ...state.resources, coin: (state.resources.coin ?? 0) - unlockCost },
     unlockedRegions: [...state.unlockedRegions, regionId],
+    routeStability: route ? addRouteStability(state.routeStability, [route.id], 6) : state.routeStability,
     log: pushLog(state.log, route
       ? `打通「${route.name}」，解锁新地区「${target.name}」。${discount > 0 ? `凭路线情报省下 ${discount} 文。` : ''}${route.preview ?? ''}`
       : `打通商路，解锁新地区「${target.name}」。`),
@@ -1583,16 +1679,73 @@ function resourceTierRank(content: GameContent, resourceId: string) {
   return 0;
 }
 
-function orderResourceCandidates(npc: NpcDef, content: GameContent): string[] {
-  const preferred = (npc.preferences ?? []).flatMap((preference) => preference.resourceIds ?? []);
+interface OrderResourceCandidate {
+  resourceId: string;
+  sourceWeight: number;
+}
+
+function orderResourceCandidates(npc: NpcDef, content: GameContent): OrderResourceCandidate[] {
+  const candidates = new Map<string, number>();
+  const add = (resourceId: string | undefined, weight: number) => {
+    if (!resourceId) return;
+    candidates.set(resourceId, Math.max(candidates.get(resourceId) ?? 0, weight));
+  };
+  for (const resourceId of (npc.preferences ?? []).flatMap((preference) => preference.resourceIds ?? [])) {
+    add(resourceId, 55);
+  }
   const craftOutput = content.crafts.find((craft) => craft.id === npc.anchorCraftId)?.outputResourceId;
+  add(craftOutput, 48);
   const activityOutput = Object.keys(
     (content.activities ?? []).find((activity) => activity.id === npc.anchorCraftId)?.reward.resources ?? {},
   ).filter((key) => key !== 'coin' && key !== 'labor');
-  const fallbackProducts = (content.resources ?? [])
+  for (const resourceId of activityOutput) add(resourceId, 38);
+  for (const resourceId of (content.resources ?? [])
     .filter((resource) => resource.tier === 'product')
-    .map((resource) => resource.id);
-  return [...new Set([...preferred, craftOutput, ...activityOutput, ...fallbackProducts].filter(Boolean) as string[])];
+    .map((resource) => resource.id)) {
+    add(resourceId, 10);
+  }
+  return [...candidates.entries()].map(([resourceId, sourceWeight]) => ({ resourceId, sourceWeight }));
+}
+
+function orderCandidateScore(
+  state: GameState,
+  content: GameContent,
+  npc: NpcDef,
+  candidate: OrderResourceCandidate,
+  affinity: number,
+) {
+  const rank = resourceTierRank(content, candidate.resourceId);
+  const reputation = regionReputationOf(state, npc.regionId);
+  const highReputationDemand = rank >= 3 ? reputation * 0.36 : Math.max(0, 28 - reputation) * 0.22;
+  const relationshipTrust = Math.min(18, affinity * 0.22);
+  const deterministicTieBreak = stableTextHash(`${npc.id}:${candidate.resourceId}:${state.calendar.day}`) % 9;
+  return candidate.sourceWeight + rank * 12 + highReputationDemand + relationshipTrust + deterministicTieBreak;
+}
+
+function orderRouteIdsForNpc(
+  state: GameState,
+  content: GameContent,
+  npc: NpcDef,
+  reputation: number,
+): string[] {
+  const routeIds = [
+    ...new Set(
+      (npc.intel ?? [])
+        .flatMap((intel) => intel.routeIds ?? [])
+        .concat(npc.regionId === state.currentRegion ? currentRegionRouteIds(state, content) : []),
+    ),
+  ];
+  if (reputation >= 60) return routeIds.slice(0, 3);
+  if (reputation >= 24) return routeIds.slice(0, 2);
+  return routeIds.slice(0, 1);
+}
+
+function orderRouteRisk(state: GameState, content: GameContent, routeIds: string[]) {
+  const routeMap = new Map(allRouteSpecs(content).map((route) => [route.id, route]));
+  return routeIds.reduce((max, routeId) => {
+    const route = routeMap.get(routeId);
+    return route ? Math.max(max, routeRiskScore(state, route)) : max;
+  }, 0);
 }
 
 function createNpcOrder(
@@ -1602,29 +1755,41 @@ function createNpcOrder(
   affinity: number,
 ): ActiveOrder {
   const candidates = orderResourceCandidates(npc, content);
-  const resourceId = candidates.sort(
-    (a, b) => resourceTierRank(content, b) - resourceTierRank(content, a),
-  )[0] ?? 'bambooWare';
+  const resourceId = candidates
+    .sort((a, b) => orderCandidateScore(state, content, npc, b, affinity) - orderCandidateScore(state, content, npc, a, affinity))[0]
+    ?.resourceId ?? 'bambooWare';
   const rank = resourceTierRank(content, resourceId);
-  const quantity = rank >= 3 ? 1 : 2;
+  const reputation = regionReputationOf(state, npc.regionId);
+  const routeIds = orderRouteIdsForNpc(state, content, npc, reputation);
+  const routeRisk = orderRouteRisk(state, content, routeIds);
+  const quantity =
+    rank >= 3
+      ? 1 + (reputation >= 70 ? 1 : 0)
+      : Math.max(1, 2 + (reputation >= 36 ? 1 : 0) - (rank <= 1 ? 1 : 0));
   const baseValue = content.resources?.find((resource) => resource.id === resourceId)?.value ?? (rank >= 2 ? 12 : 6);
-  const rewardCoin = Math.max(8, Math.round(baseValue * quantity + 8 + affinity / 8));
-  const routeIds = [
-    ...new Set((npc.intel ?? []).flatMap((intel) => intel.routeIds ?? [])),
-  ];
+  const reputationPremium = Math.round(reputation * (rank >= 3 ? 0.28 : 0.12));
+  const riskPremium = routeRisk > 0 ? Math.round(routeRisk * 0.18) : 0;
+  const rewardCoin = Math.max(8, Math.round(baseValue * quantity + 8 + affinity / 8 + reputationPremium + riskPremium));
+  const minQuality = Math.min(0.82, Number(((rank >= 3 ? 0.52 : 0.42) + reputation * 0.002 + routeRisk * 0.001).toFixed(2)));
   const itemName = resourceName(content, resourceId);
+  const routeNote = routeIds.length > 0
+    ? `还要照看${routeNamesForIds(content, routeIds).slice(0, 2).join('、')}的路况。`
+    : '这是一张本地熟客单。';
   return {
     id: `order-${npc.id}-${state.calendar.day}-${state.turn}-${(state.activeOrders ?? []).length + 1}`,
     npcId: npc.id,
+    regionId: npc.regionId,
     title: `${npc.name}的${itemName}订单`,
-    desc: `${npc.name}要 ${quantity} 份${itemName}，看重来路、品相和能否按时交付。`,
+    desc: `${npc.name}要 ${quantity} 份${itemName}，看重来路、品相和能否按时交付。${routeNote}`,
     resourceId,
     quantity,
-    minQuality: rank >= 3 ? 0.58 : 0.45,
+    minQuality,
     rewardCoin,
     rewardMetrics: { market: 2, life: 1 },
     rewardAttributes: { commerce: 2, people: 1 },
     routeIds,
+    routeRisk,
+    reputationAtCreation: reputation,
     createdDay: state.calendar.day,
     expiresDay: state.calendar.day + 7,
     status: 'active',
@@ -1708,7 +1873,8 @@ function fulfillOrder(state: GameState, content: GameContent, orderId: string): 
   };
   const withMetrics = order.rewardMetrics ? applyEffect(base, { metrics: order.rewardMetrics }) : recompute(base);
   const withProfile = applyProfileXp(withMetrics, order.rewardAttributes ?? { commerce: 1 });
-  return grantRegionReputation(withProfile, content, npc?.regionId ?? state.currentRegion, 3, `交付「${order.title}」`);
+  const withRoutes = grantRouteStability(withProfile, content, order.routeIds, 2, `交付「${order.title}」`);
+  return grantRegionReputation(withRoutes, content, npc?.regionId ?? state.currentRegion, 3, `交付「${order.title}」`);
 }
 
 function useNpcFunction(
@@ -1786,11 +1952,18 @@ function useNpcFunction(
     };
     const routeNames = routeIds.map((routeId) => routeNameForId(content, routeId)).join('、') || '本地小路';
     const flags = [`npc-route:${npcId}`, ...routeIds.map((routeId) => `route-known:${routeId}`)];
+    const stableRoutes = grantRouteStability(
+      functionBaseState(state, npcId, nextRuntime, functionKind, flags),
+      content,
+      routeIds,
+      5,
+      `请「${npc.name}」指路`,
+    );
     return applyProfileXp(
       {
-        ...functionBaseState(state, npcId, nextRuntime, functionKind, flags),
+        ...stableRoutes,
         log: pushLog(
-          state.log,
+          stableRoutes.log,
           `「${npc.name}」替你梳理路线：${routeNames}（好感 ${affinityResult.cur}→${affinityResult.nextAffinity}）。`,
         ),
       },
@@ -1810,7 +1983,7 @@ function useNpcFunction(
       };
     }
     const affinityResult = updateNpcAffinityAfterFunction(state, npcId, runtime, functionKind);
-    const order = createNpcOrder(state, content, npc, affinity);
+    const order = createNpcOrder(state, content, npc, affinityResult.nextAffinity);
     const base = {
       ...functionBaseState(state, npcId, affinityResult.runtime, functionKind, [`npc-order:${npcId}`]),
       activeOrders: [order, ...(state.activeOrders ?? [])].slice(0, 12),

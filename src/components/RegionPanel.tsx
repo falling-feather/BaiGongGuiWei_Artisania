@@ -2,7 +2,15 @@ import { useGameStore } from '../store/gameStore';
 import { RESOURCE_INDEX } from '../data';
 import { localIndustriesForSubregion } from '../data/subregionContent';
 import { emitBus } from '../game/EventBus';
-import { regionReputationLabel, regionReputationOf, routeCostWithIntel, routeIntelKnown } from '../engine';
+import {
+  regionReputationLabel,
+  regionReputationOf,
+  routeCostWithIntel,
+  routeIntelKnown,
+  routeRiskLabel,
+  routeRiskScore,
+  routeStabilityOf,
+} from '../engine';
 import type { CropId, IndustryDef, RegionDef, RouteSpec } from '../engine';
 
 const CROP_OPTIONS: { id: CropId; name: string; output: string }[] = [
@@ -56,6 +64,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const currentRegion = useGameStore((s) => s.state.currentRegion);
   const currentSubregion = useGameStore((s) => s.state.currentSubregion);
   const regionReputation = useGameStore((s) => s.state.regionReputation);
+  const routeStability = useGameStore((s) => s.state.routeStability);
   const unlockedRegions = useGameStore((s) => s.state.unlockedRegions);
   const flags = useGameStore((s) => s.state.flags);
   const calendar = useGameStore((s) => s.state.calendar);
@@ -82,6 +91,14 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
     .filter((row): row is { route: RouteSpec; target: RegionDef } => Boolean(row.target));
   const openedRouteRows = currentRouteRows.filter((row) => unlockedRegions.includes(row.target.id));
   const frontierRouteRows = currentRouteRows.filter((row) => !unlockedRegions.includes(row.target.id));
+  const routeStateFor = (route: RouteSpec) => {
+    const risk = routeRiskScore({ flags, regionReputation, routeStability }, route);
+    return {
+      risk,
+      riskLabel: routeRiskLabel(risk),
+      stability: routeStabilityOf({ routeStability }, route.id),
+    };
+  };
 
   const localIndustries: IndustryDef[] = localIndustriesForSubregion(region, currentSubregion, industries);
   const currentActivities = (content.activities ?? []).filter(
@@ -272,15 +289,20 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
           <section className="panel-block">
             <h4 className="panel-block__title">当前出入口 · 已通路线</h4>
             <ul className="ind-list">
-              {openedRouteRows.map(({ route, target }) => (
-                <li className="ind-item" key={route.id}>
-                  <div className="ind-item__main">
-                    <span className="ind-item__name">{route.name} · {target.name}</span>
-                    <span className="ind-item__io">已通行 · 请在当前场景寻找出入口牌坊，按 E 前往</span>
-                    <span className="ind-item__blurb">{route.preview ?? target.blurb}</span>
-                  </div>
-                </li>
-              ))}
+              {openedRouteRows.map(({ route, target }) => {
+                const routeState = routeStateFor(route);
+                return (
+                  <li className="ind-item" key={route.id}>
+                    <div className="ind-item__main">
+                      <span className="ind-item__name">{route.name} · {target.name}</span>
+                      <span className="ind-item__io">
+                        已通行 · 稳定 {routeState.stability} · 风险 {routeState.riskLabel}({routeState.risk}) · 场景出入口按 E 前往
+                      </span>
+                      <span className="ind-item__blurb">{route.preview ?? target.blurb}</span>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         )}
@@ -304,12 +326,13 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
               const cost = routeCostWithIntel(route, flags);
               const known = routeIntelKnown(route, flags);
               const enoughCoin = (resources.coin ?? 0) >= cost;
+              const routeState = routeStateFor(route);
               return (
                 <li className="ind-item" key={route.id}>
                   <div className="ind-item__main">
                     <span className="ind-item__name">{route.name} · {target.name}</span>
                     <span className="ind-item__io">
-                      路资 {cost} 文 · {known ? '已掌握路线情报' : '未掌握路线情报'} · {enoughCoin ? '可在场景出入口开通' : '路资不足'}
+                      路资 {cost} 文 · 风险 {routeState.riskLabel}({routeState.risk}) · {known ? '已掌握路线情报' : '未掌握路线情报'} · {enoughCoin ? '可在场景出入口开通' : '路资不足'}
                     </span>
                     <span className="ind-item__blurb">{route.unlockHint}</span>
                   </div>

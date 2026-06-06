@@ -18,6 +18,7 @@ import { REGION_ACTIVITIES, REGION_CONTENT, REGION_ROUTES } from '../../data/reg
 import { localIndustriesForRegion } from '../../data/regionEconomy';
 import { SUBREGION_CONTENT, localIndustriesForSubregion } from '../../data/subregionContent';
 import { orderPrice } from '../reducer';
+import { routeStabilityOf } from '../routeStability';
 import { buildRegionSpec } from '../../game/regionSpec';
 
 const content: GameContent = {
@@ -119,6 +120,21 @@ describe('gameReducer', () => {
     expect(s1.turn === s0.turn + 1 || s1.pendingEvent !== null).toBe(true);
   });
 
+  it('END_TURN 会对低稳定已通商路施加季节压力', () => {
+    const s0 = freshState();
+    const s = {
+      ...s0,
+      unlockedRegions: [...s0.unlockedRegions, 'huizhou'],
+      pendingEvent: null,
+      regionReputation: { ...s0.regionReputation, jiangnan: 0, huizhou: 0 },
+      routeStability: { ...s0.routeStability, 'route-jiangnan-huizhou-paper': 10 },
+    };
+    const s1 = gameReducer(s, { type: 'END_TURN' }, content);
+    expect(routeStabilityOf(s1, 'route-jiangnan-huizhou-paper')).toBeLessThan(
+      routeStabilityOf(s, 'route-jiangnan-huizhou-paper'),
+    );
+  });
+
   it('初始状态解锁首发地区并定位', () => {
     const s = freshState();
     expect(s.unlockedRegions).toContain('jiangnan');
@@ -134,6 +150,7 @@ describe('gameReducer', () => {
     expect(s.calendar.phase).toBe('morning');
     expect(s.farmPlots.length).toBeGreaterThanOrEqual(3);
     expect(s.regionReputation.jiangnan).toBe(5);
+    expect(s.routeStability).toEqual({});
   });
 
   it('ADVANCE_TIME 推进日内时段，夜间后进入下一日', () => {
@@ -271,6 +288,9 @@ describe('gameReducer', () => {
     expect(s1.completedActivities).toContain('jn-lake-tea-house');
     expect(s1.regionReputation.jiangnan).toBeGreaterThan(s.regionReputation.jiangnan);
     expect(s1.flags).toContain('route-known:route-jiangnan-huizhou-paper');
+    expect(routeStabilityOf(s1, 'route-jiangnan-huizhou-paper')).toBeGreaterThan(
+      routeStabilityOf(s, 'route-jiangnan-huizhou-paper'),
+    );
     expect(s1.npcStates['jn-su-xiaocha']?.knownTopics).toContain('route:route-jiangnan-huizhou-paper');
     expect(s1.npcAffinity['jn-su-xiaocha']).toBeGreaterThan(0);
     expect(s1.itemInstances[0]?.resourceId).toBe('tea');
@@ -378,6 +398,7 @@ describe('gameReducer', () => {
     expect(s1.resources.coin).toBeLessThan(s.resources.coin);
     expect(s1.regionReputation.huizhou).toBe(3);
     expect(s1.regionReputation.jiangnan).toBeGreaterThan(s.regionReputation.jiangnan);
+    expect(routeStabilityOf(s1, 'route-jiangnan-huizhou-paper')).toBeGreaterThan(routeStabilityOf(s, 'route-jiangnan-huizhou-paper'));
     expect(s1.log.some((line) => line.includes('江南纸墨路'))).toBe(true);
   });
 
@@ -677,6 +698,7 @@ describe('gameReducer', () => {
     expect(s.flags).toContain('npc-route:jn-fang-jiheng');
     expect(s.flags).toContain('route-known:route-jiangnan-huizhou-paper');
     expect(s.npcStates['jn-fang-jiheng'].knownTopics).toContain('route:route-jiangnan-huizhou-paper');
+    expect(routeStabilityOf(s, 'route-jiangnan-huizhou-paper')).toBeGreaterThan(48);
     expect(s.profile.attributes.commerce).toBeGreaterThan(5);
   });
 
@@ -688,8 +710,11 @@ describe('gameReducer', () => {
     const order = s.activeOrders[0];
     expect(order.npcId).toBe('jn-bamboo-master');
     expect(order.status).toBe('active');
+    expect(order.regionId).toBe('jiangnan');
     expect(order.quantity).toBeGreaterThan(0);
     expect(order.rewardCoin).toBeGreaterThan(0);
+    expect(order.routeRisk).toBeGreaterThanOrEqual(0);
+    expect(order.reputationAtCreation).toBe(s.regionReputation.jiangnan);
     expect(s.flags).toContain('npc-order:jn-bamboo-master');
   });
 
@@ -710,6 +735,7 @@ describe('gameReducer', () => {
     expect(next.flags).toContain(`order-completed:${order.id}`);
     expect(next.npcAffinity['jn-bamboo-master']).toBeGreaterThan(s.npcAffinity['jn-bamboo-master']);
     expect(next.regionReputation.jiangnan).toBeGreaterThan(s.regionReputation.jiangnan);
+    expect(routeStabilityOf(next, order.routeIds?.[0])).toBeGreaterThan(routeStabilityOf(s, order.routeIds?.[0]));
   });
 
   it('USE_NPC_FUNCTION 联作和鉴评会写入作品实例', () => {

@@ -163,6 +163,7 @@ export function createInitialState(
     completedQuests: [],
     completedActivities: [],
     regionReputation: currentRegion ? { [currentRegion]: devMode ? 30 : 5 } : {},
+    routeStability: {},
     activeOrders: [],
   };
 }

@@ -380,6 +380,8 @@ export interface GameState {
   completedActivities: string[];
   /** 大地区声望（regionId -> 0–100），由活动、任务、订单和开路沉淀 */
   regionReputation: Record<string, number>;
+  /** 商路稳定度（routeId -> 0–100），由开路、护送/指路、订单交付和季节压力共同影响 */
+  routeStability: Record<string, number>;
   /** 已接取或完成的 NPC 订单 */
   activeOrders: ActiveOrder[];
 }
@@ -487,6 +489,7 @@ export interface ActiveOrder {
   npcId: string;
   title: string;
   desc: string;
+  regionId?: string;
   resourceId: string;
   quantity: number;
   minQuality: number;
@@ -494,6 +497,8 @@ export interface ActiveOrder {
   rewardMetrics?: Partial<Metrics>;
   rewardAttributes?: Partial<PlayerAttributes>;
   routeIds?: string[];
+  routeRisk?: number;
+  reputationAtCreation?: number;
   createdDay: number;
   expiresDay?: number;
   status: 'active' | 'completed';

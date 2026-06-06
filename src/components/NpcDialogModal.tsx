@@ -1,6 +1,6 @@
 import { useGameStore } from '../store/gameStore';
 import { NPC_INDEX, RESOURCE_INDEX, questsForNpc } from '../data';
-import { NPC_FUNCTION_LABELS, npcFunctionNeedsItem, npcFunctionRequirement } from '../engine';
+import { NPC_FUNCTION_LABELS, npcFunctionNeedsItem, npcFunctionRequirement, routeRiskLabel } from '../engine';
 import type { ActiveOrder, ItemInstance, NpcFunctionKind, NpcGiftPreference, GameState } from '../engine';
 
 const ITEM_STATUS_LABEL = {
@@ -228,6 +228,7 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
                     <span className="npc-quest__req">
                       需 {orderResourceName(order)} {stock}/{order.quantity}
                       {` · 品相 ${Math.round(order.minQuality * 100)}+`}
+                      {order.routeRisk !== undefined ? ` · 路险 ${routeRiskLabel(order.routeRisk)}` : ''}
                     </span>
                     <button
                       className="btn btn--bamboo btn--sm"
