@@ -2,15 +2,10 @@
  * 地区地图规格装配器 —— 把「内容数据 + 当前状态」翻译成一份场景可用的 RegionMapSpec。
  * 让 Phaser 场景与数据层解耦：场景只认 RegionMapSpec。
  */
-import type { GameState, IndustryDef, NpcDef } from '../engine';
-import { INDUSTRIES, INDUSTRY_INDEX, REGION_INDEX, CRAFT_INDEX, RESOURCE_INDEX, npcsForRegion } from '../data';
+import type { GameState, NpcDef } from '../engine';
+import { INDUSTRIES, REGION_INDEX, CRAFT_INDEX, npcsForRegion } from '../data';
+import { industryTierFor, localIndustriesForRegion } from '../data/regionEconomy';
 import type { RegionMapSpec, IndustryTier, TerrainKind, WeatherKind, WeatherSeason } from './EventBus';
-
-/** 按「输入是否为空 / 产出资源层级」推断产业层级 */
-function industryTier(ind: IndustryDef): IndustryTier {
-  if (Object.keys(ind.input).length === 0) return 'harvest';
-  return RESOURCE_INDEX[ind.output]?.tier === 'product' ? 'product' : 'refine';
-}
 
 /** 由地区地貌基底关键字推断地形类型，驱动地图河流/山石/海岸生成 */
 function terrainKind(base: string, obstacles: string[]): TerrainKind {
@@ -74,21 +69,8 @@ export function buildRegionSpec(regionId: string, state: GameState): RegionMapSp
   const season = overrides.season ?? state.calendar.season ?? seasonFromTurn(state.turn);
   const weather = overrides.weather ?? state.calendar.weather ?? weatherForSeason(season);
 
-  // 显式列入的产业
-  const explicit = region.industries
-    .map((id) => INDUSTRY_INDEX[id])
-    .filter((i): i is IndustryDef => Boolean(i));
-
-  // 本地特产授权的采集业（采集业 = 输入为空，且产出是本地特产）
-  const harvests = INDUSTRIES.filter(
-    (i) => Object.keys(i.input).length === 0 && region.localResources.includes(i.output),
-  );
-
-  // 去重合并
-  const seen = new Set<string>();
-  const industries = [...harvests, ...explicit]
-    .filter((i) => (seen.has(i.id) ? false : (seen.add(i.id), true)))
-    .map((i) => ({ id: i.id, name: i.name, tier: industryTier(i) }));
+  const industries = localIndustriesForRegion(region, INDUSTRIES)
+    .map((i) => ({ id: i.id, name: i.name, tier: industryTierFor(i) as IndustryTier }));
 
   // 招牌手艺中已实现的（存在于 CRAFTS）
   const crafts = region.signatureCrafts

@@ -12,6 +12,7 @@ import { STORY_BEATS, renderStoryLine } from '../../data/story';
 import { RESOURCES } from '../../data/resources';
 import { NPCS } from '../../data/npcs';
 import { QUESTS } from '../../data/quests';
+import { localIndustriesForRegion } from '../../data/regionEconomy';
 import { orderPrice } from '../reducer';
 
 const content: GameContent = {
@@ -28,6 +29,16 @@ const content: GameContent = {
 
 function freshState() {
   return createInitialState(content.crafts, content.apprentices, 12345, undefined, content.regions);
+}
+
+const demoContent: GameContent = { ...content, events: [] };
+
+function endDemoDay(state: ReturnType<typeof freshState>) {
+  return gameReducer(
+    { ...state, pendingEvent: null, calendar: { ...state.calendar, phase: 'night' } },
+    { type: 'ADVANCE_TIME' },
+    demoContent,
+  );
 }
 
 describe('gameReducer', () => {
@@ -122,6 +133,15 @@ describe('gameReducer', () => {
     const s1 = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'harvest-cocoon', quality: 1 }, content);
     expect((s1.resources.cocoonSilk ?? 0)).toBeGreaterThan(0);
     expect(s1.resources.labor).toBeLessThan(s.resources.labor);
+  });
+
+  it('地区经济：镇务与街景共享本地采集/精炼产业列表', () => {
+    const jiangnan = REGIONS.find((r) => r.id === 'jiangnan');
+    const ids = localIndustriesForRegion(jiangnan, INDUSTRIES).map((industry) => industry.id);
+    expect(ids).toContain('harvest-indigo');
+    expect(ids).toContain('harvest-bamboo');
+    expect(ids).toContain('build-indigo');
+    expect(ids).toContain('split-bamboo');
   });
 
   it('GATHER_RESOURCE 拒绝本地不具备的产业', () => {
@@ -323,5 +343,61 @@ describe('gameReducer', () => {
     // 重复交付无效
     const again = gameReducer(s, { type: 'COMPLETE_QUEST', questId: quest.id }, content);
     expect(again.resources.coin).toBe(s.resources.coin);
+  });
+
+  it('全流程 demo：家园种植→江南制作订单→解锁徽州→跨区制纸订单可自循环', () => {
+    let s = gameReducer(freshState(), { type: 'TRAVEL_SUBREGION', subregionId: 'jiangnan-baigongyuan' }, demoContent);
+    expect(s.currentSubregion).toBe('jiangnan-baigongyuan');
+
+    s = gameReducer(s, { type: 'PLANT_CROP', plotId: 'yard-1', cropId: 'indigo' }, demoContent);
+    expect(s.farmPlots[0].cropId).toBe('indigo');
+
+    for (let day = 0; day < 3; day++) {
+      s = gameReducer(s, { type: 'WATER_PLOT', plotId: 'yard-1' }, demoContent);
+      s = endDemoDay(s);
+    }
+    expect(s.farmPlots[0].growth).toBe(100);
+
+    s = gameReducer(s, { type: 'HARVEST_CROP', plotId: 'yard-1' }, demoContent);
+    expect(s.farmPlots[0].cropId).toBeNull();
+    expect(s.resources.indigoPlant).toBeGreaterThanOrEqual(4);
+
+    s = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'build-indigo', quality: 1 }, demoContent);
+    s = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'build-indigo', quality: 1 }, demoContent);
+    expect(s.resources.indigoVat).toBeGreaterThanOrEqual(3);
+
+    s = endDemoDay(s);
+    s = gameReducer(
+      s,
+      { type: 'RUN_PROCESS', craftId: 'indigo-dyeing', skipStepIds: ['harvest-indigo', 'tie-resist'] },
+      demoContent,
+    );
+    expect(s.resources.indigoCloth).toBeGreaterThanOrEqual(1);
+    const coinAfterCraft = s.resources.coin ?? 0;
+    s = gameReducer(s, { type: 'TAKE_ORDER', craftId: 'indigo-dyeing' }, demoContent);
+    expect(s.resources.coin).toBeGreaterThan(coinAfterCraft);
+
+    s = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'harvest-bamboo', quality: 1 }, demoContent);
+    expect(s.resources.bambooRaw).toBeGreaterThanOrEqual(1);
+
+    s = gameReducer(s, { type: 'UNLOCK_REGION', regionId: 'huizhou' }, demoContent);
+    expect(s.unlockedRegions).toContain('huizhou');
+    s = gameReducer(s, { type: 'TRAVEL', regionId: 'huizhou' }, demoContent);
+    expect(s.currentRegion).toBe('huizhou');
+
+    s = endDemoDay(s);
+    s = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'harvest-qingtan', quality: 1 }, demoContent);
+    s = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'make-paper', quality: 1 }, demoContent);
+    expect(s.resources.paperSheet).toBeGreaterThanOrEqual(1);
+
+    s = gameReducer(s, { type: 'RUN_PROCESS', craftId: 'xuan-paper', skipStepIds: [] }, demoContent);
+    expect(s.resources.xuanPaper).toBeGreaterThanOrEqual(1);
+    const coinBeforePaperOrder = s.resources.coin ?? 0;
+    s = gameReducer(s, { type: 'TAKE_ORDER', craftId: 'xuan-paper' }, demoContent);
+    expect(s.resources.coin).toBeGreaterThan(coinBeforePaperOrder);
+    expect(s.status).toBe('playing');
+    expect(s.calendar.day).toBeGreaterThan(1);
+    expect(s.profile.attributes.craft).toBeGreaterThan(5);
+    expect(s.profile.attributes.commerce).toBeGreaterThan(5);
   });
 });

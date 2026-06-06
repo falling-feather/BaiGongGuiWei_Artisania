@@ -309,6 +309,9 @@ export type GameAction =
   | { type: 'RESOLVE_EVENT'; choiceId: string }
   | { type: 'ADVANCE_TIME' }
   | { type: 'END_TURN' }
+  | { type: 'PLANT_CROP'; plotId: string; cropId: CropId }
+  | { type: 'WATER_PLOT'; plotId: string }
+  | { type: 'HARVEST_CROP'; plotId: string }
   /** 在当前地区运行一项基础产业（手搓原料），quality 0–1 来自微交互 */
   | { type: 'GATHER_RESOURCE'; industryId: string; quality?: number }
   /** 前往一个已解锁的地区 */

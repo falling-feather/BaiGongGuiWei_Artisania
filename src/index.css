@@ -516,6 +516,58 @@ body {
   opacity: 0.65;
 }
 
+.farm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+}
+
+.farm-plot-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px;
+  background: rgba(250, 246, 230, 0.72);
+}
+
+.farm-plot-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.farm-plot-card__head span {
+  color: var(--bamboo);
+  font-weight: 700;
+}
+
+.farm-meter {
+  position: relative;
+  height: 7px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(39, 57, 63, 0.12);
+}
+
+.farm-meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--bamboo), var(--gold));
+}
+
+.farm-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.farm-actions--wrap {
+  flex-wrap: wrap;
+}
+
 .region-chips {
   display: flex;
   flex-wrap: wrap;

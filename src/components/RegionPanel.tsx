@@ -1,7 +1,19 @@
 import { useGameStore } from '../store/gameStore';
 import { RESOURCE_INDEX } from '../data';
+import { localIndustriesForRegion } from '../data/regionEconomy';
 import { emitBus } from '../game/EventBus';
-import type { IndustryDef } from '../engine';
+import type { CropId, IndustryDef } from '../engine';
+
+const CROP_OPTIONS: { id: CropId; name: string; output: string }[] = [
+  { id: 'indigo', name: '靛草', output: '靛蓝草' },
+  { id: 'mulberry', name: '桑蚕', output: '蚕丝' },
+  { id: 'tea', name: '茶树', output: '茶青' },
+];
+const CROP_LABEL: Record<CropId, string> = {
+  indigo: '靛草',
+  mulberry: '桑蚕',
+  tea: '茶树',
+};
 
 /** 资源键 → 中文名（无定义则原样显示） */
 function resName(key: string): string {
@@ -23,6 +35,7 @@ function describeInput(input: Record<string, number>): string {
 export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const content = useGameStore((s) => s.content);
   const resources = useGameStore((s) => s.state.resources);
+  const farmPlots = useGameStore((s) => s.state.farmPlots);
   const currentRegion = useGameStore((s) => s.state.currentRegion);
   const currentSubregion = useGameStore((s) => s.state.currentSubregion);
   const unlockedRegions = useGameStore((s) => s.state.unlockedRegions);
@@ -37,9 +50,10 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const labor = resources.labor ?? 0;
   const currentSub = region?.subregions.find((s) => s.id === currentSubregion) ?? region?.subregions[0];
 
-  const localIndustries: IndustryDef[] = (region?.industries ?? [])
-    .map((id) => industries.find((i) => i.id === id))
-    .filter((i): i is IndustryDef => Boolean(i));
+  const localIndustries: IndustryDef[] = localIndustriesForRegion(region, industries);
+  const isFarmSubregion = Boolean(
+    currentSub?.traits.includes('种植') || currentSub?.id.includes('baigongyuan'),
+  );
 
   const canGather = (ind: IndustryDef): boolean => {
     if (labor < ind.laborCost) return false;
@@ -138,6 +152,59 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
             ))}
           </ul>
         </section>
+
+        {isFarmSubregion && (
+          <section className="panel-block">
+            <h4 className="panel-block__title">百工院田圃</h4>
+            <div className="farm-grid">
+              {farmPlots.map((plot) => (
+                <div className="farm-plot-card" key={plot.id}>
+                  <div className="farm-plot-card__head">
+                    <b>{plot.cropId ? CROP_LABEL[plot.cropId] : '空田圃'}</b>
+                    <span>{plot.cropId ? `${plot.growth}%` : '待下种'}</span>
+                  </div>
+                  {plot.cropId ? (
+                    <>
+                      <div className="farm-meter">
+                        <i style={{ width: `${plot.growth}%` }} />
+                      </div>
+                      <div className="farm-actions">
+                        <button
+                          className="btn btn--sm btn--ghost"
+                          disabled={!playing || plot.wateredToday || labor < 1}
+                          onClick={() => dispatch({ type: 'WATER_PLOT', plotId: plot.id })}
+                        >
+                          {plot.wateredToday ? '已浇水' : '浇水'}
+                        </button>
+                        <button
+                          className="btn btn--sm btn--bamboo"
+                          disabled={!playing || plot.growth < 100}
+                          onClick={() => dispatch({ type: 'HARVEST_CROP', plotId: plot.id })}
+                        >
+                          收获
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="farm-actions farm-actions--wrap">
+                      {CROP_OPTIONS.map((crop) => (
+                        <button
+                          className="btn btn--sm btn--ghost"
+                          key={crop.id}
+                          disabled={!playing}
+                          title={`成熟后入仓：${crop.output}`}
+                          onClick={() => dispatch({ type: 'PLANT_CROP', plotId: plot.id, cropId: crop.id })}
+                        >
+                          种{crop.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {travelTargets.length > 0 && (
           <section className="panel-block">

@@ -26,6 +26,7 @@ import type {
   NpcRuntimeState,
   RelationshipStage,
   TimePhase,
+  CropId,
 } from './types';
 import { applyDelta, aggregateTownMetrics, METRIC_KEYS, METRIC_LABELS } from './metrics';
 import { createCalendar, createInitialState, LABOR_PER_TURN, titleForRank } from './state';
@@ -69,6 +70,12 @@ const TIME_PHASE_LABEL: Record<TimePhase, string> = {
   afternoon: '下午',
   dusk: '黄昏',
   night: '夜间',
+};
+const WATER_LABOR_COST = 1;
+const CROP_OUTPUT: Record<CropId, { resourceId: string; amount: number; name: string }> = {
+  indigo: { resourceId: 'indigoPlant', amount: 4, name: '靛草' },
+  mulberry: { resourceId: 'cocoonSilk', amount: 4, name: '桑蚕' },
+  tea: { resourceId: 'teaLeaf', amount: 4, name: '茶青' },
 };
 
 function clampStat(value: number) {
@@ -418,6 +425,76 @@ function gatherResource(
   }, { stamina: 1, knowledge: Object.keys(industry.input).length === 0 ? 1 : 0 });
 }
 
+function isFarmSubregion(state: GameState, content: GameContent): boolean {
+  const region = (content.regions ?? []).find((r) => r.id === state.currentRegion);
+  const subregion = region?.subregions.find((s) => s.id === state.currentSubregion);
+  return Boolean(subregion?.traits.includes('种植') || subregion?.id.includes('baigongyuan'));
+}
+
+function plantCrop(state: GameState, content: GameContent, plotId: string, cropId: CropId): GameState {
+  if (!isFarmSubregion(state, content)) {
+    return { ...state, log: pushLog(state.log, '要回到带田圃的家园小地区，才能下种。') };
+  }
+  const crop = CROP_OUTPUT[cropId];
+  const plot = state.farmPlots.find((item) => item.id === plotId);
+  if (!plot) return state;
+  if (plot.cropId) return { ...state, log: pushLog(state.log, '这块田圃已经种下东西了。') };
+  return {
+    ...state,
+    farmPlots: state.farmPlots.map((item) =>
+      item.id === plotId
+        ? { ...item, cropId, plantedDay: state.calendar.day, growth: 0, wateredToday: false }
+        : item,
+    ),
+    log: pushLog(state.log, `在田圃里种下${crop.name}，等它慢慢长成。`),
+  };
+}
+
+function waterPlot(state: GameState, content: GameContent, plotId: string): GameState {
+  if (!isFarmSubregion(state, content)) {
+    return { ...state, log: pushLog(state.log, '要回到百工院田圃边，才能浇水照料。') };
+  }
+  const plot = state.farmPlots.find((item) => item.id === plotId);
+  if (!plot?.cropId) return { ...state, log: pushLog(state.log, '空田圃不用浇水。') };
+  if (plot.wateredToday) return { ...state, log: pushLog(state.log, '这块田圃今日已经浇过水。') };
+  if ((state.resources.labor ?? 0) < WATER_LABOR_COST) {
+    return { ...state, log: pushLog(state.log, '工时不足，今日顾不上田圃了。') };
+  }
+  return applyProfileXp({
+    ...state,
+    resources: { ...state.resources, labor: (state.resources.labor ?? 0) - WATER_LABOR_COST },
+    farmPlots: state.farmPlots.map((item) =>
+      item.id === plotId
+        ? { ...item, wateredToday: true, growth: Math.min(100, item.growth + 8) }
+        : item,
+    ),
+    log: pushLog(state.log, '给田圃浇了水，苗势稳了些。'),
+  }, { stamina: 1, mind: 1 });
+}
+
+function harvestCrop(state: GameState, content: GameContent, plotId: string): GameState {
+  if (!isFarmSubregion(state, content)) {
+    return { ...state, log: pushLog(state.log, '要回到田圃边，才能收获作物。') };
+  }
+  const plot = state.farmPlots.find((item) => item.id === plotId);
+  if (!plot?.cropId) return { ...state, log: pushLog(state.log, '这块田圃还没有作物。') };
+  if (plot.growth < 100) return { ...state, log: pushLog(state.log, '作物还没成熟，再照料几日。') };
+  const crop = CROP_OUTPUT[plot.cropId];
+  return applyProfileXp({
+    ...state,
+    resources: {
+      ...state.resources,
+      [crop.resourceId]: (state.resources[crop.resourceId] ?? 0) + crop.amount,
+    },
+    farmPlots: state.farmPlots.map((item) =>
+      item.id === plotId
+        ? { ...item, cropId: null, plantedDay: null, growth: 0, wateredToday: false }
+        : item,
+    ),
+    log: pushLog(state.log, `收下${crop.name}，入仓 ${crop.amount} 份。`),
+  }, { stamina: 1, knowledge: 1 });
+}
+
 /** 前往一个已解锁的地区 */
 function travel(state: GameState, content: GameContent, regionId: string): GameState {
   if (!state.unlockedRegions.includes(regionId)) {
@@ -641,6 +718,18 @@ function reduce(
     case 'END_TURN':
       if (state.status !== 'playing') return state;
       return endTurn(state, content);
+
+    case 'PLANT_CROP':
+      if (state.status !== 'playing') return state;
+      return plantCrop(state, content, action.plotId, action.cropId);
+
+    case 'WATER_PLOT':
+      if (state.status !== 'playing') return state;
+      return waterPlot(state, content, action.plotId);
+
+    case 'HARVEST_CROP':
+      if (state.status !== 'playing') return state;
+      return harvestCrop(state, content, action.plotId);
 
     case 'GATHER_RESOURCE':
       if (state.status !== 'playing') return state;
