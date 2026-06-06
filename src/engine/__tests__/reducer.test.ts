@@ -515,7 +515,10 @@ describe('gameReducer', () => {
     expect(sword.status).toBe('gifted');
     expect(sword.giftedToNpcId).toBe('jn-ning-ciqiu');
     expect(s.resources.treasureSword).toBe(beforeGiftStock - 1);
-    expect(s.npcAffinity['jn-ning-ciqiu']).toBeGreaterThan(0);
+    expect(s.npcAffinity['jn-ning-ciqiu']).toBeGreaterThanOrEqual(18);
+    expect(s.flags).toContain('ning-mentioned-huizhou-stationery');
+    expect(s.npcStates['jn-ning-ciqiu'].revealedIntelIds).toContain('intel-ning-stationery-route');
+    expect(s.log[0]).toContain('正合其意');
   });
 
   it('供应链：半成品不足时拒绝开工，不产成品也不计数', () => {
@@ -556,6 +559,16 @@ describe('gameReducer', () => {
     for (let i = 0; i < 30; i++) s = gameReducer(s, { type: 'TALK_NPC', npcId }, content);
     expect(s.npcAffinity[npcId]).toBe(100);
     expect(s.npcStates[npcId].stage).toBe('confidant');
+  });
+
+  it('TALK_NPC 会按好感解锁 NPC 地方见闻与叙事标记', () => {
+    let s = freshState();
+    s = gameReducer(s, { type: 'TALK_NPC', npcId: 'jn-ning-ciqiu' }, content);
+    expect(s.npcAffinity['jn-ning-ciqiu']).toBe(8);
+    expect(s.flags).toContain('ning-mentioned-huizhou-stationery');
+    expect(s.npcStates['jn-ning-ciqiu'].knownTopics).toContain('stationery');
+    expect(s.npcStates['jn-ning-ciqiu'].knownTopics).toContain('route:route-jiangnan-huizhou-paper');
+    expect(s.npcStates['jn-ning-ciqiu'].revealedIntelIds).toContain('intel-ning-stationery-route');
   });
 
   it('COMPLETE_QUEST：好感不足时拒绝交付', () => {

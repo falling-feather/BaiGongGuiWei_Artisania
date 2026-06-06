@@ -2809,12 +2809,36 @@ body {
   font-size: 13px;
   color: var(--indigo);
 }
+.npc-profile-card {
+  padding-top: 2px;
+}
+.npc-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.npc-tag {
+  border: 1px solid rgba(77, 112, 75, 0.32);
+  border-radius: 999px;
+  background: rgba(112, 143, 95, 0.12);
+  color: var(--bamboo);
+  font-size: 11px;
+  padding: 2px 7px;
+}
 .npc-quest {
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 8px 10px;
   margin-bottom: 8px;
   background: var(--paper-2);
+}
+.npc-quest--locked {
+  opacity: 0.68;
+}
+.npc-quest--locked .npc-quest__name,
+.npc-quest--locked .npc-quest__desc {
+  color: rgba(43, 38, 32, 0.58);
 }
 .npc-quest__head {
   display: flex;

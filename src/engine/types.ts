@@ -172,6 +172,7 @@ export interface NpcRuntimeState {
   lastTalkTurn: number;
   lastGreetingIndex: number;
   knownTopics: string[];
+  revealedIntelIds?: string[];
 }
 
 export type CropId = 'indigo' | 'mulberry' | 'tea';
@@ -381,6 +382,28 @@ export interface NpcScheduleRule {
   note?: string;
 }
 
+export type NpcFunctionKind = 'mentor' | 'quest' | 'route' | 'order' | 'collab' | 'appraisal' | 'homeVisit';
+
+export interface NpcGiftPreference {
+  label: string;
+  resourceIds?: string[];
+  craftIds?: string[];
+  descriptorIncludes?: string[];
+  originRegionIds?: string[];
+  minQuality?: number;
+  affinityBonus: number;
+}
+
+export interface NpcIntelDef {
+  id: string;
+  title: string;
+  body: string;
+  unlockAffinity: number;
+  topics?: string[];
+  routeIds?: string[];
+  setFlags?: string[];
+}
+
 /** NPC 定义（静态数据，来自 src/data/npcs.ts） */
 export interface NpcDef {
   id: string;
@@ -391,6 +414,12 @@ export interface NpcDef {
   profession?: string;
   personality?: string;
   knowledgeTags?: string[];
+  functions?: NpcFunctionKind[];
+  preferences?: NpcGiftPreference[];
+  intel?: NpcIntelDef[];
+  relationshipLines?: Partial<Record<RelationshipStage, string[]>>;
+  personalDilemma?: string;
+  endingInfluence?: string;
   schedule?: NpcScheduleRule[];
   /** vendor 关联的手艺点 id（驻守其旁） */
   anchorCraftId?: string;

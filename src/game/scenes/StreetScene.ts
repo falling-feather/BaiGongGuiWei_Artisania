@@ -26,6 +26,7 @@ import {
   type WeatherKind,
   type WeatherSeason,
 } from '../EventBus';
+import { shouldReplaceNearbyCandidate } from '../nearbyPriority';
 
 // Phaser 场景类无法被有意义地热替换：StreetScene.ts 的局部 HMR 会被上层
 // PhaserGame.tsx 的 React Fast Refresh 边界吸收，导致运行中的 Phaser.Game 仍持有
@@ -1342,7 +1343,7 @@ export class StreetScene extends Phaser.Scene {
     let bestDist = Infinity;
     for (const p of this.points) {
       const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, p.sprite.x, p.sprite.y);
-      if (d < INTERACT_RANGE && d < bestDist) {
+      if (d < INTERACT_RANGE && shouldReplaceNearbyCandidate('point', d, best?.kind ?? null, bestDist)) {
         best = { kind: 'point', point: p, x: p.sprite.x, y: p.sprite.y, hint: p.hint };
         bestDist = d;
       }
@@ -1354,7 +1355,7 @@ export class StreetScene extends Phaser.Scene {
         npc.sprite.x,
         npc.sprite.y,
       );
-      if (d < INTERACT_RANGE && d < bestDist) {
+      if (d < INTERACT_RANGE && shouldReplaceNearbyCandidate('npc', d, best?.kind ?? null, bestDist)) {
         best = {
           kind: 'npc',
           npc,

@@ -143,6 +143,7 @@ function emptyNpcState(): NpcRuntimeState {
     lastTalkTurn: 0,
     lastGreetingIndex: 0,
     knownTopics: [],
+    revealedIntelIds: [],
   };
 }
 
@@ -1107,6 +1108,40 @@ function reduce(
 const AFFINITY_PER_TALK = 8;
 const AFFINITY_MAX = 100;
 
+function pickNpcLine(npc: NpcDef, stage: RelationshipStage, rngValue: number) {
+  const lines = npc.relationshipLines?.[stage] ?? npc.greetings;
+  if (!lines.length) return '';
+  return lines[Math.floor(rngValue * lines.length)] ?? lines[0];
+}
+
+function revealNpcIntel(
+  state: GameState,
+  npc: NpcDef,
+  runtime: NpcRuntimeState,
+  affinity: number,
+) {
+  const revealed = new Set(runtime.revealedIntelIds ?? []);
+  const knownTopics = new Set(runtime.knownTopics);
+  for (const topic of npc.knowledgeTags ?? []) knownTopics.add(topic);
+  const flags = new Set(state.flags);
+  const newlyRevealed: string[] = [];
+  for (const intel of npc.intel ?? []) {
+    if (affinity < intel.unlockAffinity || revealed.has(intel.id)) continue;
+    revealed.add(intel.id);
+    newlyRevealed.push(intel.title);
+    knownTopics.add(intel.id);
+    for (const topic of intel.topics ?? []) knownTopics.add(topic);
+    for (const routeId of intel.routeIds ?? []) knownTopics.add(`route:${routeId}`);
+    for (const flag of intel.setFlags ?? []) flags.add(flag);
+  }
+  return {
+    flags: [...flags],
+    knownTopics: [...knownTopics],
+    revealedIntelIds: [...revealed],
+    newlyRevealed,
+  };
+}
+
 /** 与 NPC 对话一次：好感度上升（封顶 100），并记录寒暄日志 */
 function talkNpc(state: GameState, content: GameContent, npcId: string): GameState {
   const npc = (content.npcs ?? []).find((n) => n.id === npcId);
@@ -1116,23 +1151,27 @@ function talkNpc(state: GameState, content: GameContent, npcId: string): GameSta
   const peopleBonus = Math.max(0, Math.floor(((state.profile.attributes.people ?? 5) - 5) / 5));
   const nextAffinity = Math.min(AFFINITY_MAX, cur + AFFINITY_PER_TALK + peopleBonus);
   const rng = createRng(state.seed + hashText(npcId) + runtime.talks * 97 + state.turn * 17);
-  const greetingIndex = Math.floor(rng.next() * Math.max(1, npc.greetings.length));
-  const greeting = npc.greetings[greetingIndex] ?? '';
-  const knownTopics = new Set(runtime.knownTopics);
-  for (const topic of npc.knowledgeTags ?? []) knownTopics.add(topic);
+  const nextStage = relationshipStageForAffinity(nextAffinity);
+  const lineRoll = rng.next();
+  const greeting = pickNpcLine(npc, nextStage, lineRoll);
+  const greetingIndex = Math.floor(lineRoll * Math.max(1, (npc.relationshipLines?.[nextStage] ?? npc.greetings).length));
+  const intel = revealNpcIntel(state, npc, runtime, nextAffinity);
   const npcState: NpcRuntimeState = {
     affinity: nextAffinity,
-    stage: relationshipStageForAffinity(nextAffinity),
+    stage: nextStage,
     talks: runtime.talks + 1,
     lastTalkTurn: state.turn,
     lastGreetingIndex: greetingIndex,
-    knownTopics: [...knownTopics],
+    knownTopics: intel.knownTopics,
+    revealedIntelIds: intel.revealedIntelIds,
   };
+  const intelLog = intel.newlyRevealed.length ? `；听得「${intel.newlyRevealed.join('」「')}」` : '';
   return applyProfileXp({
     ...state,
+    flags: intel.flags,
     npcAffinity: { ...state.npcAffinity, [npcId]: nextAffinity },
     npcStates: { ...state.npcStates, [npcId]: npcState },
-    log: pushLog(state.log, `与「${npc.name}」攀谈：${greeting}（好感 ${cur}→${nextAffinity}，关系：${npcState.stage}）`),
+    log: pushLog(state.log, `与「${npc.name}」攀谈：${greeting}${intelLog}（好感 ${cur}→${nextAffinity}，关系：${npcState.stage}）`),
   }, { people: 1, knowledge: npc.knowledgeTags?.length ? 1 : 0 });
 }
 
@@ -1184,6 +1223,29 @@ function displayItem(state: GameState, content: GameContent, itemId: string): Ga
   return applyProfileXp(applyEffect(withDisplay, { metrics: { spirit: 3, life: 1 } }), { mind: 1 });
 }
 
+function bestGiftPreference(npc: NpcDef, item: ItemInstance) {
+  const matches = (npc.preferences ?? []).filter((preference) => {
+    if (preference.minQuality !== undefined && item.quality < preference.minQuality) return false;
+    if (preference.resourceIds && !preference.resourceIds.includes(item.resourceId)) return false;
+    if (preference.craftIds && (!item.sourceCraftId || !preference.craftIds.includes(item.sourceCraftId))) {
+      return false;
+    }
+    if (preference.originRegionIds && !preference.originRegionIds.includes(item.originRegionId)) return false;
+    if (
+      preference.descriptorIncludes &&
+      !preference.descriptorIncludes.some((word) =>
+        item.descriptors.some((descriptor) => descriptor.includes(word)) ||
+        item.appraisal.includes(word) ||
+        item.inscription?.includes(word),
+      )
+    ) {
+      return false;
+    }
+    return true;
+  });
+  return matches.sort((a, b) => b.affinityBonus - a.affinityBonus)[0] ?? null;
+}
+
 function giftItem(state: GameState, content: GameContent, itemId: string, npcId: string): GameState {
   const target = state.itemInstances.find((item) => item.id === itemId);
   const npc = (content.npcs ?? []).find((item) => item.id === npcId);
@@ -1201,16 +1263,24 @@ function giftItem(state: GameState, content: GameContent, itemId: string, npcId:
   };
   const runtime = state.npcStates[npcId] ?? emptyNpcState();
   const cur = runtime.affinity || state.npcAffinity[npcId] || 0;
-  const gain = Math.max(6, Math.round(6 + target.quality * 10));
+  const preference = bestGiftPreference(npc, target);
+  const baseGain = Math.max(4, Math.round(5 + target.quality * 8));
+  const gain = Math.max(2, baseGain + (preference?.affinityBonus ?? (npc.preferences?.length ? -2 : 0)));
   const nextAffinity = Math.min(AFFINITY_MAX, cur + gain);
+  const intel = revealNpcIntel(state, npc, runtime, nextAffinity);
   const npcState: NpcRuntimeState = {
     ...runtime,
     affinity: nextAffinity,
     stage: relationshipStageForAffinity(nextAffinity),
     lastTalkTurn: state.turn,
+    knownTopics: intel.knownTopics,
+    revealedIntelIds: intel.revealedIntelIds,
   };
   const flags = new Set(state.flags);
+  for (const flag of intel.flags) flags.add(flag);
   if (target.quality >= MASTERWORK_MIN_QUALITY) flags.add('gifted-first-masterwork');
+  const preferenceNote = preference ? `，正合其意「${preference.label}」` : npc.preferences?.length ? '，但并非其偏好' : '';
+  const intelLog = intel.newlyRevealed.length ? `；又听得「${intel.newlyRevealed.join('」「')}」` : '';
   return applyProfileXp({
     ...state,
     flags: [...flags],
@@ -1221,7 +1291,7 @@ function giftItem(state: GameState, content: GameContent, itemId: string, npcId:
     npcAffinity: { ...state.npcAffinity, [npcId]: nextAffinity },
     npcStates: { ...state.npcStates, [npcId]: npcState },
     itemInstances: state.itemInstances.map((item) => (item.id === itemId ? named : item)),
-    log: pushLog(state.log, `把「${named.displayName}」赠予「${npc.name}」（好感 ${cur}→${nextAffinity}）。`),
+    log: pushLog(state.log, `把「${named.displayName}」赠予「${npc.name}」${preferenceNote}${intelLog}（好感 ${cur}→${nextAffinity}）。`),
   }, { people: 2, commerce: npc.role === 'vendor' ? 1 : 0 });
 }
 
