@@ -3,7 +3,7 @@
  * 让 Phaser 场景与数据层解耦：场景只认 RegionMapSpec。
  */
 import type { GameState, NpcDef } from '../engine';
-import { INDUSTRIES, REGION_INDEX, CRAFT_INDEX, npcsForRegion } from '../data';
+import { CRAFT_INDEX, INDUSTRIES, REGION_INDEX, activitiesForSubregion, npcsForRegion } from '../data';
 import { industryTierFor, localIndustriesForRegion } from '../data/regionEconomy';
 import type { RegionMapSpec, IndustryTier, TerrainKind, WeatherKind, WeatherSeason } from './EventBus';
 
@@ -78,6 +78,12 @@ export function buildRegionSpec(regionId: string, state: GameState): RegionMapSp
     .filter((c): c is NonNullable<typeof c> => Boolean(c))
     .map((c) => ({ id: c.id, name: c.name }));
 
+  const activities = activitiesForSubregion(region.id, subregion?.id ?? region.id).map((activity) => ({
+    id: activity.id,
+    name: activity.name,
+    kind: activity.kind,
+  }));
+
   // 相邻地区中已定义的，作为出入口
   const gates = region.neighbors
     .map((id) => REGION_INDEX[id])
@@ -99,6 +105,7 @@ export function buildRegionSpec(regionId: string, state: GameState): RegionMapSp
     weather,
     industries,
     crafts,
+    activities,
     gates,
     npcs: npcsForRegion(region.id)
       .filter((n) => npcIsInSubregion(n, state, subregion?.id ?? region.id))

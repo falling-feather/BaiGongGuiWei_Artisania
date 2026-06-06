@@ -14,7 +14,21 @@ import {
   type GameAction,
   type GameContent,
 } from '../engine';
-import { CRAFTS, STARTING_APPRENTICES, EVENTS, INDUSTRIES, REGIONS, ACHIEVEMENTS, STORY_BEATS, RESOURCES, NPCS, QUESTS } from '../data';
+import {
+  ACHIEVEMENTS,
+  ALL_NPCS,
+  CRAFTS,
+  EVENTS,
+  INDUSTRIES,
+  ITEM_DESCRIPTOR_RULES,
+  QUESTS,
+  REGION_ACTIVITIES,
+  REGION_CONTENT,
+  REGIONS,
+  RESOURCES,
+  STARTING_APPRENTICES,
+  STORY_BEATS,
+} from '../data';
 import { localStorageAdapter } from '../storage/localStorageAdapter';
 import type { SaveSlotSummary } from '../storage/StorageAdapter';
 
@@ -27,8 +41,11 @@ const content: GameContent = {
   achievements: ACHIEVEMENTS,
   story: STORY_BEATS,
   resources: RESOURCES,
-  npcs: NPCS,
+  npcs: ALL_NPCS,
   quests: QUESTS,
+  activities: REGION_ACTIVITIES,
+  regionContent: REGION_CONTENT,
+  itemDescriptorRules: ITEM_DESCRIPTOR_RULES,
 };
 
 interface GameStore {

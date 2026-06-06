@@ -404,6 +404,83 @@ body {
   margin: 4px 0;
 }
 
+.modal--activity {
+  max-width: 560px;
+}
+
+.modal--activity .modal__title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modal--activity .modal__title small {
+  color: var(--vermilion);
+  font-size: 12px;
+}
+
+.activity-detail {
+  margin: 0 0 12px;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.activity-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+
+.activity-tags span,
+.item-appraisal__tags span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(184, 137, 59, 0.12);
+  color: var(--indigo);
+  font-size: 11px;
+  padding: 3px 8px;
+}
+
+.activity-ledger {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.activity-ledger div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 252, 242, 0.72);
+  padding: 9px 10px;
+}
+
+.activity-ledger b,
+.activity-ledger span {
+  display: block;
+}
+
+.activity-ledger b {
+  color: var(--bamboo);
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.activity-ledger span {
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+@media (max-width: 620px) {
+  .activity-ledger {
+    grid-template-columns: 1fr;
+  }
+}
+
 .panel-note {
   margin: 0 0 8px;
   font-size: 12px;
@@ -1325,6 +1402,44 @@ body {
 
 .bag-inventory {
   min-width: 0;
+}
+
+.item-appraisals {
+  display: grid;
+  gap: 8px;
+}
+
+.item-appraisal {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(68, 96, 88, 0.08);
+  padding: 9px 10px;
+}
+
+.item-appraisal__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--indigo);
+  font-size: 12px;
+}
+
+.item-appraisal__head span {
+  color: var(--vermilion);
+  white-space: nowrap;
+}
+
+.item-appraisal p {
+  margin: 5px 0 7px;
+  line-height: 1.65;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.item-appraisal__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
 @media (max-width: 720px) {

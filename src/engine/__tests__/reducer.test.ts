@@ -10,10 +10,13 @@ import { REGIONS } from '../../data/regions';
 import { ACHIEVEMENTS } from '../../data/achievements';
 import { STORY_BEATS, renderStoryLine } from '../../data/story';
 import { RESOURCES } from '../../data/resources';
-import { NPCS } from '../../data/npcs';
+import { ALL_NPCS, NPCS } from '../../data/npcs';
 import { QUESTS } from '../../data/quests';
+import { ITEM_DESCRIPTOR_RULES } from '../../data/itemDescriptors';
+import { REGION_ACTIVITIES, REGION_CONTENT } from '../../data/regionContent';
 import { localIndustriesForRegion } from '../../data/regionEconomy';
 import { orderPrice } from '../reducer';
+import { buildRegionSpec } from '../../game/regionSpec';
 
 const content: GameContent = {
   crafts: CRAFTS,
@@ -23,8 +26,11 @@ const content: GameContent = {
   regions: REGIONS,
   achievements: ACHIEVEMENTS,
   resources: RESOURCES,
-  npcs: NPCS,
+  npcs: ALL_NPCS,
   quests: QUESTS,
+  activities: REGION_ACTIVITIES,
+  regionContent: REGION_CONTENT,
+  itemDescriptorRules: ITEM_DESCRIPTOR_RULES,
 };
 
 function freshState() {
@@ -57,6 +63,8 @@ describe('gameReducer', () => {
     const after = s1.crafts.find((c) => c.craftId === craftId)!;
     expect(after.produced).toBe(before.produced + 1);
     expect(s1.resources.labor).toBeLessThan(s0.resources.labor);
+    expect(s1.itemInstances[0]?.resourceId).toBe(content.crafts[0].outputResourceId);
+    expect(s1.itemInstances[0]?.appraisal.length).toBeGreaterThan(0);
   });
 
   it('TAKE_ORDER 交付成品：消耗 1 件库存并按品质入账', () => {
@@ -76,6 +84,15 @@ describe('gameReducer', () => {
     const s1 = gameReducer(s, { type: 'TAKE_ORDER', craftId: 'indigo-dyeing' }, content);
     expect(s1.resources.coin).toBe(5);
     expect(s1.resources.indigoCloth ?? 0).toBe(0);
+  });
+
+  it('TAKE_ORDER 会同步移除已售出的物品评鉴实例', () => {
+    let s = freshState();
+    s = gameReducer(s, { type: 'RUN_PROCESS', craftId: 'indigo-dyeing', skipStepIds: [] }, content);
+    const beforeCount = s.itemInstances.length;
+    s = gameReducer(s, { type: 'TAKE_ORDER', craftId: 'indigo-dyeing' }, content);
+    expect(s.itemInstances.length).toBe(beforeCount - 1);
+    expect(s.itemInstances.some((item) => item.resourceId === 'indigoCloth')).toBe(false);
   });
 
   it('orderPrice 随传承品质单调上升', () => {
@@ -142,6 +159,52 @@ describe('gameReducer', () => {
     expect(ids).toContain('harvest-bamboo');
     expect(ids).toContain('build-indigo');
     expect(ids).toContain('split-bamboo');
+  });
+
+  it('逐地区内容数据库：活动均落在已定义地区与小地区中', () => {
+    expect(new Set(REGION_CONTENT.map((item) => item.regionId))).toEqual(new Set(REGIONS.map((item) => item.id)));
+    for (const activity of REGION_ACTIVITIES) {
+      const region = REGIONS.find((item) => item.id === activity.regionId);
+      expect(region, activity.id).toBeTruthy();
+      expect(region?.subregions.some((subregion) => subregion.id === activity.subregionId)).toBe(true);
+      expect(REGION_CONTENT.find((item) => item.regionId === activity.regionId)?.activityIds).toContain(
+        activity.id,
+      );
+    }
+  });
+
+  it('PERFORM_ACTIVITY 在当前小地区结算生活/商贸活动并生成评鉴文本', () => {
+    let s = freshState();
+    s = gameReducer(s, { type: 'TRAVEL_SUBREGION', subregionId: 'jiangnan-linan' }, content);
+    s = { ...s, resources: { ...s.resources, teaLeaf: 1, labor: 4 } };
+    const beforeKnowledge = s.profile.attributes.knowledge;
+
+    const s1 = gameReducer(s, { type: 'PERFORM_ACTIVITY', activityId: 'jn-lake-tea-house', quality: 0.9 }, content);
+
+    expect(s1.resources.tea).toBe((s.resources.tea ?? 0) + 1);
+    expect(s1.resources.teaLeaf).toBe((s.resources.teaLeaf ?? 0) - 1);
+    expect(s1.profile.attributes.knowledge).toBeGreaterThan(beforeKnowledge);
+    expect(s1.itemInstances[0]?.resourceId).toBe('tea');
+    expect(s1.itemInstances[0]?.appraisal.length).toBeGreaterThan(0);
+  });
+
+  it('PERFORM_ACTIVITY 拒绝不在当前小地区的活动', () => {
+    const s = freshState();
+    const s1 = gameReducer(s, { type: 'PERFORM_ACTIVITY', activityId: 'jn-lake-tea-house' }, content);
+    expect(s1.resources.tea ?? 0).toBe(s.resources.tea ?? 0);
+    expect(s1.itemInstances.length).toBe(0);
+  });
+
+  it('地图规格会带出当前小地区活动点和占位 NPC 锚点', () => {
+    const s = gameReducer(
+      freshState(),
+      { type: 'TRAVEL_SUBREGION', subregionId: 'jiangnan-longquan' },
+      content,
+    );
+    const spec = buildRegionSpec('jiangnan', s);
+    expect(spec?.activities.map((activity) => activity.id)).toContain('jn-longquan-sword-forge');
+    const lu = spec?.npcs.find((npc) => npc.id === 'jn-lu-hanquan');
+    expect(lu?.anchorId).toBe('jn-longquan-sword-forge');
   });
 
   it('GATHER_RESOURCE 拒绝本地不具备的产业', () => {

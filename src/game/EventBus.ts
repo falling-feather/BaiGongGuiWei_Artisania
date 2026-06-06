@@ -5,6 +5,7 @@
  * 二者各走一个频道，互不耦合。
  */
 import Phaser from 'phaser';
+import type { ActivityKind } from '../engine';
 
 /** 地图上一个产业交互点的层级（用于配色/图标） */
 export type IndustryTier = 'harvest' | 'refine' | 'product';
@@ -44,6 +45,7 @@ export interface RegionMapSpec {
   weather: WeatherKind;
   industries: { id: string; name: string; tier: IndustryTier }[];
   crafts: { id: string; name: string }[];
+  activities: { id: string; name: string; kind: ActivityKind }[];
   gates: { regionId: string; name: string; unlocked: boolean }[];
   /** 本地 NPC（游客 + 店铺关联人物） */
   npcs: RegionNpcSpec[];
@@ -53,7 +55,7 @@ export interface RegionMapSpec {
 export interface MiniMapPoint {
   tx: number;
   ty: number;
-  kind: 'industry' | 'craft' | 'gate';
+  kind: 'industry' | 'craft' | 'activity' | 'gate';
 }
 
 export type GameBusEvent =
@@ -61,6 +63,7 @@ export type GameBusEvent =
   | { type: 'interact-craft'; craftId: string }
   /** 玩家走近并触发某个基础产业点 */
   | { type: 'interact-industry'; industryId: string }
+  | { type: 'interact-activity'; activityId: string }
   /** 玩家走近并触发某个地区出入口 */
   | { type: 'interact-gate'; regionId: string; unlocked: boolean }
   /** 玩家走近并触发某个 NPC */

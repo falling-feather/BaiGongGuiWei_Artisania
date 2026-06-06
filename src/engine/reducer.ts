@@ -27,6 +27,11 @@ import type {
   RelationshipStage,
   TimePhase,
   CropId,
+  ActivityDef,
+  ItemDescriptorRule,
+  ItemInstance,
+  PlayerAttributes,
+  RegionContentSpec,
 } from './types';
 import { applyDelta, aggregateTownMetrics, METRIC_KEYS, METRIC_LABELS } from './metrics';
 import { createCalendar, createInitialState, LABOR_PER_TURN, titleForRank } from './state';
@@ -51,6 +56,12 @@ export interface GameContent {
   npcs?: NpcDef[];
   /** 任务定义（可选，街市人物系统用） */
   quests?: QuestDef[];
+  /** 逐地区内容活动（非工艺生活/商贸/修习/节令点） */
+  activities?: ActivityDef[];
+  /** 逐地区内容总览（路线、主 NPC、活动 id，全局剧情/任务数据库入口） */
+  regionContent?: RegionContentSpec[];
+  /** 隐藏数值转古风描述词的规则 */
+  itemDescriptorRules?: ItemDescriptorRule[];
 }
 
 /** 解锁一个新地区的费用（文） */
@@ -112,6 +123,10 @@ function applyProfileXp(
   return { ...state, profile: normalizeProfile({ ...state.profile, attributes, attributeXp }) };
 }
 
+function profileXpFromAttributes(delta: Partial<PlayerAttributes> | undefined) {
+  return (delta ?? {}) as Partial<Record<PlayerAttributeKey, number>>;
+}
+
 function relationshipStageForAffinity(affinity: number): RelationshipStage {
   if (affinity >= 75) return 'confidant';
   if (affinity >= 50) return 'trusted';
@@ -134,6 +149,62 @@ function hashText(value: string) {
   let hash = 0;
   for (let i = 0; i < value.length; i++) hash = (hash * 31 + value.charCodeAt(i)) | 0;
   return Math.abs(hash);
+}
+
+function pickDescriptorTier(words: string[] | undefined, quality: number) {
+  if (!words?.length) return '';
+  const index = Math.max(0, Math.min(words.length - 1, Math.floor(quality * words.length)));
+  return words[index] ?? words[0];
+}
+
+function descriptorRuleFor(
+  rules: ItemDescriptorRule[] | undefined,
+  resourceId: string,
+  craftId: string | undefined,
+  tags: string[],
+) {
+  return (
+    rules?.find((rule) => craftId && rule.craftIds?.includes(craftId)) ??
+    rules?.find((rule) => rule.resourceIds?.includes(resourceId)) ??
+    rules?.find((rule) => rule.tags?.some((tag) => tags.includes(tag))) ??
+    rules?.find((rule) => rule.id === 'generic-product') ??
+    null
+  );
+}
+
+function createItemInstance(
+  state: GameState,
+  content: GameContent,
+  resourceId: string,
+  sourceCraftId?: string,
+  quality = 0.62,
+  tags: string[] = [],
+): ItemInstance {
+  const rule = descriptorRuleFor(content.itemDescriptorRules, resourceId, sourceCraftId, tags);
+  const descriptors = rule
+    ? Object.values(rule.dimensions)
+        .map((words) => pickDescriptorTier(words, quality))
+        .filter(Boolean)
+        .slice(0, 4)
+    : [];
+  const resourceName = content.resources?.find((resource) => resource.id === resourceId)?.name ?? resourceId;
+  const template = rule?.templates[Math.floor(Math.max(0, Math.min(0.999, quality)) * rule.templates.length)] ??
+    '此物已有可辨之质，尚待名家细评。';
+  const appraisal = template
+    .replace(/\{item\}/g, resourceName)
+    .replace(/\{descriptors\}/g, descriptors.join('、') || '朴实可用');
+
+  return {
+    id: `${resourceId}-${state.turn}-${state.itemInstances.length + 1}-${Math.abs(hashText(appraisal)).toString(36)}`,
+    resourceId,
+    sourceCraftId,
+    originRegionId: state.currentRegion,
+    originSubregionId: state.currentSubregion,
+    createdTurn: state.turn,
+    quality,
+    descriptors,
+    appraisal,
+  };
 }
 
 /**
@@ -267,11 +338,14 @@ function runProcess(
 
   // 供应链终端：消耗 material 后产出一件成品（product 层）
   let productNote = '';
+  let itemInstance: ItemInstance | null = null;
   const outputId = craftDef.outputResourceId;
   if (outputId) {
     resources[outputId] = (resources[outputId] ?? 0) + 1;
     const productName = content.resources?.find((r) => r.id === outputId)?.name ?? outputId;
-    productNote = `，得「${productName}」×1`;
+    const quality = Math.max(0.25, Math.min(0.98, (craftMetrics.heritage + craftMetrics.spirit) / 200));
+    itemInstance = createItemInstance(state, content, outputId, craftDef.id, quality, craftDef.synergyTags);
+    productNote = `，得「${productName}」×1（${itemInstance.descriptors.join('、') || '可用'}）`;
   }
 
   const crafts = state.crafts.map((c) =>
@@ -283,7 +357,11 @@ function runProcess(
     ...state,
     resources,
     crafts,
-    log: pushLog(state.log, `「${craftDef.name}」完成一批出品${skipNote}${productNote}，入账 ${incomeBase} 文。`),
+    itemInstances: itemInstance ? [itemInstance, ...state.itemInstances].slice(0, 80) : state.itemInstances,
+    log: pushLog(
+      itemInstance ? pushLog(state.log, itemInstance.appraisal) : state.log,
+      `「${craftDef.name}」完成一批出品${skipNote}${productNote}，入账 ${incomeBase} 文。`,
+    ),
   };
   return recompute(applyProfileXp(next, { craft: 2, mind: stepsSkipped.length > 0 ? 0 : 1 }));
 }
@@ -495,6 +573,72 @@ function harvestCrop(state: GameState, content: GameContent, plotId: string): Ga
   }, { stamina: 1, knowledge: 1 });
 }
 
+function performActivity(
+  state: GameState,
+  content: GameContent,
+  activityId: string,
+  quality = 0.72,
+): GameState {
+  const activity = (content.activities ?? []).find((item) => item.id === activityId);
+  if (!activity) return state;
+  if (activity.regionId !== state.currentRegion || activity.subregionId !== state.currentSubregion) {
+    return { ...state, log: pushLog(state.log, '这项活动不在当前小地区，先动身前往对应地点。') };
+  }
+  if (activity.once && state.completedActivities.includes(activityId)) {
+    return { ...state, log: pushLog(state.log, `「${activity.name}」已经完成过了。`) };
+  }
+  if ((state.resources.labor ?? 0) < activity.laborCost) {
+    return { ...state, log: pushLog(state.log, `工时不足，无法体验「${activity.name}」。`) };
+  }
+  for (const [key, amount] of Object.entries(activity.resourceCost ?? {})) {
+    if ((state.resources[key] ?? 0) < amount) {
+      return { ...state, log: pushLog(state.log, `物料不足，无法体验「${activity.name}」（缺 ${key}）。`) };
+    }
+  }
+
+  const resources: ResourcePool = {
+    ...state.resources,
+    labor: (state.resources.labor ?? 0) - activity.laborCost,
+  };
+  for (const [key, amount] of Object.entries(activity.resourceCost ?? {})) {
+    resources[key] = (resources[key] ?? 0) - amount;
+  }
+  for (const [key, amount] of Object.entries(activity.reward.resources ?? {})) {
+    resources[key] = (resources[key] ?? 0) + amount;
+  }
+
+  const flags = new Set(state.flags);
+  for (const flag of activity.reward.flags ?? []) flags.add(flag);
+
+  const firstRewardResource = Object.keys(activity.reward.resources ?? {})[0];
+  const itemInstance = firstRewardResource
+    ? createItemInstance(
+        state,
+        content,
+        firstRewardResource,
+        undefined,
+        quality,
+        [activity.kind, ...(activity.reward.descriptorTags ?? [])],
+      )
+    : null;
+
+  const activityLog = `${activity.detail}（${activity.name}：${activity.miniGames.join(' / ')}）`;
+  const next: GameState = {
+    ...state,
+    resources,
+    flags: [...flags],
+    itemInstances: itemInstance ? [itemInstance, ...state.itemInstances].slice(0, 80) : state.itemInstances,
+    completedActivities: activity.once
+      ? [...new Set([...state.completedActivities, activityId])]
+      : state.completedActivities,
+    log: pushLog(itemInstance ? pushLog(state.log, itemInstance.appraisal) : state.log, activityLog),
+  };
+  const withEffect = activity.reward.metrics
+    ? applyEffect(next, { metrics: activity.reward.metrics })
+    : recompute(next);
+  return applyProfileXp(withEffect, profileXpFromAttributes(activity.reward.attributes));
+}
+
 /** 前往一个已解锁的地区 */
 function travel(state: GameState, content: GameContent, regionId: string): GameState {
   if (!state.unlockedRegions.includes(regionId)) {
@@ -682,12 +826,19 @@ function reduce(
       const craftState = findCraftState(state, action.craftId);
       const heritage = craftState?.metrics.heritage ?? 50;
       const price = orderPrice(product?.value ?? 12, heritage);
+      const soldIndex = state.itemInstances.findIndex((item) => item.resourceId === outputId);
       const afterOrder = applyEffect(state, {
         resources: { coin: price, [outputId]: -1 },
         craftMetrics: { [action.craftId]: { market: 6, heritage: 2, spirit: 1 } },
         logMessage: `交付一笔「${name}」订单，售出「${productName}」×1，进账 ${price} 文，真品口碑使市场看好。`,
       });
-      return applyProfileXp(afterOrder, { commerce: 2 });
+      const afterStock = soldIndex >= 0
+        ? {
+            ...afterOrder,
+            itemInstances: state.itemInstances.filter((_, index) => index !== soldIndex),
+          }
+        : afterOrder;
+      return applyProfileXp(afterStock, { commerce: 2 });
     }
 
     case 'HOLD_EXHIBITION': {
@@ -730,6 +881,10 @@ function reduce(
     case 'HARVEST_CROP':
       if (state.status !== 'playing') return state;
       return harvestCrop(state, content, action.plotId);
+
+    case 'PERFORM_ACTIVITY':
+      if (state.status !== 'playing') return state;
+      return performActivity(state, content, action.activityId, action.quality ?? 0.72);
 
     case 'GATHER_RESOURCE':
       if (state.status !== 'playing') return state;

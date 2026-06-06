@@ -7,6 +7,7 @@
  * 数据驱动：新增 NPC = 在此追加一条 NpcDef，场景/引擎不改。
  */
 import type { NpcDef } from '../engine/types';
+import { PLACEHOLDER_NPCS } from './regionContent';
 
 export const NPCS: NpcDef[] = [
   // —— 江南·关联人物 ——
@@ -179,13 +180,15 @@ export const NPCS: NpcDef[] = [
   },
 ];
 
+export const ALL_NPCS: NpcDef[] = [...NPCS, ...PLACEHOLDER_NPCS];
+
 export const NPC_INDEX: Record<string, NpcDef> = Object.fromEntries(
-  NPCS.map((n) => [n.id, n]),
+  ALL_NPCS.map((n) => [n.id, n]),
 );
 
 /** 取某地区的 NPC（含通用游客）。当前游客均挂在 jiangnan，其余地区仅复用为游客。 */
 export function npcsForRegion(regionId: string): NpcDef[] {
-  const local = NPCS.filter((n) => n.regionId === regionId);
+  const local = ALL_NPCS.filter((n) => n.regionId === regionId);
   if (local.length > 0) return local;
   // 其它地区暂复用江南游客作为路人（保证街市有人气）
   return NPCS.filter((n) => n.role === 'tourist').map((n) => {

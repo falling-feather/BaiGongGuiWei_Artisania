@@ -149,6 +149,7 @@ export function createInitialState(
     profile: createDefaultPlayerProfile(),
     calendar: createCalendar(1),
     farmPlots: createInitialFarmPlots(),
+    itemInstances: [],
     unlockedRegions,
     currentRegion,
     currentSubregion,
@@ -160,5 +161,6 @@ export function createInitialState(
     npcAffinity: {},
     npcStates: {},
     completedQuests: [],
+    completedActivities: [],
   };
 }

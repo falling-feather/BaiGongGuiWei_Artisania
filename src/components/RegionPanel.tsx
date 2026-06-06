@@ -36,6 +36,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const content = useGameStore((s) => s.content);
   const resources = useGameStore((s) => s.state.resources);
   const farmPlots = useGameStore((s) => s.state.farmPlots);
+  const completedActivities = useGameStore((s) => s.state.completedActivities);
   const currentRegion = useGameStore((s) => s.state.currentRegion);
   const currentSubregion = useGameStore((s) => s.state.currentSubregion);
   const unlockedRegions = useGameStore((s) => s.state.unlockedRegions);
@@ -51,6 +52,9 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const currentSub = region?.subregions.find((s) => s.id === currentSubregion) ?? region?.subregions[0];
 
   const localIndustries: IndustryDef[] = localIndustriesForRegion(region, industries);
+  const currentActivities = (content.activities ?? []).filter(
+    (activity) => activity.regionId === currentRegion && activity.subregionId === currentSubregion,
+  );
   const isFarmSubregion = Boolean(
     currentSub?.traits.includes('种植') || currentSub?.id.includes('baigongyuan'),
   );
@@ -58,6 +62,12 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const canGather = (ind: IndustryDef): boolean => {
     if (labor < ind.laborCost) return false;
     return Object.entries(ind.input).every(([k, v]) => (resources[k] ?? 0) >= v);
+  };
+
+  const canPerformActivity = (activity: (typeof currentActivities)[number]): boolean => {
+    if (labor < activity.laborCost) return false;
+    if (activity.once && completedActivities.includes(activity.id)) return false;
+    return Object.entries(activity.resourceCost ?? {}).every(([k, v]) => (resources[k] ?? 0) >= v);
   };
 
   // 与已解锁地区相邻、但自身未解锁的地区
@@ -147,6 +157,31 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
                   }}
                 >
                   采料
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="panel-block">
+          <h4 className="panel-block__title">本地活动</h4>
+          {currentActivities.length === 0 && <p className="panel-empty">此小地区暂无活动点。</p>}
+          <ul className="ind-list">
+            {currentActivities.map((activity) => (
+              <li className="ind-item" key={activity.id}>
+                <div className="ind-item__main">
+                  <span className="ind-item__name">{activity.name}</span>
+                  <span className="ind-item__io">
+                    {activity.kind} · {describeInput(activity.resourceCost ?? {})} → {describeInput(activity.reward.resources ?? {})} · 工时{activity.laborCost}
+                  </span>
+                  <span className="ind-item__blurb">{activity.blurb}</span>
+                </div>
+                <button
+                  className="btn btn--sm btn--bamboo"
+                  disabled={!playing || !canPerformActivity(activity)}
+                  onClick={() => dispatch({ type: 'PERFORM_ACTIVITY', activityId: activity.id, quality: 0.82 })}
+                >
+                  体验
                 </button>
               </li>
             ))}

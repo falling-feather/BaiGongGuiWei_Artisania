@@ -184,6 +184,90 @@ export interface FarmPlot {
   wateredToday: boolean;
 }
 
+export type ActivityKind =
+  | 'resource'
+  | 'workshop'
+  | 'training'
+  | 'trade'
+  | 'life'
+  | 'festival'
+  | 'route';
+
+export type ActivityMiniGameType =
+  | MiniGameType
+  | 'couplet_choice'
+  | 'calligraphy_trace'
+  | 'crop_calendar'
+  | 'appraise_select'
+  | 'route_plan'
+  | 'dialogue_check';
+
+export interface ActivityReward {
+  resources?: ResourcePool;
+  metrics?: Partial<Metrics>;
+  attributes?: Partial<PlayerAttributes>;
+  flags?: string[];
+  descriptorTags?: string[];
+}
+
+export interface ActivityDef {
+  id: string;
+  regionId: string;
+  subregionId: string;
+  name: string;
+  kind: ActivityKind;
+  blurb: string;
+  detail: string;
+  npcId?: string;
+  miniGames: ActivityMiniGameType[];
+  laborCost: number;
+  resourceCost?: ResourcePool;
+  reward: ActivityReward;
+  evaluationId?: string;
+  once?: boolean;
+}
+
+export interface RegionContentSpec {
+  regionId: string;
+  routes: string[];
+  mainNpcIds: string[];
+  activityIds: string[];
+}
+
+export type ItemQualityDimension =
+  | 'purity'
+  | 'grain'
+  | 'hardness'
+  | 'resilience'
+  | 'spirit'
+  | 'form'
+  | 'handling'
+  | 'sharpness'
+  | 'finish'
+  | 'merchantTrust';
+
+export interface ItemDescriptorRule {
+  id: string;
+  label: string;
+  resourceIds?: string[];
+  craftIds?: string[];
+  tags?: string[];
+  dimensions: Partial<Record<ItemQualityDimension, string[]>>;
+  templates: string[];
+}
+
+export interface ItemInstance {
+  id: string;
+  resourceId: string;
+  sourceCraftId?: string;
+  originRegionId: string;
+  originSubregionId: string;
+  createdTurn: number;
+  quality: number;
+  descriptors: string[];
+  appraisal: string;
+}
+
 /** 游戏整体状态机 —— 单一事实来源（Single Source of Truth） */
 export interface GameState {
   /** 随机种子，保证可重放 */
@@ -208,6 +292,8 @@ export interface GameState {
   calendar: CalendarState;
   /** 城郊百工院的轻量田圃槽位 */
   farmPlots: FarmPlot[];
+  /** 可检查的成品/原料实例，用于古风描述、鉴别与后续赠礼/订单系统 */
+  itemInstances: ItemInstance[];
   /** 已解锁的地区 id 列表（地区优先世界） */
   unlockedRegions: RegionId[];
   /** 玩家当前所在地区 id（采料/产业在此地进行） */
@@ -230,6 +316,8 @@ export interface GameState {
   npcStates: Record<string, NpcRuntimeState>;
   /** 已完成的任务 id 列表 */
   completedQuests: string[];
+  /** 已完成的一次性地区活动 id 列表 */
+  completedActivities: string[];
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -312,6 +400,7 @@ export type GameAction =
   | { type: 'PLANT_CROP'; plotId: string; cropId: CropId }
   | { type: 'WATER_PLOT'; plotId: string }
   | { type: 'HARVEST_CROP'; plotId: string }
+  | { type: 'PERFORM_ACTIVITY'; activityId: string; quality?: number }
   /** 在当前地区运行一项基础产业（手搓原料），quality 0–1 来自微交互 */
   | { type: 'GATHER_RESOURCE'; industryId: string; quality?: number }
   /** 前往一个已解锁的地区 */

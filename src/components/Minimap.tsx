@@ -3,6 +3,7 @@ import type { MiniMapPoint } from '../game/EventBus';
 const KIND_COLOR: Record<MiniMapPoint['kind'], string> = {
   industry: '#c98a3a',
   craft: '#3a7bd5',
+  activity: '#cf5b62',
   gate: '#7a9a4a',
 };
 

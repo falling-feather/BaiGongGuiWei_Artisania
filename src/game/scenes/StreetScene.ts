@@ -37,13 +37,14 @@ if (import.meta.hot) {
     import.meta.hot!.invalidate();
   });
 }
-type PointKind = 'industry' | 'craft' | 'gate';
+type PointKind = 'industry' | 'craft' | 'activity' | 'gate';
+type ActivityPointKind = RegionMapSpec['activities'][number]['kind'];
 
 interface MapPoint {
   kind: PointKind;
   label: string;
   hint: string;
-  /** industry: industryId | craft: craftId | gate: regionId */
+  /** industry: industryId | craft: craftId | activity: activityId | gate: regionId */
   payload: string;
   unlocked?: boolean;
   sprite: Phaser.GameObjects.Image;
@@ -148,6 +149,20 @@ function textureForIndustry(id: string, tier: IndustryTier) {
 
 function textureForCraft(id: string) {
   return CRAFT_TEX_RULES.find(([pattern]) => pattern.test(id))?.[1] ?? TEX.craft;
+}
+
+const ACTIVITY_TEX: Record<ActivityPointKind, string> = {
+  resource: TEX.indField,
+  workshop: TEX.craft,
+  training: TEX.craftPaper,
+  trade: TEX.indMarket,
+  life: TEX.indHarvest,
+  festival: TEX.lanternPost,
+  route: TEX.gate,
+};
+
+function textureForActivity(kind: ActivityPointKind) {
+  return ACTIVITY_TEX[kind] ?? TEX.indProduct;
 }
 
 const TIER_LABEL: Record<IndustryTier, string> = {
@@ -359,6 +374,13 @@ export class StreetScene extends Phaser.Scene {
         hint: `按 E 进入「${c.name}」`,
         payload: c.id,
         tex: textureForCraft(c.id),
+      })),
+      ...spec.activities.map((a) => ({
+        kind: 'activity' as const,
+        label: a.name,
+        hint: `按 E 体验「${a.name}」`,
+        payload: a.id,
+        tex: textureForActivity(a.kind),
       })),
       ...spec.gates.map((g) => ({
         kind: 'gate' as const,
@@ -1237,6 +1259,7 @@ export class StreetScene extends Phaser.Scene {
         const p = n.point;
         if (p.kind === 'craft') emitBus({ type: 'interact-craft', craftId: p.payload });
         else if (p.kind === 'industry') emitBus({ type: 'interact-industry', industryId: p.payload });
+        else if (p.kind === 'activity') emitBus({ type: 'interact-activity', activityId: p.payload });
         else emitBus({ type: 'interact-gate', regionId: p.payload, unlocked: !!p.unlocked });
       }
     }

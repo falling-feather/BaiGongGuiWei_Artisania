@@ -42,6 +42,7 @@ export function InventoryModal({ open, onClose }: { open: boolean; onClose: () =
   const resources = state.resources;
   const profile = state.profile;
   const calendar = state.calendar;
+  const itemInstances = state.itemInstances.slice(0, 6);
   if (!open) return null;
 
   const coin = resources.coin ?? 0;
@@ -101,10 +102,31 @@ export function InventoryModal({ open, onClose }: { open: boolean; onClose: () =
           </aside>
 
           <div className="bag-inventory">
-            {totalKinds === 0 && misc.length === 0 ? (
+            {totalKinds === 0 && misc.length === 0 && itemInstances.length === 0 ? (
               <p className="modal__desc">行囊空空，去各地采料、开工攒些家底吧。</p>
             ) : (
               <div className="bag-body">
+                {itemInstances.length > 0 && (
+                  <div className="panel-block item-appraisals">
+                    <div className="panel-block__title">近作评鉴</div>
+                    {itemInstances.map((item) => (
+                      <article className="item-appraisal" key={item.id}>
+                        <div className="item-appraisal__head">
+                          <b>{RESOURCE_INDEX[item.resourceId]?.name ?? item.resourceId}</b>
+                          <span>品相 {Math.round(item.quality * 100)}</span>
+                        </div>
+                        <p>{item.appraisal}</p>
+                        {item.descriptors.length > 0 && (
+                          <div className="item-appraisal__tags">
+                            {item.descriptors.map((descriptor) => (
+                              <span key={descriptor}>{descriptor}</span>
+                            ))}
+                          </div>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                )}
                 {TIER_ORDER.map((tier) =>
                   byTier[tier].length === 0 ? null : (
                     <div className="panel-block" key={tier}>

@@ -13,6 +13,7 @@ import { IndustryPage } from './components/IndustryPage';
 import { RegionPanel } from './components/RegionPanel';
 import { WorldMapModal } from './components/WorldMapModal';
 import { InventoryModal } from './components/InventoryModal';
+import { ActivityModal } from './components/ActivityModal';
 import { AchievementsModal } from './components/AchievementsModal';
 import { MainMenu } from './components/MainMenu';
 import { Tutorial } from './components/Tutorial';
@@ -44,6 +45,7 @@ function GameApp() {
   const [activeCraftPageId, setActiveCraftPageId] = useState<string | null>(null);
   const [activeNpcId, setActiveNpcId] = useState<string | null>(null);
   const [activeIndustryId, setActiveIndustryId] = useState<string | null>(null);
+  const [activeActivityId, setActiveActivityId] = useState<string | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const [bagOpen, setBagOpen] = useState(false);
@@ -110,6 +112,7 @@ function GameApp() {
         if (hasCraftPage(payload.craftId)) setActiveCraftPageId(payload.craftId);
         else setActiveCraftId(payload.craftId);
       } else if (payload.type === 'interact-industry') setActiveIndustryId(payload.industryId);
+      else if (payload.type === 'interact-activity') setActiveActivityId(payload.activityId);
       else if (payload.type === 'interact-npc') setActiveNpcId(payload.npcId);
       else if (payload.type === 'player-pos')
         setPlayerPos({ tx: payload.tx, ty: payload.ty, mapW: payload.mapW, mapH: payload.mapH });
@@ -188,6 +191,7 @@ function GameApp() {
           <RegionPanel open={panelOpen} onClose={() => setPanelOpen(false)} />
           <WorldMapModal open={mapOpen} onClose={() => setMapOpen(false)} />
           <InventoryModal open={bagOpen} onClose={() => setBagOpen(false)} />
+          <ActivityModal activityId={activeActivityId} onClose={() => setActiveActivityId(null)} />
           <AchievementsModal open={achOpen} onClose={() => setAchOpen(false)} />
           <Tutorial open={tutorialOpen} onClose={() => setTutorialOpen(false)} />
           {!tutorialOpen && <StoryModal />}
