@@ -12,6 +12,12 @@ export type IndustryTier = 'harvest' | 'refine' | 'product';
 /** 地区地貌类型——驱动地图地形生成（河流/山石/海岸/街巷） */
 export type TerrainKind = 'water' | 'mountain' | 'coast' | 'plain';
 
+/** 地图视觉季节。先用于江南试装天气资源，后续可扩到所有地区。 */
+export type WeatherSeason = 'spring' | 'summer' | 'autumn' | 'winter';
+
+/** 地图天气表现层。 */
+export type WeatherKind = 'clear' | 'rain' | 'snow';
+
 /** 地图上的 NPC 角色类别 */
 export type NpcRole = 'tourist' | 'vendor';
 
@@ -27,11 +33,15 @@ export interface RegionNpcSpec {
 /** React 下发给场景的「地区地图规格」——场景据此摆点，无需 import 数据层 */
 export interface RegionMapSpec {
   regionId: string;
+  subregionId: string;
   name: string;
+  subregionName: string;
   /** [地面色, 点缀色] hex */
   palette: [string, string];
   /** 地貌类型，决定河流/山石/海岸布局 */
   terrain: TerrainKind;
+  season: WeatherSeason;
+  weather: WeatherKind;
   industries: { id: string; name: string; tier: IndustryTier }[];
   crafts: { id: string; name: string }[];
   gates: { regionId: string; name: string; unlocked: boolean }[];

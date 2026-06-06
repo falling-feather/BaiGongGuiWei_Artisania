@@ -77,7 +77,7 @@ export function WorldMapModal({ open, onClose }: { open: boolean; onClose: () =>
       <div className="modal modal--map" onClick={(e) => e.stopPropagation()}>
         <h3 className="modal__title">九州行脚 · 大地图</h3>
         <p className="modal__desc">
-          点亮的地区可一键前往；与商路相邻的地区可花 {UNLOCK_COST} 文打通（现有 {coin} 文）。
+          大地图仅展示大地区；区内小地区请在「镇务」中切换。点亮的大地区可一键前往；相邻商路可花 {UNLOCK_COST} 文打通（现有 {coin} 文）。
         </p>
         <div className="worldmap">
           <svg className="worldmap__lines" viewBox="0 0 100 100" preserveAspectRatio="none">

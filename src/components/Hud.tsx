@@ -1,7 +1,17 @@
 import { useGameStore } from '../store/gameStore';
 import { METRIC_KEYS, METRIC_LABELS, zoneOf, type Metrics } from '../engine';
+import { REGION_INDEX } from '../data';
 
-/** 叠加在游戏画面上的抬头显示：四维数值 + 提示 + 镇务按钮 */
+const UI_ROOT = '/assets/game/ui';
+
+const METRIC_ICONS: Record<string, string> = {
+  heritage: `${UI_ROOT}/icon_heritage.png`,
+  market: `${UI_ROOT}/icon_market.png`,
+  life: `${UI_ROOT}/icon_life.png`,
+  spirit: `${UI_ROOT}/icon_spirit.png`,
+};
+
+/** 叠加在游戏画面上的 HUD：四维数值、场景提示和常用入口。 */
 export function Hud({
   hint,
   onOpenPanel,
@@ -21,59 +31,110 @@ export function Hud({
   const turn = useGameStore((s) => s.state.turn);
   const maxTurns = useGameStore((s) => s.state.maxTurns);
   const playing = useGameStore((s) => s.state.status === 'playing');
+  const currentRegion = useGameStore((s) => s.state.currentRegion);
+  const currentSubregion = useGameStore((s) => s.state.currentSubregion);
   const hasEvent = useGameStore((s) => s.state.pendingEvent !== null);
   const dispatch = useGameStore((s) => s.dispatch);
+  const region = REGION_INDEX[currentRegion];
+  const subregion = region?.subregions.find((item) => item.id === currentSubregion);
+
+  const tools = [
+    { label: '大地图', icon: `${UI_ROOT}/icon_map.png`, frame: `${UI_ROOT}/hud_button.png`, onClick: onOpenMap },
+    { label: '背包', icon: `${UI_ROOT}/icon_bag.png`, frame: `${UI_ROOT}/hud_button.png`, onClick: onOpenBag },
+    {
+      label: '成就',
+      icon: `${UI_ROOT}/icon_achievement.png`,
+      frame: `${UI_ROOT}/hud_button.png`,
+      onClick: onOpenAchievements,
+    },
+    {
+      label: '镇务',
+      icon: `${UI_ROOT}/icon_panel.png`,
+      frame: `${UI_ROOT}/hud_button.png`,
+      onClick: onOpenPanel,
+      disabled: !playing,
+    },
+    {
+      label: '本季',
+      icon: `${UI_ROOT}/icon_season.png`,
+      frame: `${UI_ROOT}/hud_button_red.png`,
+      onClick: () => dispatch({ type: 'END_TURN' }),
+      disabled: !playing || hasEvent,
+    },
+  ];
 
   return (
     <>
       <div className="hud hud--top">
-        <div className="hud__metrics">
+        <div className="hud__left">
           <button
             className="hud__settings"
             onClick={onOpenSettings}
             title="设置 (Esc)"
             aria-label="设置"
           >
-            ⚙
+            <img className="hud__button-frame" src={`${UI_ROOT}/hud_button_gold.png`} alt="" draggable={false} />
+            <img className="hud__settings-icon" src={`${UI_ROOT}/icon_settings.png`} alt="" draggable={false} />
+            <span className="hud__sr-only">设置</span>
           </button>
-          {METRIC_KEYS.map((key) => {
-            const value = metrics[key as keyof Metrics];
-            const zone = zoneOf(value);
-            return (
-              <div className="hud__metric" key={key}>
-                <span className="hud__metric-name">{METRIC_LABELS[key]}</span>
-                <span className={`hud__metric-value zone-${zone}`}>{value}</span>
-              </div>
-            );
-          })}
+          <div className="hud__metrics" aria-label="四维状态">
+            {METRIC_KEYS.map((key) => {
+              const value = metrics[key as keyof Metrics];
+              const zone = zoneOf(value);
+              return (
+                <div className="hud__metric" key={key}>
+                  <img className="hud__metric-frame" src={`${UI_ROOT}/hud_metric.png`} alt="" draggable={false} />
+                  <img className="hud__metric-icon" src={METRIC_ICONS[key]} alt="" draggable={false} />
+                  <span className="hud__metric-name">{METRIC_LABELS[key]}</span>
+                  <span className={`hud__metric-value zone-${zone}`}>{value}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <div className="hud__season">
-          第 {turn} / {maxTurns} 季
-          <button className="btn btn--sm" onClick={onOpenMap}>
-            大地图
-          </button>
-          <button className="btn btn--sm" onClick={onOpenBag}>
-            背包
-          </button>
-          <button className="btn btn--sm" onClick={onOpenAchievements}>
-            成就
-          </button>
-          <button className="btn btn--sm" disabled={!playing} onClick={onOpenPanel}>
-            镇务行脚
-          </button>
-          <button
-            className="btn btn--sm"
-            disabled={!playing || hasEvent}
-            onClick={() => dispatch({ type: 'END_TURN' })}
-          >
-            结束本季
-          </button>
+
+        <div className="hud__right">
+          <div className="hud__location-plaque" aria-label="当前位置">
+            <img className="hud__button-frame" src={`${UI_ROOT}/hud_button.png`} alt="" draggable={false} />
+            <img className="hud__season-icon" src={`${UI_ROOT}/icon_map.png`} alt="" draggable={false} />
+            <span>{region?.name ?? currentRegion} · {subregion?.name ?? currentSubregion}</span>
+          </div>
+          <div className="hud__season-plaque" aria-label={`第 ${turn} / ${maxTurns} 季`}>
+            <img className="hud__button-frame" src={`${UI_ROOT}/hud_button_gold.png`} alt="" draggable={false} />
+            <img className="hud__season-icon" src={`${UI_ROOT}/icon_season.png`} alt="" draggable={false} />
+            <span>第 {turn} / {maxTurns} 季</span>
+          </div>
+          <div className="hud__tools" aria-label="常用入口">
+            {tools.map((tool) => (
+              <button
+                className="hud__tool"
+                key={tool.label}
+                disabled={tool.disabled}
+                onClick={tool.onClick}
+                title={tool.label}
+                aria-label={tool.label}
+              >
+                <img className="hud__button-frame" src={tool.frame} alt="" draggable={false} />
+                <img className="hud__tool-icon" src={tool.icon} alt="" draggable={false} />
+                <span className="hud__tool-text">{tool.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {hint && <div className="hud hud--hint">{hint}</div>}
+      {hint && (
+        <div className="hud hud--hint">
+          <img className="hud__panel-frame" src={`${UI_ROOT}/hud_panel.png`} alt="" draggable={false} />
+          <span>{hint}</span>
+        </div>
+      )}
 
-      <div className="hud hud--controls">WASD / 方向键 移动 · E 进入体验点</div>
+      <div className="hud hud--controls">
+        <img className="hud__panel-frame" src={`${UI_ROOT}/hud_panel.png`} alt="" draggable={false} />
+        <span>WASD / 方向键移动</span>
+        <span>E 进入体验点</span>
+      </div>
     </>
   );
 }

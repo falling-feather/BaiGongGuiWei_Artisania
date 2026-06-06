@@ -21,15 +21,23 @@ import { EventModal } from './components/EventModal';
 import { GameOverReport } from './components/GameOverReport';
 import { SettingsModal } from './components/SettingsModal';
 import { Minimap, type PlayerPos } from './components/Minimap';
-import { localStorageAdapter } from './storage/localStorageAdapter';
+import { MapEditor } from './components/MapEditor';
 
 const TUTORIAL_SEEN_KEY = 'artisania:tutorial-seen';
 
 export function App() {
+  const editorMode = new URLSearchParams(window.location.search).get('editor') === '1';
+  return editorMode ? <MapEditor /> : <GameApp />;
+}
+
+function GameApp() {
   const loadFromStorage = useGameStore((s) => s.loadFromStorage);
   const newGame = useGameStore((s) => s.newGame);
+  const refreshSaveSlots = useGameStore((s) => s.refreshSaveSlots);
+  const deleteSaveSlot = useGameStore((s) => s.deleteSaveSlot);
+  const saveSlots = useGameStore((s) => s.saveSlots);
+  const activeSaveSlotId = useGameStore((s) => s.activeSaveSlotId);
   const [view, setView] = useState<'menu' | 'playing'>('menu');
-  const [hasSave, setHasSave] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
   const [activeCraftId, setActiveCraftId] = useState<string | null>(null);
@@ -53,12 +61,11 @@ export function App() {
   // 首次挂载：恢复存档并探测是否有可续的存档
   useEffect(() => {
     void loadFromStorage();
-    void localStorageAdapter.hasSave().then(setHasSave);
   }, [loadFromStorage]);
 
   // 主菜单入口
-  function startNew(playerName: string) {
-    newGame(undefined, playerName);
+  async function startNew(playerName: string, slotId?: string) {
+    await newGame(undefined, playerName, slotId);
     setView('playing');
     lastSigRef.current = '';
     syncRegion();
@@ -67,17 +74,26 @@ export function App() {
       localStorage.setItem(TUTORIAL_SEEN_KEY, '1');
     }
   }
-  function continueGame() {
+  async function continueGame(slotId?: string) {
+    const loaded = await loadFromStorage(slotId);
+    if (!loaded) {
+      await refreshSaveSlots();
+      return;
+    }
     setView('playing');
     lastSigRef.current = '';
     syncRegion();
+  }
+
+  async function deleteSave(slotId: string) {
+    await deleteSaveSlot(slotId);
   }
 
   // 把当前地区规格下发给 Phaser 场景；signature 变化（换区/解锁）才重建
   function syncRegion() {
     if (!sceneReadyRef.current) return;
     const state = useGameStore.getState().state;
-    const sig = `${state.currentRegion}:${[...state.unlockedRegions].sort().join(',')}`;
+    const sig = `${state.currentRegion}:${state.currentSubregion}:${state.turn}:${[...state.unlockedRegions].sort().join(',')}`;
     if (sig === lastSigRef.current) return;
     const spec = buildRegionSpec(state.currentRegion, state);
     if (!spec) return;
@@ -150,7 +166,13 @@ export function App() {
     <div className="stage">
       <PhaserGame />
       {view === 'menu' ? (
-        <MainMenu hasSave={hasSave} onNew={startNew} onContinue={continueGame} />
+        <MainMenu
+          saveSlots={saveSlots}
+          activeSaveSlotId={activeSaveSlotId}
+          onNew={startNew}
+          onContinue={continueGame}
+          onDeleteSave={deleteSave}
+        />
       ) : (
         <>
           <Hud

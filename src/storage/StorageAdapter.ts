@@ -5,7 +5,7 @@
  */
 import type { GameState } from '../engine/types';
 
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 export interface SaveData {
   version: number;
@@ -13,10 +13,31 @@ export interface SaveData {
   state: GameState;
 }
 
+export interface SaveSlotSummary {
+  slotId: string;
+  name: string;
+  savedAt: number;
+  version: number;
+  turn: number;
+  playerName: string;
+  currentRegion: string;
+  currentSubregion: string;
+  devMode: boolean;
+}
+
+export interface SaveSlotData extends SaveData {
+  slotId: string;
+  name: string;
+}
+
 export interface StorageAdapter {
-  save(state: GameState): Promise<void>;
-  load(): Promise<GameState | null>;
-  clear(): Promise<void>;
+  save(state: GameState, slotId?: string, name?: string): Promise<string>;
+  load(slotId?: string): Promise<GameState | null>;
+  listSaves(): Promise<SaveSlotSummary[]>;
+  deleteSave(slotId: string): Promise<void>;
+  clear(slotId?: string): Promise<void>;
+  getActiveSlotId(): Promise<string | null>;
+  setActiveSlotId(slotId: string | null): Promise<void>;
   /** 是否存在可用（版本兼容）的存档 */
   hasSave(): Promise<boolean>;
 }

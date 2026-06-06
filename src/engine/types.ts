@@ -156,6 +156,8 @@ export interface GameState {
   unlockedRegions: RegionId[];
   /** 玩家当前所在地区 id（采料/产业在此地进行） */
   currentRegion: RegionId;
+  /** 玩家当前所在的小地区 id（同一大地区内的可探索地点） */
+  currentSubregion: string;
   /** 已解锁的成就 id 列表 */
   achievements: string[];
   /** 已呈现过的剧情节点 id（每个只出现一次） */
@@ -240,6 +242,8 @@ export type GameAction =
   | { type: 'GATHER_RESOURCE'; industryId: string; quality?: number }
   /** 前往一个已解锁的地区 */
   | { type: 'TRAVEL'; regionId: string }
+  /** 在当前大地区内切换小地区 */
+  | { type: 'TRAVEL_SUBREGION'; subregionId: string }
   /** 花费解锁一个与已解锁地区相邻的新地区 */
   | { type: 'UNLOCK_REGION'; regionId: string }
   /** 标记一个剧情节点已阅读；choiceId 为分支选择时一并应用其标记/日志 */
@@ -309,6 +313,16 @@ export interface TerrainTheme {
 
 export type RegionId = string;
 
+/** 大地区内的小地区/地点定义 */
+export interface SubregionDef {
+  id: string;
+  name: string;
+  /** 小地区定位：市集、工坊、郊野、码头等 */
+  role: string;
+  blurb: string;
+  traits: string[];
+}
+
 /** 地区定义（世界主干，规划 §17） */
 export interface RegionDef {
   id: RegionId;
@@ -326,6 +340,8 @@ export interface RegionDef {
   neighbors: RegionId[];
   /** 地区性格标签 */
   traits: string[];
+  /** 属于该大地区的多个小地区 */
+  subregions: SubregionDef[];
   /** 是否首发即解锁 */
   startUnlocked: boolean;
 }

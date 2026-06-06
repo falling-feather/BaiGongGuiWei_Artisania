@@ -83,6 +83,7 @@ describe('gameReducer', () => {
     const s = freshState();
     expect(s.unlockedRegions).toContain('jiangnan');
     expect(s.currentRegion).toBe('jiangnan');
+    expect(s.currentSubregion).toBe('jiangnan-suhang');
   });
 
   it('GATHER_RESOURCE 在本地产业产出半成品并消耗原料/人力', () => {
@@ -117,6 +118,22 @@ describe('gameReducer', () => {
     const s1 = gameReducer(s, { type: 'UNLOCK_REGION', regionId: 'huizhou' }, content);
     expect(s1.unlockedRegions).toContain('huizhou');
     expect(s1.resources.coin).toBeLessThan(s.resources.coin);
+  });
+
+  it('TRAVEL 切换大地区时进入该地区默认小地区', () => {
+    let s = freshState();
+    s = { ...s, resources: { ...s.resources, coin: 100 } };
+    s = gameReducer(s, { type: 'UNLOCK_REGION', regionId: 'huizhou' }, content);
+    const s1 = gameReducer(s, { type: 'TRAVEL', regionId: 'huizhou' }, content);
+    expect(s1.currentRegion).toBe('huizhou');
+    expect(s1.currentSubregion).toBe('huizhou-ink-alley');
+  });
+
+  it('TRAVEL_SUBREGION 在当前大地区内切换小地区', () => {
+    const s = freshState();
+    const s1 = gameReducer(s, { type: 'TRAVEL_SUBREGION', subregionId: 'jiangnan-longquan' }, content);
+    expect(s1.currentRegion).toBe('jiangnan');
+    expect(s1.currentSubregion).toBe('jiangnan-longquan');
   });
 
   it('UNLOCK_REGION 拒绝不相邻地区', () => {

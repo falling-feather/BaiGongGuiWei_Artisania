@@ -4,7 +4,7 @@
  */
 import type { GameState, IndustryDef } from '../engine';
 import { INDUSTRIES, INDUSTRY_INDEX, REGION_INDEX, CRAFT_INDEX, RESOURCE_INDEX, npcsForRegion } from '../data';
-import type { RegionMapSpec, IndustryTier, TerrainKind } from './EventBus';
+import type { RegionMapSpec, IndustryTier, TerrainKind, WeatherKind, WeatherSeason } from './EventBus';
 
 /** 按「输入是否为空 / 产出资源层级」推断产业层级 */
 function industryTier(ind: IndustryDef): IndustryTier {
@@ -21,10 +21,44 @@ function terrainKind(base: string, obstacles: string[]): TerrainKind {
   return 'plain';
 }
 
+function seasonFromTurn(turn: number): WeatherSeason {
+  const index = (((turn - 1) % 4) + 4) % 4;
+  return (['spring', 'summer', 'autumn', 'winter'] as const)[index];
+}
+
+function weatherForSeason(season: WeatherSeason): WeatherKind {
+  if (season === 'winter') return 'snow';
+  return 'clear';
+}
+
+function safeSeasonOverride(value: string | null): WeatherSeason | null {
+  if (value === 'spring' || value === 'summer' || value === 'autumn' || value === 'winter') return value;
+  return null;
+}
+
+function safeWeatherOverride(value: string | null): WeatherKind | null {
+  if (value === 'clear' || value === 'rain' || value === 'snow') return value;
+  return null;
+}
+
+function devWeatherOverride() {
+  if (!import.meta.env.DEV || typeof window === 'undefined') return {};
+  const params = new URLSearchParams(window.location.search);
+  return {
+    season: safeSeasonOverride(params.get('qaSeason')),
+    weather: safeWeatherOverride(params.get('qaWeather')),
+  };
+}
+
 /** 组装某地区在当前状态下的地图规格；地区不存在时返回 null */
 export function buildRegionSpec(regionId: string, state: GameState): RegionMapSpec | null {
   const region = REGION_INDEX[regionId];
   if (!region) return null;
+  const subregion =
+    region.subregions.find((item) => item.id === state.currentSubregion) ?? region.subregions[0];
+  const overrides = devWeatherOverride();
+  const season = overrides.season ?? seasonFromTurn(state.turn);
+  const weather = overrides.weather ?? weatherForSeason(season);
 
   // 显式列入的产业
   const explicit = region.industries
@@ -60,9 +94,13 @@ export function buildRegionSpec(regionId: string, state: GameState): RegionMapSp
 
   return {
     regionId: region.id,
+    subregionId: subregion?.id ?? region.id,
     name: region.name,
+    subregionName: subregion?.name ?? region.name,
     palette: region.terrain.palette.slice(0, 2) as [string, string],
     terrain: terrainKind(region.terrain.base, region.terrain.obstacles),
+    season,
+    weather,
     industries,
     crafts,
     gates,

@@ -24,6 +24,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const content = useGameStore((s) => s.content);
   const resources = useGameStore((s) => s.state.resources);
   const currentRegion = useGameStore((s) => s.state.currentRegion);
+  const currentSubregion = useGameStore((s) => s.state.currentSubregion);
   const unlockedRegions = useGameStore((s) => s.state.unlockedRegions);
   const playing = useGameStore((s) => s.state.status === 'playing');
   const dispatch = useGameStore((s) => s.dispatch);
@@ -34,6 +35,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const industries = content.industries ?? [];
   const region = regions.find((r) => r.id === currentRegion);
   const labor = resources.labor ?? 0;
+  const currentSub = region?.subregions.find((s) => s.id === currentSubregion) ?? region?.subregions[0];
 
   const localIndustries: IndustryDef[] = (region?.industries ?? [])
     .map((id) => industries.find((i) => i.id === id))
@@ -71,6 +73,32 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
           </small>
         </h3>
         {region && <p className="modal__desc">{region.blurb}</p>}
+
+        {region && (
+          <section className="panel-block">
+            <h4 className="panel-block__title">区内小地区</h4>
+            {currentSub && (
+              <p className="panel-note">
+                当前：{currentSub.name} · {currentSub.role}。{currentSub.blurb}
+              </p>
+            )}
+            <div className="subregion-grid">
+              {region.subregions.map((subregion) => (
+                <button
+                  key={subregion.id}
+                  className={`subregion-card ${subregion.id === currentSubregion ? 'is-current' : ''}`}
+                  disabled={!playing || subregion.id === currentSubregion}
+                  onClick={() => dispatch({ type: 'TRAVEL_SUBREGION', subregionId: subregion.id })}
+                  title={subregion.blurb}
+                >
+                  <b>{subregion.name}</b>
+                  <span>{subregion.role}</span>
+                  <small>{subregion.traits.join(' / ')}</small>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="panel-block">
           <h4 className="panel-block__title">库存</h4>

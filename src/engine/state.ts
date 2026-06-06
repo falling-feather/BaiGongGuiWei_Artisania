@@ -30,6 +30,11 @@ export const DEV_RESOURCES = {
   labor: 999999,
 };
 
+function firstSubregionId(regions: RegionDef[], regionId: string): string {
+  const region = regions.find((r) => r.id === regionId);
+  return region?.subregions[0]?.id ?? regionId;
+}
+
 export function createInitialState(
   crafts: Craft[],
   apprentices: Apprentice[],
@@ -53,6 +58,7 @@ export function createInitialState(
     : regions.filter((r) => r.startUnlocked).map((r) => r.id);
   const currentRegion =
     regions.find((r) => r.startUnlocked)?.id ?? unlockedRegions[0] ?? '';
+  const currentSubregion = firstSubregionId(regions, currentRegion);
 
   return {
     seed,
@@ -72,6 +78,7 @@ export function createInitialState(
     report: null,
     unlockedRegions,
     currentRegion,
+    currentSubregion,
     achievements: [],
     seenStory: [],
     flags: [],

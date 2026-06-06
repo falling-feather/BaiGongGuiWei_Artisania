@@ -16,6 +16,7 @@ import {
 } from '../engine';
 import { CRAFTS, STARTING_APPRENTICES, EVENTS, INDUSTRIES, REGIONS, ACHIEVEMENTS, STORY_BEATS, RESOURCES, NPCS, QUESTS } from '../data';
 import { localStorageAdapter } from '../storage/localStorageAdapter';
+import type { SaveSlotSummary } from '../storage/StorageAdapter';
 
 const content: GameContent = {
   crafts: CRAFTS,
@@ -33,12 +34,18 @@ const content: GameContent = {
 interface GameStore {
   state: GameState;
   content: GameContent;
+  saveSlots: SaveSlotSummary[];
+  activeSaveSlotId: string | null;
   /** 通用派发入口：所有规则变更都经此 */
   dispatch: (action: GameAction) => void;
   /** 从存档恢复；无存档则保持新局 */
-  loadFromStorage: () => Promise<void>;
+  loadFromStorage: (slotId?: string) => Promise<boolean>;
+  /** 刷新可用存档槽位 */
+  refreshSaveSlots: () => Promise<void>;
   /** 开新局并清档 */
-  newGame: (seed?: number, playerName?: string) => void;
+  newGame: (seed?: number, playerName?: string, slotId?: string) => Promise<string>;
+  /** 删除指定存档槽 */
+  deleteSaveSlot: (slotId: string) => Promise<void>;
 }
 
 function bootstrapState(): GameState {
@@ -54,21 +61,49 @@ function bootstrapState(): GameState {
 export const useGameStore = create<GameStore>((set, get) => ({
   state: bootstrapState(),
   content,
+  saveSlots: [],
+  activeSaveSlotId: null,
 
   dispatch: (action) => {
     const next = gameReducer(get().state, action, get().content);
     set({ state: next });
-    void localStorageAdapter.save(next);
+    void localStorageAdapter.save(next, get().activeSaveSlotId ?? undefined).then((slotId) => {
+      set({ activeSaveSlotId: slotId });
+      void get().refreshSaveSlots();
+    });
   },
 
-  loadFromStorage: async () => {
-    const saved = await localStorageAdapter.load();
-    if (saved) set({ state: saved });
+  loadFromStorage: async (slotId) => {
+    const saved = await localStorageAdapter.load(slotId);
+    if (!saved) {
+      await get().refreshSaveSlots();
+      return false;
+    }
+    const activeSaveSlotId = await localStorageAdapter.getActiveSlotId();
+    set({ state: saved, activeSaveSlotId });
+    await get().refreshSaveSlots();
+    return true;
   },
 
-  newGame: (seed, playerName) => {
+  refreshSaveSlots: async () => {
+    const [saveSlots, activeSaveSlotId] = await Promise.all([
+      localStorageAdapter.listSaves(),
+      localStorageAdapter.getActiveSlotId(),
+    ]);
+    set({ saveSlots, activeSaveSlotId });
+  },
+
+  newGame: async (seed, playerName, slotId) => {
     const next = gameReducer(get().state, { type: 'NEW_GAME', seed, playerName }, get().content);
     set({ state: next });
-    void localStorageAdapter.save(next);
+    const savedSlotId = await localStorageAdapter.save(next, slotId);
+    set({ activeSaveSlotId: savedSlotId });
+    await get().refreshSaveSlots();
+    return savedSlotId;
+  },
+
+  deleteSaveSlot: async (slotId) => {
+    await localStorageAdapter.deleteSave(slotId);
+    await get().refreshSaveSlots();
   },
 }));

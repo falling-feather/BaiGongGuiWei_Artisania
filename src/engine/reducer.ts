@@ -340,7 +340,23 @@ function travel(state: GameState, content: GameContent, regionId: string): GameS
   return {
     ...state,
     currentRegion: regionId,
+    currentSubregion: region?.subregions[0]?.id ?? regionId,
     log: pushLog(state.log, `起程前往「${region?.name ?? regionId}」。`),
+  };
+}
+
+/** 在当前大地区内切换小地区 */
+function travelSubregion(state: GameState, content: GameContent, subregionId: string): GameState {
+  const region = (content.regions ?? []).find((r) => r.id === state.currentRegion);
+  const subregion = region?.subregions.find((s) => s.id === subregionId);
+  if (!region || !subregion) {
+    return { ...state, log: pushLog(state.log, '该小地区暂不可达。') };
+  }
+  if (state.currentSubregion === subregionId) return state;
+  return {
+    ...state,
+    currentSubregion: subregionId,
+    log: pushLog(state.log, `转往「${region.name} · ${subregion.name}」。`),
   };
 }
 
@@ -539,6 +555,10 @@ function reduce(
     case 'TRAVEL':
       if (state.status !== 'playing') return state;
       return travel(state, content, action.regionId);
+
+    case 'TRAVEL_SUBREGION':
+      if (state.status !== 'playing') return state;
+      return travelSubregion(state, content, action.subregionId);
 
     case 'UNLOCK_REGION':
       if (state.status !== 'playing') return state;
