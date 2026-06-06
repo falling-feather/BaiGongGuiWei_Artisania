@@ -74,6 +74,11 @@ interface AmbientWalker {
   role: Extract<NpcRole, 'tourist' | 'vendor'>;
 }
 
+interface ForegroundCover {
+  image: Phaser.GameObjects.Image;
+  bounds: Phaser.Geom.Rectangle;
+}
+
 /** 当前感应到的可交互对象（交互点或 NPC） */
 interface PointLocation {
   tileX: number;
@@ -99,6 +104,7 @@ const PLAYER_SPEED = 160;
 const NPC_SPEED = 46;
 const CHARACTER_SCALE = 0.72;
 const INTERACT_RANGE = TILE * 1.8;
+const FOREGROUND_COVER_DEPTH = 85000;
 const ZOOM_MIN = 1;
 const ZOOM_MAX = 4;
 const ZOOM_STEP = 0.25;
@@ -186,6 +192,8 @@ export class StreetScene extends Phaser.Scene {
   private nearby: Nearby | null = null;
   /** 地形装饰层（河面/桥/栅栏/树石），随地区重建 */
   private decor: Phaser.GameObjects.Image[] = [];
+  /** 玩家上方的前景遮挡层：草丛、树冠、芦苇等 */
+  private foregroundCovers: ForegroundCover[] = [];
   /** NPC 实体列表 */
   private npcs: NpcEntity[] = [];
   /** 非交互街景行人，只负责让街道更有生活气息 */
@@ -320,6 +328,7 @@ export class StreetScene extends Phaser.Scene {
     this.labels = [];
     this.decor.forEach((d) => d.destroy());
     this.decor = [];
+    this.foregroundCovers = [];
     this.npcs.forEach((n) => {
       n.sprite.destroy();
       n.label.destroy();
@@ -723,6 +732,40 @@ export class StreetScene extends Phaser.Scene {
     return img;
   }
 
+  private addForegroundCover(anchorTx: number, anchorTy: number, tex: string, tileW = 2, tileH = 2, scale = 1) {
+    if (anchorTx < 0 || anchorTx >= this.mapWTiles || anchorTy < 0 || anchorTy >= MAP_H) return null;
+    const px = anchorTx * TILE + TILE / 2;
+    const py = (anchorTy + 1) * TILE;
+    const image = this.add
+      .image(px, py, tex)
+      .setOrigin(0.5, 1)
+      .setDepth(FOREGROUND_COVER_DEPTH)
+      .setScale(scale);
+    const bounds = new Phaser.Geom.Rectangle(
+      px - (tileW * TILE) / 2,
+      py - tileH * TILE,
+      tileW * TILE,
+      tileH * TILE,
+    );
+    this.decor.push(image);
+    this.foregroundCovers.push({ image, bounds });
+    return image;
+  }
+
+  private updateForegroundCovers() {
+    if (!this.player) return;
+    const playerBounds = new Phaser.Geom.Rectangle(
+      this.player.x - TILE * 0.32,
+      this.player.y - TILE * 0.82,
+      TILE * 0.64,
+      TILE * 0.9,
+    );
+    for (const cover of this.foregroundCovers) {
+      const covered = Phaser.Geom.Intersects.RectangleToRectangle(playerBounds, cover.bounds);
+      cover.image.setAlpha(covered ? 0.42 : 1);
+    }
+  }
+
   private seasonalPropOverlayFor(tex: string) {
     if (!this.usesWeatherArt()) return null;
     if (this.activeSeason === 'summer') {
@@ -807,6 +850,16 @@ export class StreetScene extends Phaser.Scene {
       this.tryAddProp(Math.floor(this.mapWTiles * 0.18), ROAD_ROW_TOP - 2, TEX.willow, 2, 3);
       this.tryAddProp(Math.floor(this.mapWTiles * 0.82), ROAD_ROW_BOTTOM + 3, TEX.willow, 2, 3);
     }
+
+    const coverTex = kind === 'water' ? TEX.summerDenseReedClump : TEX.summerWaterGrassClump;
+    rows.forEach((row, index) => {
+      this.addForegroundCover(Math.floor(this.mapWTiles * (0.22 + index * 0.18)), row + 1, coverTex, 3, 2);
+      this.addForegroundCover(Math.floor(this.mapWTiles * (0.72 - index * 0.12)), row - 1, coverTex, 3, 2);
+    });
+    if (kind === 'mountain') {
+      this.addForegroundCover(Math.floor(this.mapWTiles * 0.14), ROAD_ROW_TOP - 1, TEX.summerLushTreeCrown, 3, 3, 1.08);
+      this.addForegroundCover(Math.floor(this.mapWTiles * 0.86), ROAD_ROW_BOTTOM + 2, TEX.summerLushTreeCrown, 3, 3, 1.08);
+    }
   }
 
   private buildTerrain(kind: TerrainKind) {
@@ -847,7 +900,7 @@ export class StreetScene extends Phaser.Scene {
       this.tryAddProp(riverAt(ROAD_ROW_BOTTOM + 3) - 4, ROAD_ROW_BOTTOM + 3, TEX.dock, 3, 1);
       this.addProp(riverAt(ROAD_ROW_BOTTOM + 3) + 5, ROAD_ROW_BOTTOM + 3, TEX.boat, false, 4, 1);
       if (summerWater) {
-        this.addProp(riverAt(ROAD_ROW_TOP + 5) - 2, ROAD_ROW_TOP + 5, TEX.summerDenseReedClump, false, 3, 2);
+        this.addForegroundCover(riverAt(ROAD_ROW_TOP + 5) - 2, ROAD_ROW_TOP + 5, TEX.summerDenseReedClump, 3, 2);
         this.addProp(riverAt(ROAD_ROW_BOTTOM - 2) + 2, ROAD_ROW_BOTTOM - 2, TEX.summerLotusPatch, false, 3, 2);
       }
     } else if (kind === 'coast') {
@@ -1148,6 +1201,7 @@ export class StreetScene extends Phaser.Scene {
     this.player.setDepth(this.player.y);
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body | null;
     this.updatePlayerAnimation(playerBody?.velocity.x ?? 0, playerBody?.velocity.y ?? 0);
+    this.updateForegroundCovers();
 
     this.updateNpcs();
     this.updateAmbientWalkers();

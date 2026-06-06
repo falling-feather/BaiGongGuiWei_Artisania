@@ -1,6 +1,6 @@
 import { useGameStore } from '../store/gameStore';
 import { RESOURCES, RESOURCE_INDEX } from '../data';
-import type { ResourceTier } from '../engine';
+import type { PlayerAttributeKey, ResourceTier } from '../engine';
 
 const TIER_LABEL: Record<ResourceTier, string> = {
   raw: '原料 · 天然物',
@@ -8,10 +8,40 @@ const TIER_LABEL: Record<ResourceTier, string> = {
   product: '成品 · 出品',
 };
 const TIER_ORDER: ResourceTier[] = ['raw', 'material', 'product'];
+const ATTRIBUTE_LABEL: Record<PlayerAttributeKey, string> = {
+  craft: '手艺',
+  knowledge: '见闻',
+  people: '人缘',
+  commerce: '商誉',
+  stamina: '体魄',
+  mind: '心境',
+};
+const ATTRIBUTE_ORDER: PlayerAttributeKey[] = ['craft', 'knowledge', 'people', 'commerce', 'stamina', 'mind'];
+const PHASE_LABEL = {
+  dawn: '清晨',
+  morning: '上午',
+  afternoon: '下午',
+  dusk: '黄昏',
+  night: '夜间',
+} as const;
+const SEASON_LABEL = {
+  spring: '春',
+  summer: '夏',
+  autumn: '秋',
+  winter: '冬',
+} as const;
+const WEATHER_LABEL = {
+  clear: '晴',
+  rain: '雨',
+  snow: '雪',
+} as const;
 
 /** 背包：按分层罗列当前持有的资源；通货与工时单列。 */
 export function InventoryModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const resources = useGameStore((s) => s.state.resources);
+  const state = useGameStore((s) => s.state);
+  const resources = state.resources;
+  const profile = state.profile;
+  const calendar = state.calendar;
   if (!open) return null;
 
   const coin = resources.coin ?? 0;
@@ -50,38 +80,61 @@ export function InventoryModal({ open, onClose }: { open: boolean; onClose: () =
           <span className="bag-count">货品 {totalKinds} 种</span>
         </div>
 
-        {totalKinds === 0 && misc.length === 0 ? (
-          <p className="modal__desc">行囊空空，去各地采料、开工攒些家底吧。</p>
-        ) : (
-          <div className="bag-body">
-            {TIER_ORDER.map((tier) =>
-              byTier[tier].length === 0 ? null : (
-                <div className="panel-block" key={tier}>
-                  <div className="panel-block__title">{TIER_LABEL[tier]}</div>
-                  <div className="region-chips">
-                    {byTier[tier].map((it) => (
-                      <span className="stock-chip" key={it.key} title={RESOURCE_INDEX[it.key]?.blurb}>
-                        {it.name} ×{it.amount}
-                      </span>
-                    ))}
+        <div className="bag-layout">
+          <aside className="character-panel">
+            <div className="character-panel__head">
+              <span>{state.playerName || '无名匠人'}</span>
+              <b>{profile.title}</b>
+            </div>
+            <div className="character-panel__meta">
+              第 {calendar.day} 日 · {SEASON_LABEL[calendar.season]} · {PHASE_LABEL[calendar.phase]} · {WEATHER_LABEL[calendar.weather]}
+            </div>
+            <div className="character-stats">
+              {ATTRIBUTE_ORDER.map((key) => (
+                <div className="character-stat" key={key}>
+                  <span>{ATTRIBUTE_LABEL[key]}</span>
+                  <b>{profile.attributes[key]}</b>
+                  <i style={{ width: `${profile.attributes[key]}%` }} />
+                </div>
+              ))}
+            </div>
+          </aside>
+
+          <div className="bag-inventory">
+            {totalKinds === 0 && misc.length === 0 ? (
+              <p className="modal__desc">行囊空空，去各地采料、开工攒些家底吧。</p>
+            ) : (
+              <div className="bag-body">
+                {TIER_ORDER.map((tier) =>
+                  byTier[tier].length === 0 ? null : (
+                    <div className="panel-block" key={tier}>
+                      <div className="panel-block__title">{TIER_LABEL[tier]}</div>
+                      <div className="region-chips">
+                        {byTier[tier].map((it) => (
+                          <span className="stock-chip" key={it.key} title={RESOURCE_INDEX[it.key]?.blurb}>
+                            {it.name} ×{it.amount}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ),
+                )}
+                {misc.length > 0 && (
+                  <div className="panel-block">
+                    <div className="panel-block__title">其他</div>
+                    <div className="region-chips">
+                      {misc.map((it) => (
+                        <span className="stock-chip" key={it.key}>
+                          {it.name} ×{it.amount}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ),
-            )}
-            {misc.length > 0 && (
-              <div className="panel-block">
-                <div className="panel-block__title">其他</div>
-                <div className="region-chips">
-                  {misc.map((it) => (
-                    <span className="stock-chip" key={it.key}>
-                      {it.name} ×{it.amount}
-                    </span>
-                  ))}
-                </div>
+                )}
               </div>
             )}
           </div>
-        )}
+        </div>
 
         <div className="btn-row">
           <button className="btn btn--ghost" onClick={onClose}>关闭</button>

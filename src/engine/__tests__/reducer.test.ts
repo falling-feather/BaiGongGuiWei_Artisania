@@ -86,6 +86,25 @@ describe('gameReducer', () => {
     expect(s.currentSubregion).toBe('jiangnan-suhang');
   });
 
+  it('初始状态包含玩家档案、日历和田圃槽位', () => {
+    const s = freshState();
+    expect(s.profile.title).toBe('粗手生人');
+    expect(s.profile.attributes.craft).toBe(5);
+    expect(s.calendar.day).toBe(1);
+    expect(s.calendar.phase).toBe('morning');
+    expect(s.farmPlots.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('ADVANCE_TIME 推进日内时段，夜间后进入下一日', () => {
+    let s = freshState();
+    s = gameReducer(s, { type: 'ADVANCE_TIME' }, content);
+    expect(s.calendar.phase).toBe('afternoon');
+    s = { ...s, calendar: { ...s.calendar, phase: 'night' }, pendingEvent: null };
+    const next = gameReducer(s, { type: 'ADVANCE_TIME' }, content);
+    expect(next.calendar.day).toBe(s.calendar.day + 1);
+    expect(next.calendar.phase).toBe('morning');
+  });
+
   it('GATHER_RESOURCE 在本地产业产出半成品并消耗原料/人力', () => {
     // 江南具备 smelt-iron（冶铁）：消耗 ironOre+coal，产出 ironIngot
     let s = freshState();
@@ -272,9 +291,13 @@ describe('gameReducer', () => {
     expect(s.npcAffinity[npcId] ?? 0).toBe(0);
     s = gameReducer(s, { type: 'TALK_NPC', npcId }, content);
     expect(s.npcAffinity[npcId]).toBe(8);
+    expect(s.npcStates[npcId].talks).toBe(1);
+    expect(s.npcStates[npcId].stage).toBe('stranger');
+    expect(s.profile.attributes.people).toBeGreaterThan(5);
     // 反复攀谈不超过 100
     for (let i = 0; i < 30; i++) s = gameReducer(s, { type: 'TALK_NPC', npcId }, content);
     expect(s.npcAffinity[npcId]).toBe(100);
+    expect(s.npcStates[npcId].stage).toBe('confidant');
   });
 
   it('COMPLETE_QUEST：好感不足时拒绝交付', () => {

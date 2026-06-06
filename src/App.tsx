@@ -93,7 +93,7 @@ function GameApp() {
   function syncRegion() {
     if (!sceneReadyRef.current) return;
     const state = useGameStore.getState().state;
-    const sig = `${state.currentRegion}:${state.currentSubregion}:${state.turn}:${[...state.unlockedRegions].sort().join(',')}`;
+    const sig = `${state.currentRegion}:${state.currentSubregion}:${state.turn}:${state.calendar.day}:${state.calendar.phase}:${state.calendar.weather}:${[...state.unlockedRegions].sort().join(',')}`;
     if (sig === lastSigRef.current) return;
     const spec = buildRegionSpec(state.currentRegion, state);
     if (!spec) return;

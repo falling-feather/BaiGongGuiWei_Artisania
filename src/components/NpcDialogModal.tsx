@@ -9,6 +9,7 @@ import { NPC_INDEX, questsForNpc } from '../data';
 export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClose: () => void }) {
   const dispatch = useGameStore((s) => s.dispatch);
   const affinityMap = useGameStore((s) => s.state.npcAffinity);
+  const npcStates = useGameStore((s) => s.state.npcStates);
   const completed = useGameStore((s) => s.state.completedQuests);
   const state = useGameStore((s) => s.state);
 
@@ -17,6 +18,7 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
   if (!npc) return null;
 
   const affinity = affinityMap[npcId] ?? 0;
+  const runtime = npcStates[npcId];
   const quests = questsForNpc(npcId);
   const greeting = npc.greetings[0] ?? '……';
 
@@ -26,10 +28,15 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
         <h3 className="modal__title">
           {npc.name}{' '}
           <small style={{ fontSize: 12, color: 'var(--indigo-soft)' }}>
-            {npc.role === 'vendor' ? '关联人物' : '游客'}
+            {npc.profession ?? (npc.role === 'vendor' ? '关联人物' : '游客')}
           </small>
         </h3>
         <p className="modal__desc">“{greeting}”</p>
+        <div className="npc-profile-strip">
+          <span>关系：{runtime?.stage ?? 'stranger'}</span>
+          <span>交谈：{runtime?.talks ?? 0} 次</span>
+          {npc.personality && <span>性格：{npc.personality}</span>}
+        </div>
 
         <div className="npc-affinity">
           <span className="npc-affinity__label">好感度</span>

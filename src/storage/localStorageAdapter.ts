@@ -4,6 +4,7 @@
  */
 import type { GameState } from '../engine/types';
 import { firstSubregionIdForRegion } from '../data/regions';
+import { createCalendar, createDefaultPlayerProfile, createInitialFarmPlots } from '../engine/state';
 import {
   SAVE_VERSION,
   type SaveData,
@@ -18,6 +19,7 @@ const ACTIVE_KEY = 'artisania:saves:active';
 const SLOT_PREFIX = 'artisania:saves:slot:';
 const DEFAULT_SLOT_ID = 'slot-1';
 const MAX_SAVE_SLOTS = 5;
+const COMPATIBLE_SAVE_VERSIONS = new Set([5, 6, SAVE_VERSION]);
 
 function slotKey(slotId: string) {
   return `${SLOT_PREFIX}${slotId}`;
@@ -37,9 +39,14 @@ function migrateState(state: GameState): GameState {
     state.currentSubregion && state.currentSubregion !== state.currentRegion
       ? state.currentSubregion
       : firstSubregionIdForRegion(state.currentRegion);
+  const day = state.calendar?.day ?? state.turn ?? 1;
   return {
     ...state,
     currentSubregion,
+    profile: state.profile ?? createDefaultPlayerProfile(),
+    calendar: state.calendar ?? createCalendar(day),
+    farmPlots: state.farmPlots ?? createInitialFarmPlots(),
+    npcStates: state.npcStates ?? {},
   };
 }
 
@@ -80,7 +87,7 @@ export class LocalStorageAdapter implements StorageAdapter {
       const raw = localStorage.getItem(slotKey(slotId));
       if (!raw) return null;
       const payload = JSON.parse(raw) as SaveSlotData;
-      if (payload.version !== SAVE_VERSION && payload.version !== 5) return null;
+      if (!COMPATIBLE_SAVE_VERSIONS.has(payload.version)) return null;
       return {
         ...payload,
         version: SAVE_VERSION,
@@ -98,7 +105,7 @@ export class LocalStorageAdapter implements StorageAdapter {
     if (!raw) return;
     try {
       const legacy = JSON.parse(raw) as SaveData;
-      if (legacy.version !== SAVE_VERSION && legacy.version !== 5) return;
+      if (!COMPATIBLE_SAVE_VERSIONS.has(legacy.version)) return;
       const state = migrateState(legacy.state);
       const payload: SaveSlotData = {
         slotId: DEFAULT_SLOT_ID,

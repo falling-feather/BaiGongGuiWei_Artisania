@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 
 type EditorCategory = 'terrain' | 'road' | 'water' | 'building' | 'prop' | 'actor' | 'marker';
-type EditorLayer = 'terrain' | 'road' | 'water' | 'structure' | 'prop' | 'actor' | 'marker';
+type EditorLayer = 'terrain' | 'road' | 'water' | 'structure' | 'prop' | 'actor' | 'foreground' | 'marker';
 type EditorTool = 'paint' | 'select' | 'erase';
 type EditorRegionId = 'jiangnan' | 'western';
 type InteractionKind =
@@ -430,6 +430,9 @@ const BASE_PALETTE: PaletteItem[] = [
   object('boat', '乌篷船', 'prop', 'prop', '/assets/game/props/boat.png', 4, 2, false, true, 'decoration'),
   object('market_crates', '货箱摊具', 'prop', 'prop', '/assets/game/props/market_crates.png', 3, 2, true, true, 'decoration'),
   object('paper_umbrella', '纸伞桌', 'prop', 'prop', '/assets/game/props/paper_umbrella.png', 2, 3, true, true, 'decoration'),
+  object('fg_water_grass', '前景水草', 'prop', 'foreground', '/assets/game/weather/props/summer_water_grass_clump.png', 3, 2, false, true, 'decoration'),
+  object('fg_reed_clump', '前景芦苇', 'prop', 'foreground', '/assets/game/weather/props/summer_dense_reed_clump.png', 3, 2, false, true, 'decoration'),
+  object('fg_tree_crown', '前景树冠', 'prop', 'foreground', '/assets/game/weather/props/summer_lush_tree_crown.png', 3, 3, false, true, 'decoration'),
   ...OPEN_WORLD_PROP_DEFS.map(([id, name, interaction, tileW, tileH, solid]) =>
     object(id, name, 'prop', 'prop', `/assets/game/props/open_world/${id}.png`, tileW, tileH, solid, true, interaction),
   ),
@@ -461,6 +464,7 @@ const LAYER_LABEL: Record<EditorLayer, string> = {
   structure: '建筑层',
   prop: '道具层',
   actor: '单位层',
+  foreground: '前景遮挡层',
   marker: '标记层',
 };
 
@@ -473,7 +477,7 @@ const COMPONENT_KIND_LABEL: Record<ComponentKind, string> = {
 };
 
 const MODEL_CATEGORY_OPTIONS: EditorCategory[] = ['building', 'prop', 'actor', 'marker'];
-const MODEL_LAYER_OPTIONS: EditorLayer[] = ['structure', 'prop', 'actor', 'marker'];
+const MODEL_LAYER_OPTIONS: EditorLayer[] = ['structure', 'prop', 'actor', 'foreground', 'marker'];
 const INTERACTION_OPTIONS: Array<{ value: InteractionKind; label: string }> = [
   { value: 'none', label: '无' },
   { value: 'craft', label: '手艺' },
@@ -584,7 +588,8 @@ function layerBase(layer: EditorLayer) {
     structure: 200,
     prop: 320,
     actor: 500,
-    marker: 640,
+    foreground: 820,
+    marker: 900,
   }[layer];
 }
 

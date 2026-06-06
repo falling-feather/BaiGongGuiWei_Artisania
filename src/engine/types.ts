@@ -134,6 +134,56 @@ export interface CraftState {
   produced: number;
 }
 
+export type PlayerAttributeKey =
+  | 'craft'
+  | 'knowledge'
+  | 'people'
+  | 'commerce'
+  | 'stamina'
+  | 'mind';
+
+export type PlayerAttributes = Record<PlayerAttributeKey, number>;
+
+export interface PlayerProfile {
+  /** 玩家当前社会评价阶段：0 粗手生人 -> 5 神匠 */
+  titleRank: number;
+  title: string;
+  attributes: PlayerAttributes;
+  attributeXp: PlayerAttributes;
+}
+
+export type TimePhase = 'dawn' | 'morning' | 'afternoon' | 'dusk' | 'night';
+export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
+export type GameWeather = 'clear' | 'rain' | 'snow';
+
+export interface CalendarState {
+  day: number;
+  season: Season;
+  phase: TimePhase;
+  weather: GameWeather;
+}
+
+export type RelationshipStage = 'stranger' | 'familiar' | 'trusted' | 'confidant';
+
+export interface NpcRuntimeState {
+  affinity: number;
+  stage: RelationshipStage;
+  talks: number;
+  lastTalkTurn: number;
+  lastGreetingIndex: number;
+  knownTopics: string[];
+}
+
+export type CropId = 'indigo' | 'mulberry' | 'tea';
+
+export interface FarmPlot {
+  id: string;
+  cropId: CropId | null;
+  plantedDay: number | null;
+  growth: number;
+  wateredToday: boolean;
+}
+
 /** 游戏整体状态机 —— 单一事实来源（Single Source of Truth） */
 export interface GameState {
   /** 随机种子，保证可重放 */
@@ -152,6 +202,12 @@ export interface GameState {
   status: 'playing' | 'ended';
   /** 结局报告，仅在 status==='ended' 时存在 */
   report: GameReport | null;
+  /** 玩家这个人的成长档案：属性、称号、经验 */
+  profile: PlayerProfile;
+  /** 日 / 时段 / 季节 / 天气，服务江南 7 日生活切片 */
+  calendar: CalendarState;
+  /** 城郊百工院的轻量田圃槽位 */
+  farmPlots: FarmPlot[];
   /** 已解锁的地区 id 列表（地区优先世界） */
   unlockedRegions: RegionId[];
   /** 玩家当前所在地区 id（采料/产业在此地进行） */
@@ -170,6 +226,8 @@ export interface GameState {
   devMode: boolean;
   /** 各 NPC 好感度（npcId -> 0–100），缺省视为 0 */
   npcAffinity: Record<string, number>;
+  /** NPC 运行态：关系阶段、交谈次数、最近一次对话等 */
+  npcStates: Record<string, NpcRuntimeState>;
   /** 已完成的任务 id 列表 */
   completedQuests: string[];
 }
@@ -181,12 +239,24 @@ export interface GameState {
 /** NPC 角色类别：游客（随机游走）/ 关联人物（驻守店铺，承载剧情任务） */
 export type NpcRole = 'tourist' | 'vendor';
 
+export interface NpcScheduleRule {
+  phase: TimePhase | 'any';
+  subregionId: string;
+  anchorCraftId?: string;
+  note?: string;
+}
+
 /** NPC 定义（静态数据，来自 src/data/npcs.ts） */
 export interface NpcDef {
   id: string;
   name: string;
   role: NpcRole;
   regionId: string;
+  subregionId?: string;
+  profession?: string;
+  personality?: string;
+  knowledgeTags?: string[];
+  schedule?: NpcScheduleRule[];
   /** vendor 关联的手艺点 id（驻守其旁） */
   anchorCraftId?: string;
   /** 寒暄台词池（对话时随机选一句） */
@@ -237,6 +307,7 @@ export type GameAction =
   | { type: 'TAKE_ORDER'; craftId: string }
   | { type: 'HOLD_EXHIBITION' }
   | { type: 'RESOLVE_EVENT'; choiceId: string }
+  | { type: 'ADVANCE_TIME' }
   | { type: 'END_TURN' }
   /** 在当前地区运行一项基础产业（手搓原料），quality 0–1 来自微交互 */
   | { type: 'GATHER_RESOURCE'; industryId: string; quality?: number }

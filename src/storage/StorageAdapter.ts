@@ -5,7 +5,7 @@
  */
 import type { GameState } from '../engine/types';
 
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 export interface SaveData {
   version: number;

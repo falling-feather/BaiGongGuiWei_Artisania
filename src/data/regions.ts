@@ -12,8 +12,11 @@ import type { RegionDef, SubregionDef } from '../engine/types';
 const REGION_SUBREGIONS: Record<string, SubregionDef[]> = {
   jiangnan: [
     { id: 'jiangnan-suhang', name: '苏杭水市', role: '主街市', blurb: '河港、茶肆与百工作坊交错，是江南行脚的起点。', traits: ['水路', '市集', '手艺'] },
+    { id: 'jiangnan-jinling', name: '金陵城', role: '文人与灯市', blurb: '书院、云锦局、金箔作与秦淮灯市相互牵连。', traits: ['书院', '灯市', '金箔'] },
+    { id: 'jiangnan-linan', name: '临安水市', role: '湖港与茶伞', blurb: '茶园、伞铺、湖畔茶肆和码头把雨季生活串起来。', traits: ['茶', '纸伞', '湖港'] },
     { id: 'jiangnan-longquan', name: '龙泉山坊', role: '铸剑山坊', blurb: '山溪入炉，剑铺与陶坊沿坡而列。', traits: ['练剑', '矿冶', '山溪'] },
     { id: 'jiangnan-taihu', name: '太湖织埠', role: '织造埠头', blurb: '湖风吹动织坊帘幕，丝行、伞铺与船坞相邻。', traits: ['织造', '湖港', '商货'] },
+    { id: 'jiangnan-baigongyuan', name: '城郊百工院', role: '家园与田圃', blurb: '破工棚、小田圃、仓房与书案构成玩家长期建设中心。', traits: ['家园', '种植', '仓储'] },
   ],
   bashu: [
     { id: 'bashu-jinli', name: '锦里工巷', role: '城内工巷', blurb: '蜀锦、漆器与茶肆在窄巷里层层展开。', traits: ['织造', '茶肆', '市井'] },

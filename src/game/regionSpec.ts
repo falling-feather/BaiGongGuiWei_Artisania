@@ -2,7 +2,7 @@
  * 地区地图规格装配器 —— 把「内容数据 + 当前状态」翻译成一份场景可用的 RegionMapSpec。
  * 让 Phaser 场景与数据层解耦：场景只认 RegionMapSpec。
  */
-import type { GameState, IndustryDef } from '../engine';
+import type { GameState, IndustryDef, NpcDef } from '../engine';
 import { INDUSTRIES, INDUSTRY_INDEX, REGION_INDEX, CRAFT_INDEX, RESOURCE_INDEX, npcsForRegion } from '../data';
 import type { RegionMapSpec, IndustryTier, TerrainKind, WeatherKind, WeatherSeason } from './EventBus';
 
@@ -50,6 +50,20 @@ function devWeatherOverride() {
   };
 }
 
+function npcScheduleFor(npc: NpcDef, state: GameState) {
+  return (
+    npc.schedule?.find((rule) => rule.phase === state.calendar.phase) ??
+    npc.schedule?.find((rule) => rule.phase === 'any') ??
+    null
+  );
+}
+
+function npcIsInSubregion(npc: NpcDef, state: GameState, subregionId: string) {
+  const schedule = npcScheduleFor(npc, state);
+  const locatedSubregionId = schedule?.subregionId ?? npc.subregionId;
+  return !locatedSubregionId || locatedSubregionId === subregionId;
+}
+
 /** 组装某地区在当前状态下的地图规格；地区不存在时返回 null */
 export function buildRegionSpec(regionId: string, state: GameState): RegionMapSpec | null {
   const region = REGION_INDEX[regionId];
@@ -57,8 +71,8 @@ export function buildRegionSpec(regionId: string, state: GameState): RegionMapSp
   const subregion =
     region.subregions.find((item) => item.id === state.currentSubregion) ?? region.subregions[0];
   const overrides = devWeatherOverride();
-  const season = overrides.season ?? seasonFromTurn(state.turn);
-  const weather = overrides.weather ?? weatherForSeason(season);
+  const season = overrides.season ?? state.calendar.season ?? seasonFromTurn(state.turn);
+  const weather = overrides.weather ?? state.calendar.weather ?? weatherForSeason(season);
 
   // 显式列入的产业
   const explicit = region.industries
@@ -104,11 +118,16 @@ export function buildRegionSpec(regionId: string, state: GameState): RegionMapSp
     industries,
     crafts,
     gates,
-    npcs: npcsForRegion(region.id).map((n) => ({
-      id: n.id,
-      name: n.name,
-      role: n.role,
-      anchorId: n.anchorCraftId,
-    })),
+    npcs: npcsForRegion(region.id)
+      .filter((n) => npcIsInSubregion(n, state, subregion?.id ?? region.id))
+      .map((n) => {
+        const schedule = npcScheduleFor(n, state);
+        return {
+          id: n.id,
+          name: n.name,
+          role: n.role,
+          anchorId: schedule?.anchorCraftId ?? n.anchorCraftId,
+        };
+      }),
   };
 }

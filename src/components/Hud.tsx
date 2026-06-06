@@ -11,6 +11,20 @@ const METRIC_ICONS: Record<string, string> = {
   spirit: `${UI_ROOT}/icon_spirit.png`,
 };
 
+const PHASE_LABEL = {
+  dawn: '清晨',
+  morning: '上午',
+  afternoon: '下午',
+  dusk: '黄昏',
+  night: '夜间',
+} as const;
+
+const WEATHER_LABEL = {
+  clear: '晴',
+  rain: '雨',
+  snow: '雪',
+} as const;
+
 /** 叠加在游戏画面上的 HUD：四维数值、场景提示和常用入口。 */
 export function Hud({
   hint,
@@ -28,8 +42,7 @@ export function Hud({
   onOpenSettings: () => void;
 }) {
   const metrics = useGameStore((s) => s.state.metrics);
-  const turn = useGameStore((s) => s.state.turn);
-  const maxTurns = useGameStore((s) => s.state.maxTurns);
+  const calendar = useGameStore((s) => s.state.calendar);
   const playing = useGameStore((s) => s.state.status === 'playing');
   const currentRegion = useGameStore((s) => s.state.currentRegion);
   const currentSubregion = useGameStore((s) => s.state.currentSubregion);
@@ -55,10 +68,10 @@ export function Hud({
       disabled: !playing,
     },
     {
-      label: '本季',
+      label: '时辰',
       icon: `${UI_ROOT}/icon_season.png`,
       frame: `${UI_ROOT}/hud_button_red.png`,
-      onClick: () => dispatch({ type: 'END_TURN' }),
+      onClick: () => dispatch({ type: 'ADVANCE_TIME' }),
       disabled: !playing || hasEvent,
     },
   ];
@@ -99,10 +112,10 @@ export function Hud({
             <img className="hud__season-icon" src={`${UI_ROOT}/icon_map.png`} alt="" draggable={false} />
             <span>{region?.name ?? currentRegion} · {subregion?.name ?? currentSubregion}</span>
           </div>
-          <div className="hud__season-plaque" aria-label={`第 ${turn} / ${maxTurns} 季`}>
+          <div className="hud__season-plaque" aria-label={`第 ${calendar.day} 日，${PHASE_LABEL[calendar.phase]}，${WEATHER_LABEL[calendar.weather]}`}>
             <img className="hud__button-frame" src={`${UI_ROOT}/hud_button_gold.png`} alt="" draggable={false} />
             <img className="hud__season-icon" src={`${UI_ROOT}/icon_season.png`} alt="" draggable={false} />
-            <span>第 {turn} / {maxTurns} 季</span>
+            <span>第 {calendar.day} 日 · {PHASE_LABEL[calendar.phase]} · {WEATHER_LABEL[calendar.weather]}</span>
           </div>
           <div className="hud__tools" aria-label="常用入口">
             {tools.map((tool) => (

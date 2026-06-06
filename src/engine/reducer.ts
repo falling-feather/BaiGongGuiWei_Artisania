@@ -21,9 +21,14 @@ import type {
   ResourceDef,
   NpcDef,
   QuestDef,
+  PlayerAttributeKey,
+  PlayerProfile,
+  NpcRuntimeState,
+  RelationshipStage,
+  TimePhase,
 } from './types';
 import { applyDelta, aggregateTownMetrics, METRIC_KEYS, METRIC_LABELS } from './metrics';
-import { createInitialState, LABOR_PER_TURN } from './state';
+import { createCalendar, createInitialState, LABOR_PER_TURN, titleForRank } from './state';
 import { createRng, weightedPick } from './rng';
 
 /** reducer 运行所需的内容包（由 store 层从 data 注入） */
@@ -57,6 +62,72 @@ const TURN_RESOURCE_REGEN: Record<string, number> = {
 };
 
 const MAX_LOG = 50;
+const TIME_PHASES: TimePhase[] = ['dawn', 'morning', 'afternoon', 'dusk', 'night'];
+const TIME_PHASE_LABEL: Record<TimePhase, string> = {
+  dawn: '清晨',
+  morning: '上午',
+  afternoon: '下午',
+  dusk: '黄昏',
+  night: '夜间',
+};
+
+function clampStat(value: number) {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function profileRank(profile: PlayerProfile): number {
+  const values = Object.values(profile.attributes);
+  const average = values.reduce((sum, value) => sum + value, 0) / Math.max(1, values.length);
+  if (average >= 80) return 5;
+  if (average >= 64) return 4;
+  if (average >= 48) return 3;
+  if (average >= 32) return 2;
+  if (average >= 16) return 1;
+  return 0;
+}
+
+function normalizeProfile(profile: PlayerProfile): PlayerProfile {
+  const titleRank = profileRank(profile);
+  return { ...profile, titleRank, title: titleForRank(titleRank) };
+}
+
+function applyProfileXp(
+  state: GameState,
+  delta: Partial<Record<PlayerAttributeKey, number>>,
+): GameState {
+  if (Object.keys(delta).length === 0) return state;
+  const attributes = { ...state.profile.attributes };
+  const attributeXp = { ...state.profile.attributeXp };
+  for (const [key, amount] of Object.entries(delta) as [PlayerAttributeKey, number][]) {
+    attributeXp[key] = clampStat((attributeXp[key] ?? 0) + amount);
+    attributes[key] = clampStat((attributes[key] ?? 0) + amount);
+  }
+  return { ...state, profile: normalizeProfile({ ...state.profile, attributes, attributeXp }) };
+}
+
+function relationshipStageForAffinity(affinity: number): RelationshipStage {
+  if (affinity >= 75) return 'confidant';
+  if (affinity >= 50) return 'trusted';
+  if (affinity >= 20) return 'familiar';
+  return 'stranger';
+}
+
+function emptyNpcState(): NpcRuntimeState {
+  return {
+    affinity: 0,
+    stage: 'stranger',
+    talks: 0,
+    lastTalkTurn: 0,
+    lastGreetingIndex: 0,
+    knownTopics: [],
+  };
+}
+
+function hashText(value: string) {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) hash = (hash * 31 + value.charCodeAt(i)) | 0;
+  return Math.abs(hash);
+}
 
 /**
  * 订单交付定价：成品基准售价随该手艺当前传承度浮动，形成「品质→售价」闭环。
@@ -207,7 +278,18 @@ function runProcess(
     crafts,
     log: pushLog(state.log, `「${craftDef.name}」完成一批出品${skipNote}${productNote}，入账 ${incomeBase} 文。`),
   };
-  return recompute(next);
+  return recompute(applyProfileXp(next, { craft: 2, mind: stepsSkipped.length > 0 ? 0 : 1 }));
+}
+
+function advanceTimePhase(state: GameState, content: GameContent): GameState {
+  const currentIndex = TIME_PHASES.indexOf(state.calendar.phase);
+  if (currentIndex < 0 || currentIndex >= TIME_PHASES.length - 1) return endTurn(state, content);
+  const phase = TIME_PHASES[currentIndex + 1];
+  return {
+    ...state,
+    calendar: { ...state.calendar, phase },
+    log: pushLog(state.log, `时辰推进到${TIME_PHASE_LABEL[phase]}。`),
+  };
 }
 
 /** 推进到下一回合：补给、抽事件、判定结局 */
@@ -243,6 +325,12 @@ function endTurn(state: GameState, content: GameContent): GameState {
   let next: GameState = {
     ...state,
     turn: state.turn + 1,
+    calendar: createCalendar(state.calendar.day + 1, 'morning'),
+    farmPlots: state.farmPlots.map((plot) =>
+      plot.cropId
+        ? { ...plot, growth: Math.min(100, plot.growth + (plot.wateredToday ? 34 : 18)), wateredToday: false }
+        : { ...plot, wateredToday: false },
+    ),
     resources,
     seed: rng.seed,
     pendingEvent: event ?? null,
@@ -320,14 +408,14 @@ function gatherResource(
   }
   resources[industry.output] = (resources[industry.output] ?? 0) + produced;
 
-  return {
+  return applyProfileXp({
     ...state,
     resources,
     log: pushLog(
       state.log,
       `「${industry.name}」产出 ${produced} 份${quality >= 0.8 ? '上品' : ''}。`,
     ),
-  };
+  }, { stamina: 1, knowledge: Object.keys(industry.input).length === 0 ? 1 : 0 });
 }
 
 /** 前往一个已解锁的地区 */
@@ -517,11 +605,12 @@ function reduce(
       const craftState = findCraftState(state, action.craftId);
       const heritage = craftState?.metrics.heritage ?? 50;
       const price = orderPrice(product?.value ?? 12, heritage);
-      return applyEffect(state, {
+      const afterOrder = applyEffect(state, {
         resources: { coin: price, [outputId]: -1 },
         craftMetrics: { [action.craftId]: { market: 6, heritage: 2, spirit: 1 } },
         logMessage: `交付一笔「${name}」订单，售出「${productName}」×1，进账 ${price} 文，真品口碑使市场看好。`,
       });
+      return applyProfileXp(afterOrder, { commerce: 2 });
     }
 
     case 'HOLD_EXHIBITION': {
@@ -529,11 +618,12 @@ function reduce(
       if ((state.resources.coin ?? 0) < 8) {
         return { ...state, log: pushLog(state.log, '钱袋空空，办不起这场展演。') };
       }
-      return applyEffect(state, {
+      const afterExhibition = applyEffect(state, {
         resources: { coin: -8 },
         metrics: { spirit: 5, life: 5, market: 2 },
         logMessage: '举办了一场手艺展演，镇上人气与精气神都旺了起来。',
       });
+      return applyProfileXp(afterExhibition, { people: 1, mind: 1 });
     }
 
     case 'RESOLVE_EVENT': {
@@ -543,6 +633,10 @@ function reduce(
       const afterEffect = applyEffect(state, choice.effect);
       return { ...afterEffect, pendingEvent: null };
     }
+
+    case 'ADVANCE_TIME':
+      if (state.status !== 'playing') return state;
+      return advanceTimePhase(state, content);
 
     case 'END_TURN':
       if (state.status !== 'playing') return state;
@@ -603,14 +697,29 @@ const AFFINITY_MAX = 100;
 function talkNpc(state: GameState, content: GameContent, npcId: string): GameState {
   const npc = (content.npcs ?? []).find((n) => n.id === npcId);
   if (!npc) return state;
-  const cur = state.npcAffinity[npcId] ?? 0;
-  const next = Math.min(AFFINITY_MAX, cur + AFFINITY_PER_TALK);
-  const greeting = npc.greetings[Math.floor(Math.random() * Math.max(1, npc.greetings.length))] ?? '';
-  return {
-    ...state,
-    npcAffinity: { ...state.npcAffinity, [npcId]: next },
-    log: pushLog(state.log, `与「${npc.name}」攀谈：${greeting}（好感 ${cur}→${next}）`),
+  const runtime = state.npcStates[npcId] ?? emptyNpcState();
+  const cur = runtime.affinity || state.npcAffinity[npcId] || 0;
+  const peopleBonus = Math.max(0, Math.floor(((state.profile.attributes.people ?? 5) - 5) / 5));
+  const nextAffinity = Math.min(AFFINITY_MAX, cur + AFFINITY_PER_TALK + peopleBonus);
+  const rng = createRng(state.seed + hashText(npcId) + runtime.talks * 97 + state.turn * 17);
+  const greetingIndex = Math.floor(rng.next() * Math.max(1, npc.greetings.length));
+  const greeting = npc.greetings[greetingIndex] ?? '';
+  const knownTopics = new Set(runtime.knownTopics);
+  for (const topic of npc.knowledgeTags ?? []) knownTopics.add(topic);
+  const npcState: NpcRuntimeState = {
+    affinity: nextAffinity,
+    stage: relationshipStageForAffinity(nextAffinity),
+    talks: runtime.talks + 1,
+    lastTalkTurn: state.turn,
+    lastGreetingIndex: greetingIndex,
+    knownTopics: [...knownTopics],
   };
+  return applyProfileXp({
+    ...state,
+    npcAffinity: { ...state.npcAffinity, [npcId]: nextAffinity },
+    npcStates: { ...state.npcStates, [npcId]: npcState },
+    log: pushLog(state.log, `与「${npc.name}」攀谈：${greeting}（好感 ${cur}→${nextAffinity}，关系：${npcState.stage}）`),
+  }, { people: 1, knowledge: npc.knowledgeTags?.length ? 1 : 0 });
 }
 
 /** 交付一个任务：校验好感度门槛与达成条件，发放奖励并标记完成 */
@@ -640,5 +749,8 @@ function completeQuest(state: GameState, content: GameContent, questId: string):
     logMessage: quest.completeLog.replace(/\{name\}/g, state.playerName.trim() || '无名匠人'),
   };
   const rewarded = applyEffect(state, effect);
-  return { ...rewarded, completedQuests: [...rewarded.completedQuests, questId] };
+  return applyProfileXp(
+    { ...rewarded, completedQuests: [...rewarded.completedQuests, questId] },
+    { commerce: quest.reward.coin ? 1 : 0, people: 1 },
+  );
 }
