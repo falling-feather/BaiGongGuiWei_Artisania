@@ -83,6 +83,13 @@ export function buildRegionSpec(regionId: string, state: GameState): RegionMapSp
     name: activity.name,
     kind: activity.kind,
   }));
+  const subregionGates = region.subregions
+    .filter((item) => item.id !== (subregion?.id ?? region.id))
+    .map((item) => ({
+      subregionId: item.id,
+      name: item.name,
+      role: item.role,
+    }));
 
   // 出入口由结构化路线驱动；neighbors 仅作为遗漏路线的兼容兜底。
   const routeTargets = new Set<string>();
@@ -127,6 +134,7 @@ export function buildRegionSpec(regionId: string, state: GameState): RegionMapSp
     industries,
     crafts,
     activities,
+    subregionGates,
     gates,
     npcs: npcsForRegion(region.id)
       .filter((n) => npcIsInSubregion(n, state, subregion?.id ?? region.id))

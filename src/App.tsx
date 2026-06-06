@@ -114,7 +114,9 @@ function GameApp() {
       } else if (payload.type === 'interact-industry') setActiveIndustryId(payload.industryId);
       else if (payload.type === 'interact-activity') setActiveActivityId(payload.activityId);
       else if (payload.type === 'interact-npc') setActiveNpcId(payload.npcId);
-      else if (payload.type === 'player-pos')
+      else if (payload.type === 'interact-subregion-gate') {
+        useGameStore.getState().dispatch({ type: 'TRAVEL_SUBREGION', subregionId: payload.subregionId });
+      } else if (payload.type === 'player-pos')
         setPlayerPos({ tx: payload.tx, ty: payload.ty, mapW: payload.mapW, mapH: payload.mapH });
       else if (payload.type === 'region-points') setMapPoints(payload.points);
       else if (payload.type === 'zoom-changed') setZoom(payload.zoom);

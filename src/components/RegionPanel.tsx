@@ -128,9 +128,12 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
                 <button
                   key={subregion.id}
                   className={`subregion-card ${subregion.id === currentSubregion ? 'is-current' : ''}`}
-                  disabled={!playing || subregion.id === currentSubregion}
-                  onClick={() => dispatch({ type: 'TRAVEL_SUBREGION', subregionId: subregion.id })}
-                  title={subregion.blurb}
+                  disabled
+                  title={
+                    subregion.id === currentSubregion
+                      ? subregion.blurb
+                      : `${subregion.blurb} 请在当前场景内寻找区内通道前往。`
+                  }
                 >
                   <b>{subregion.name}</b>
                   <span>{subregion.role}</span>

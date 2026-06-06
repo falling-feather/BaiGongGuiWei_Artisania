@@ -46,6 +46,11 @@ export interface RegionMapSpec {
   industries: { id: string; name: string; tier: IndustryTier }[];
   crafts: { id: string; name: string }[];
   activities: { id: string; name: string; kind: ActivityKind }[];
+  subregionGates: {
+    subregionId: string;
+    name: string;
+    role: string;
+  }[];
   gates: {
     regionId: string;
     name: string;
@@ -63,7 +68,7 @@ export interface RegionMapSpec {
 export interface MiniMapPoint {
   tx: number;
   ty: number;
-  kind: 'industry' | 'craft' | 'activity' | 'gate';
+  kind: 'industry' | 'craft' | 'activity' | 'gate' | 'subregionGate';
 }
 
 export type GameBusEvent =
@@ -72,6 +77,7 @@ export type GameBusEvent =
   /** 玩家走近并触发某个基础产业点 */
   | { type: 'interact-industry'; industryId: string }
   | { type: 'interact-activity'; activityId: string }
+  | { type: 'interact-subregion-gate'; subregionId: string }
   /** 玩家走近并触发某个地区出入口 */
   | { type: 'interact-gate'; regionId: string; unlocked: boolean }
   /** 玩家走近并触发某个 NPC */

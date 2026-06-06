@@ -571,6 +571,11 @@ body {
   cursor: pointer;
 }
 
+.subregion-card:disabled {
+  opacity: 1;
+  cursor: help;
+}
+
 .subregion-card.is-current {
   border-color: var(--gold);
   background: rgba(184, 137, 59, 0.18);

@@ -5,6 +5,7 @@ const KIND_COLOR: Record<MiniMapPoint['kind'], string> = {
   craft: '#3a7bd5',
   activity: '#cf5b62',
   gate: '#7a9a4a',
+  subregionGate: '#a86bd1',
 };
 
 export interface PlayerPos {

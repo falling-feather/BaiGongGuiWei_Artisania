@@ -38,14 +38,14 @@ if (import.meta.hot) {
     import.meta.hot!.invalidate();
   });
 }
-type PointKind = 'industry' | 'craft' | 'activity' | 'gate';
+type PointKind = 'industry' | 'craft' | 'activity' | 'gate' | 'subregionGate';
 type ActivityPointKind = RegionMapSpec['activities'][number]['kind'];
 
 interface MapPoint {
   kind: PointKind;
   label: string;
   hint: string;
-  /** industry: industryId | craft: craftId | activity: activityId | gate: regionId */
+  /** industry: industryId | craft: craftId | activity: activityId | gate: regionId | subregionGate: subregionId */
   payload: string;
   unlocked?: boolean;
   sprite: Phaser.GameObjects.Image;
@@ -382,6 +382,13 @@ export class StreetScene extends Phaser.Scene {
         hint: `按 E 体验「${a.name}」`,
         payload: a.id,
         tex: textureForActivity(a.kind),
+      })),
+      ...spec.subregionGates.map((g) => ({
+        kind: 'subregionGate' as const,
+        label: `往 ${g.name}`,
+        hint: `按 E 经区内通道前往「${g.name}」`,
+        payload: g.subregionId,
+        tex: TEX.gate,
       })),
       ...spec.gates.map((g) => ({
         kind: 'gate' as const,
@@ -1263,6 +1270,7 @@ export class StreetScene extends Phaser.Scene {
         if (p.kind === 'craft') emitBus({ type: 'interact-craft', craftId: p.payload });
         else if (p.kind === 'industry') emitBus({ type: 'interact-industry', industryId: p.payload });
         else if (p.kind === 'activity') emitBus({ type: 'interact-activity', activityId: p.payload });
+        else if (p.kind === 'subregionGate') emitBus({ type: 'interact-subregion-gate', subregionId: p.payload });
         else emitBus({ type: 'interact-gate', regionId: p.payload, unlocked: !!p.unlocked });
       }
     }

@@ -295,6 +295,8 @@ describe('gameReducer', () => {
     );
     const spec = buildRegionSpec('jiangnan', s);
     expect(spec?.activities.map((activity) => activity.id)).toContain('jn-longquan-sword-forge');
+    expect(spec?.subregionGates.map((gate) => gate.subregionId)).toContain('jiangnan-suhang');
+    expect(spec?.subregionGates.map((gate) => gate.subregionId)).not.toContain('jiangnan-longquan');
     const lu = spec?.npcs.find((npc) => npc.id === 'jn-lu-hanquan');
     expect(lu?.anchorId).toBe('jn-longquan-sword-forge');
   });
