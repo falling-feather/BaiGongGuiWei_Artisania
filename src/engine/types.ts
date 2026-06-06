@@ -209,6 +209,10 @@ export interface ActivityReward {
   metrics?: Partial<Metrics>;
   attributes?: Partial<PlayerAttributes>;
   flags?: string[];
+  /** 完成活动后写入的路线情报，供 NPC 见闻/路线面板/后续门槛读取 */
+  routeIds?: string[];
+  /** 覆盖默认 NPC 好感增量；缺省按活动类型与挑战质量计算 */
+  npcAffinity?: number;
   descriptorTags?: string[];
 }
 

@@ -247,9 +247,25 @@ describe('gameReducer', () => {
     expect(s1.resources.tea).toBe((s.resources.tea ?? 0) + 1);
     expect(s1.resources.teaLeaf).toBe((s.resources.teaLeaf ?? 0) - 1);
     expect(s1.profile.attributes.knowledge).toBeGreaterThan(beforeKnowledge);
+    expect(s1.completedActivities).toContain('jn-lake-tea-house');
+    expect(s1.flags).toContain('route-known:route-jiangnan-huizhou-paper');
+    expect(s1.npcStates['jn-su-xiaocha']?.knownTopics).toContain('route:route-jiangnan-huizhou-paper');
+    expect(s1.npcAffinity['jn-su-xiaocha']).toBeGreaterThan(0);
     expect(s1.itemInstances[0]?.resourceId).toBe('tea');
     expect(s1.itemInstances[0]?.sourceActivityId).toBe('jn-lake-tea-house');
     expect(s1.itemInstances[0]?.appraisal.length).toBeGreaterThan(0);
+  });
+
+  it('PERFORM_ACTIVITY 按挑战质量推进关联 NPC 好感与活动记忆', () => {
+    let s = gameReducer(freshState(), { type: 'TRAVEL_SUBREGION', subregionId: 'jiangnan-linan' }, content);
+    s = { ...s, resources: { ...s.resources, teaLeaf: 2, labor: 4 } };
+
+    const low = gameReducer(s, { type: 'PERFORM_ACTIVITY', activityId: 'jn-lake-tea-house', quality: 0.42 }, content);
+    const high = gameReducer(s, { type: 'PERFORM_ACTIVITY', activityId: 'jn-lake-tea-house', quality: 0.92 }, content);
+
+    expect(low.npcAffinity['jn-su-xiaocha']).toBeLessThan(high.npcAffinity['jn-su-xiaocha']);
+    expect(high.completedActivities).toContain('jn-lake-tea-house');
+    expect(high.npcStates['jn-su-xiaocha']?.knownTopics).toContain('activity:jn-lake-tea-house');
   });
 
   it('PERFORM_ACTIVITY 拒绝不在当前小地区的活动', () => {
@@ -588,11 +604,25 @@ describe('gameReducer', () => {
     expect(sameDay.npcAffinity['jn-bamboo-master']).toBe(affinityAfterMentor);
   });
 
+  it('TALK_NPC 不会清空 NPC 功能行动的当日冷却', () => {
+    let s = freshState();
+    s = gameReducer(s, { type: 'TALK_NPC', npcId: 'jn-bamboo-master' }, content);
+    s = gameReducer(s, { type: 'USE_NPC_FUNCTION', npcId: 'jn-bamboo-master', functionKind: 'mentor' }, content);
+    const afterMentor = s.npcAffinity['jn-bamboo-master'];
+
+    s = gameReducer(s, { type: 'TALK_NPC', npcId: 'jn-bamboo-master' }, content);
+    expect(s.npcStates['jn-bamboo-master'].usedFunctionDays?.mentor).toBe(s.calendar.day);
+    const repeated = gameReducer(s, { type: 'USE_NPC_FUNCTION', npcId: 'jn-bamboo-master', functionKind: 'mentor' }, content);
+    expect(repeated.npcAffinity['jn-bamboo-master']).toBe(s.npcAffinity['jn-bamboo-master']);
+    expect(repeated.npcAffinity['jn-bamboo-master']).toBeGreaterThan(afterMentor);
+  });
+
   it('USE_NPC_FUNCTION 路线指点会写入路线情报', () => {
     let s = freshState();
     s = { ...s, npcAffinity: { ...s.npcAffinity, 'jn-fang-jiheng': 8 } };
     s = gameReducer(s, { type: 'USE_NPC_FUNCTION', npcId: 'jn-fang-jiheng', functionKind: 'route' }, content);
     expect(s.flags).toContain('npc-route:jn-fang-jiheng');
+    expect(s.flags).toContain('route-known:route-jiangnan-huizhou-paper');
     expect(s.npcStates['jn-fang-jiheng'].knownTopics).toContain('route:route-jiangnan-huizhou-paper');
     expect(s.profile.attributes.commerce).toBeGreaterThan(5);
   });

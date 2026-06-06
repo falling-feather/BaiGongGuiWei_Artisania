@@ -63,12 +63,22 @@ export function ActivityModal({
   const selectedChoice = challenge?.choices.find((choice) => choice.id === selectedChoiceId) ?? null;
   const completed = state.completedActivities.includes(activity.id);
   const laborShort = (state.resources.labor ?? 0) < activity.laborCost;
+  const phaseBlocked = Boolean(
+    activity.availablePhases && !activity.availablePhases.includes(state.calendar.phase),
+  );
   const materialShort = Object.entries(activity.resourceCost ?? {}).some(
     ([key, amount]) => (state.resources[key] ?? 0) < amount,
   );
+  const routeRows = new Map(
+    (content.regionContent?.flatMap((spec) => spec.routes) ?? []).map((route) => [route.id, route.name]),
+  );
+  const routeReward = (activity.reward.routeIds ?? [])
+    .map((routeId) => routeRows.get(routeId) ?? routeId)
+    .join('、');
   const canPerform =
     state.status === 'playing' &&
     !laborShort &&
+    !phaseBlocked &&
     !materialShort &&
     !(activity.once && completed) &&
     (!challenge || Boolean(selectedChoice));
@@ -77,6 +87,7 @@ export function ActivityModal({
     activity.reward.attributes
       ? Object.entries(activity.reward.attributes).map(([key, amount]) => `${key}+${amount}`).join('、')
       : '',
+    routeReward ? `路线情报：${routeReward}` : '',
   ]
     .filter((value) => value && value !== '无')
     .join('；') || '阅历';
@@ -140,9 +151,13 @@ export function ActivityModal({
         </div>
 
         {activity.once && completed && <p className="craft-supply__warn">这项活动已经完成过。</p>}
-        {(laborShort || materialShort) && state.status === 'playing' && (
+        {(laborShort || materialShort || phaseBlocked) && state.status === 'playing' && (
           <p className="craft-supply__warn">
-            {laborShort ? '本季工时不足。' : '所需物料不足，先去采料或加工补足。'}
+            {laborShort
+              ? '本季工时不足。'
+              : phaseBlocked
+                ? '当前时段不合适，先推进时间。'
+                : '所需物料不足，先去采料或加工补足。'}
           </p>
         )}
 

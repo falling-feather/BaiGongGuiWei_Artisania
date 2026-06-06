@@ -670,6 +670,91 @@ function harvestCrop(state: GameState, content: GameContent, plotId: string): Ga
   }, { stamina: 1, knowledge: 1 });
 }
 
+function activityAffinityGain(activity: ActivityDef, quality: number) {
+  if (activity.reward.npcAffinity !== undefined) return activity.reward.npcAffinity;
+  const baseByKind: Record<ActivityDef['kind'], number> = {
+    resource: 2,
+    workshop: 3,
+    training: 5,
+    trade: 4,
+    life: 3,
+    festival: 4,
+    route: 5,
+  };
+  const qualityBonus = quality >= 0.85 ? 3 : quality >= 0.65 ? 1 : quality < 0.5 ? -1 : 0;
+  return Math.max(1, baseByKind[activity.kind] + qualityBonus);
+}
+
+function routeNamesForIds(content: GameContent, routeIds: string[] | undefined) {
+  return [...new Set(routeIds ?? [])].map((routeId) => routeNameForId(content, routeId));
+}
+
+function applyActivityProgress(
+  state: GameState,
+  content: GameContent,
+  activity: ActivityDef,
+  quality: number,
+) {
+  const routeIds = [...new Set(activity.reward.routeIds ?? [])];
+  const flags = new Set(state.flags);
+  for (const routeId of routeIds) flags.add(`route-known:${routeId}`);
+  if (routeIds.length > 0) flags.add(`activity-routes:${activity.id}`);
+
+  let next: GameState = {
+    ...state,
+    flags: [...flags],
+    completedActivities: [...new Set([...state.completedActivities, activity.id])],
+  };
+
+  const notes: string[] = [];
+  const routeNames = routeNamesForIds(content, routeIds);
+  if (routeNames.length > 0) notes.push(`记下路线：${routeNames.join('、')}`);
+
+  if (!activity.npcId) {
+    return { state: next, note: notes.length ? `；${notes.join('；')}` : '' };
+  }
+
+  const npc = (content.npcs ?? []).find((item) => item.id === activity.npcId);
+  if (!npc) return { state: next, note: notes.length ? `；${notes.join('；')}` : '' };
+
+  const runtime = next.npcStates[npc.id] ?? emptyNpcState();
+  const cur = runtime.affinity || next.npcAffinity[npc.id] || 0;
+  const gain = activityAffinityGain(activity, quality);
+  const nextAffinity = Math.min(AFFINITY_MAX, cur + gain);
+  const knownTopics = new Set(runtime.knownTopics);
+  for (const topic of npc.knowledgeTags ?? []) knownTopics.add(topic);
+  knownTopics.add(`activity:${activity.id}`);
+  knownTopics.add(`activity-kind:${activity.kind}`);
+  for (const tag of activity.reward.descriptorTags ?? []) knownTopics.add(tag);
+  for (const routeId of routeIds) knownTopics.add(`route:${routeId}`);
+
+  const runtimeForIntel: NpcRuntimeState = {
+    ...runtime,
+    knownTopics: [...knownTopics],
+  };
+  const intel = revealNpcIntel(next, npc, runtimeForIntel, nextAffinity);
+  const npcState: NpcRuntimeState = {
+    ...runtime,
+    affinity: nextAffinity,
+    stage: relationshipStageForAffinity(nextAffinity),
+    lastTalkTurn: next.turn,
+    knownTopics: intel.knownTopics,
+    revealedIntelIds: intel.revealedIntelIds,
+    usedFunctionDays: runtime.usedFunctionDays ?? {},
+  };
+
+  next = {
+    ...next,
+    flags: intel.flags,
+    npcAffinity: { ...next.npcAffinity, [npc.id]: nextAffinity },
+    npcStates: { ...next.npcStates, [npc.id]: npcState },
+  };
+
+  notes.push(`「${npc.name}」好感 ${cur}→${nextAffinity}`);
+  if (intel.newlyRevealed.length > 0) notes.push(`听得「${intel.newlyRevealed.join('」「')}」`);
+  return { state: next, note: notes.length ? `；${notes.join('；')}` : '' };
+}
+
 function performActivity(
   state: GameState,
   content: GameContent,
@@ -728,15 +813,17 @@ function performActivity(
     : null;
 
   const activityLog = `${activity.detail}（${activity.name}：${activity.miniGames.join(' / ')}）`;
-  const next: GameState = {
+  const beforeProgress: GameState = {
     ...state,
     resources,
     flags: [...flags],
     itemInstances: itemInstance ? [itemInstance, ...itemInstancesAfterCost].slice(0, 80) : itemInstancesAfterCost,
-    completedActivities: activity.once
-      ? [...new Set([...state.completedActivities, activityId])]
-      : state.completedActivities,
-    log: pushLog(itemInstance ? pushLog(state.log, itemInstance.appraisal) : state.log, activityLog),
+    log: itemInstance ? pushLog(state.log, itemInstance.appraisal) : state.log,
+  };
+  const progress = applyActivityProgress(beforeProgress, content, activity, quality);
+  const next: GameState = {
+    ...progress.state,
+    log: pushLog(progress.state.log, `${activityLog}${progress.note}`),
   };
   const withEffect = activity.reward.metrics
     ? applyEffect(next, { metrics: activity.reward.metrics })
@@ -1164,6 +1251,7 @@ function talkNpc(state: GameState, content: GameContent, npcId: string): GameSta
   const greetingIndex = Math.floor(lineRoll * Math.max(1, (npc.relationshipLines?.[nextStage] ?? npc.greetings).length));
   const intel = revealNpcIntel(state, npc, runtime, nextAffinity);
   const npcState: NpcRuntimeState = {
+    ...runtime,
     affinity: nextAffinity,
     stage: nextStage,
     talks: runtime.talks + 1,
@@ -1171,6 +1259,7 @@ function talkNpc(state: GameState, content: GameContent, npcId: string): GameSta
     lastGreetingIndex: greetingIndex,
     knownTopics: intel.knownTopics,
     revealedIntelIds: intel.revealedIntelIds,
+    usedFunctionDays: runtime.usedFunctionDays ?? {},
   };
   const intelLog = intel.newlyRevealed.length ? `；听得「${intel.newlyRevealed.join('」「')}」` : '';
   return applyProfileXp({
@@ -1487,9 +1576,10 @@ function useNpcFunction(
       knownTopics: [...knownTopics],
     };
     const routeNames = routeIds.map((routeId) => routeNameForId(content, routeId)).join('、') || '本地小路';
+    const flags = [`npc-route:${npcId}`, ...routeIds.map((routeId) => `route-known:${routeId}`)];
     return applyProfileXp(
       {
-        ...functionBaseState(state, npcId, nextRuntime, functionKind, [`npc-route:${npcId}`]),
+        ...functionBaseState(state, npcId, nextRuntime, functionKind, flags),
         log: pushLog(
           state.log,
           `「${npc.name}」替你梳理路线：${routeNames}（好感 ${affinityResult.cur}→${affinityResult.nextAffinity}）。`,
