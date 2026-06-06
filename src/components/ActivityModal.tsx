@@ -1,4 +1,5 @@
-import { RESOURCE_INDEX } from '../data';
+import { useEffect, useState } from 'react';
+import { ACTIVITY_CHALLENGE_INDEX, RESOURCE_INDEX } from '../data';
 import { useGameStore } from '../store/gameStore';
 import type { ActivityKind, ActivityMiniGameType, ResourcePool } from '../engine';
 
@@ -34,7 +35,7 @@ function resName(key: string): string {
 function describePool(pool: ResourcePool | undefined): string {
   const entries = Object.entries(pool ?? {});
   if (entries.length === 0) return '无';
-  return entries.map(([key, amount]) => `${resName(key)}×${amount}`).join('、');
+  return entries.map(([key, amount]) => `${resName(key)}x${amount}`).join('、');
 }
 
 export function ActivityModal({
@@ -47,17 +48,30 @@ export function ActivityModal({
   const content = useGameStore((s) => s.content);
   const state = useGameStore((s) => s.state);
   const dispatch = useGameStore((s) => s.dispatch);
+  const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSelectedChoiceId(null);
+  }, [activityId]);
+
   if (!activityId) return null;
 
   const activity = (content.activities ?? []).find((item) => item.id === activityId);
   if (!activity) return null;
 
+  const challenge = ACTIVITY_CHALLENGE_INDEX[activity.id] ?? null;
+  const selectedChoice = challenge?.choices.find((choice) => choice.id === selectedChoiceId) ?? null;
   const completed = state.completedActivities.includes(activity.id);
   const laborShort = (state.resources.labor ?? 0) < activity.laborCost;
   const materialShort = Object.entries(activity.resourceCost ?? {}).some(
     ([key, amount]) => (state.resources[key] ?? 0) < amount,
   );
-  const canPerform = state.status === 'playing' && !laborShort && !materialShort && !(activity.once && completed);
+  const canPerform =
+    state.status === 'playing' &&
+    !laborShort &&
+    !materialShort &&
+    !(activity.once && completed) &&
+    (!challenge || Boolean(selectedChoice));
   const rewardText = [
     describePool(activity.reward.resources),
     activity.reward.attributes
@@ -68,7 +82,7 @@ export function ActivityModal({
     .join('；') || '阅历';
 
   const perform = () => {
-    dispatch({ type: 'PERFORM_ACTIVITY', activityId: activity.id, quality: 0.82 });
+    dispatch({ type: 'PERFORM_ACTIVITY', activityId: activity.id, quality: selectedChoice?.quality ?? 0.82 });
     onClose();
   };
 
@@ -88,11 +102,34 @@ export function ActivityModal({
           ))}
         </div>
 
+        {challenge && (
+          <section className="activity-challenge">
+            <div className="activity-challenge__head">
+              <b>{challenge.title}</b>
+              <span>{MINI_LABEL[challenge.miniGame]}</span>
+            </div>
+            <p>{challenge.prompt}</p>
+            <div className="activity-choice-list">
+              {challenge.choices.map((choice) => (
+                <button
+                  className={`activity-choice${choice.id === selectedChoiceId ? ' is-selected' : ''}`}
+                  key={choice.id}
+                  onClick={() => setSelectedChoiceId(choice.id)}
+                  type="button"
+                >
+                  {choice.label}
+                </button>
+              ))}
+            </div>
+            {selectedChoice && <p className="activity-feedback">{selectedChoice.feedback}</p>}
+          </section>
+        )}
+
         <div className="activity-ledger">
           <div>
             <b>消耗</b>
             <span>
-              工时×{activity.laborCost}
+              工时x{activity.laborCost}
               {activity.resourceCost ? `；${describePool(activity.resourceCost)}` : ''}
             </span>
           </div>

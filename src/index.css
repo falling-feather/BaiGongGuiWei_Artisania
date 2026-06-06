@@ -444,6 +444,71 @@ body {
   padding: 3px 8px;
 }
 
+.activity-challenge {
+  border: 1px solid rgba(116, 91, 56, 0.24);
+  border-radius: 8px;
+  background: rgba(255, 252, 242, 0.78);
+  margin: 0 0 12px;
+  padding: 10px;
+}
+
+.activity-challenge__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.activity-challenge__head b {
+  color: var(--indigo);
+  font-size: 13px;
+}
+
+.activity-challenge__head span {
+  color: var(--vermilion);
+  font-size: 11px;
+}
+
+.activity-challenge p {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.activity-choice-list {
+  display: grid;
+  gap: 6px;
+}
+
+.activity-choice {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.activity-choice:hover,
+.activity-choice.is-selected {
+  border-color: var(--bamboo);
+  background: rgba(91, 122, 76, 0.14);
+}
+
+.activity-feedback {
+  border-top: 1px dashed rgba(116, 91, 56, 0.25);
+  color: var(--indigo-soft) !important;
+  margin: 9px 0 0 !important;
+  padding-top: 8px;
+}
+
 .activity-ledger {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

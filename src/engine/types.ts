@@ -227,6 +227,22 @@ export interface ActivityDef {
   once?: boolean;
 }
 
+export interface ActivityChallengeChoice {
+  id: string;
+  label: string;
+  quality: number;
+  feedback: string;
+}
+
+export interface ActivityChallengeDef {
+  id: string;
+  activityId: string;
+  miniGame: ActivityMiniGameType;
+  title: string;
+  prompt: string;
+  choices: ActivityChallengeChoice[];
+}
+
 export interface RegionContentSpec {
   regionId: string;
   routes: string[];
@@ -260,6 +276,8 @@ export interface ItemInstance {
   id: string;
   resourceId: string;
   sourceCraftId?: string;
+  sourceActivityId?: string;
+  sourceIndustryId?: string;
   originRegionId: string;
   originSubregionId: string;
   createdTurn: number;

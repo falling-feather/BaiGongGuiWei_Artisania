@@ -172,6 +172,11 @@ function descriptorRuleFor(
   );
 }
 
+type ItemSourceContext = {
+  sourceActivityId?: string;
+  sourceIndustryId?: string;
+};
+
 function createItemInstance(
   state: GameState,
   content: GameContent,
@@ -179,6 +184,7 @@ function createItemInstance(
   sourceCraftId?: string,
   quality = 0.62,
   tags: string[] = [],
+  context: ItemSourceContext = {},
 ): ItemInstance {
   const rule = descriptorRuleFor(content.itemDescriptorRules, resourceId, sourceCraftId, tags);
   const descriptors = rule
@@ -198,6 +204,7 @@ function createItemInstance(
     id: `${resourceId}-${state.turn}-${state.itemInstances.length + 1}-${Math.abs(hashText(appraisal)).toString(36)}`,
     resourceId,
     sourceCraftId,
+    ...context,
     originRegionId: state.currentRegion,
     originSubregionId: state.currentSubregion,
     createdTurn: state.turn,
@@ -205,6 +212,17 @@ function createItemInstance(
     descriptors,
     appraisal,
   };
+}
+
+/** 根据资源消耗同步移除已追踪的物品实例。 */
+function consumeItemInstances(items: ItemInstance[], cost: ResourcePool): ItemInstance[] {
+  const remaining: ResourcePool = { ...cost };
+  return items.filter((item) => {
+    const need = remaining[item.resourceId] ?? 0;
+    if (need <= 0) return true;
+    remaining[item.resourceId] = need - 1;
+    return false;
+  });
 }
 
 /**
@@ -322,6 +340,7 @@ function runProcess(
   for (const [key, amount] of Object.entries(resourceNeed)) {
     resources[key] = (resources[key] ?? 0) - amount;
   }
+  const itemInstancesAfterCost = consumeItemInstances(state.itemInstances, resourceNeed);
 
   // 累积四维影响
   let craftMetrics: Metrics = { ...craftState.metrics };
@@ -357,7 +376,7 @@ function runProcess(
     ...state,
     resources,
     crafts,
-    itemInstances: itemInstance ? [itemInstance, ...state.itemInstances].slice(0, 80) : state.itemInstances,
+    itemInstances: itemInstance ? [itemInstance, ...itemInstancesAfterCost].slice(0, 80) : itemInstancesAfterCost,
     log: pushLog(
       itemInstance ? pushLog(state.log, itemInstance.appraisal) : state.log,
       `「${craftDef.name}」完成一批出品${skipNote}${productNote}，入账 ${incomeBase} 文。`,
@@ -492,13 +511,24 @@ function gatherResource(
     resources[key] = (resources[key] ?? 0) - amount;
   }
   resources[industry.output] = (resources[industry.output] ?? 0) + produced;
+  const itemInstancesAfterCost = consumeItemInstances(state.itemInstances, industry.input);
+  const itemInstance = createItemInstance(
+    state,
+    content,
+    industry.output,
+    undefined,
+    q,
+    ['resource', industry.id, industry.miniGame],
+    { sourceIndustryId: industry.id },
+  );
 
   return applyProfileXp({
     ...state,
     resources,
+    itemInstances: [itemInstance, ...itemInstancesAfterCost].slice(0, 80),
     log: pushLog(
-      state.log,
-      `「${industry.name}」产出 ${produced} 份${quality >= 0.8 ? '上品' : ''}。`,
+      pushLog(state.log, itemInstance.appraisal),
+      `「${industry.name}」产出 ${produced} 份${q >= 0.8 ? '上品' : ''}。`,
     ),
   }, { stamina: 1, knowledge: Object.keys(industry.input).length === 0 ? 1 : 0 });
 }
@@ -558,6 +588,14 @@ function harvestCrop(state: GameState, content: GameContent, plotId: string): Ga
   if (!plot?.cropId) return { ...state, log: pushLog(state.log, '这块田圃还没有作物。') };
   if (plot.growth < 100) return { ...state, log: pushLog(state.log, '作物还没成熟，再照料几日。') };
   const crop = CROP_OUTPUT[plot.cropId];
+  const itemInstance = createItemInstance(
+    state,
+    content,
+    crop.resourceId,
+    undefined,
+    0.72,
+    ['farming', plot.cropId],
+  );
   return applyProfileXp({
     ...state,
     resources: {
@@ -569,7 +607,8 @@ function harvestCrop(state: GameState, content: GameContent, plotId: string): Ga
         ? { ...item, cropId: null, plantedDay: null, growth: 0, wateredToday: false }
         : item,
     ),
-    log: pushLog(state.log, `收下${crop.name}，入仓 ${crop.amount} 份。`),
+    itemInstances: [itemInstance, ...state.itemInstances].slice(0, 80),
+    log: pushLog(pushLog(state.log, itemInstance.appraisal), `收下${crop.name}，入仓 ${crop.amount} 份。`),
   }, { stamina: 1, knowledge: 1 });
 }
 
@@ -606,6 +645,7 @@ function performActivity(
   for (const [key, amount] of Object.entries(activity.reward.resources ?? {})) {
     resources[key] = (resources[key] ?? 0) + amount;
   }
+  const itemInstancesAfterCost = consumeItemInstances(state.itemInstances, activity.resourceCost ?? {});
 
   const flags = new Set(state.flags);
   for (const flag of activity.reward.flags ?? []) flags.add(flag);
@@ -619,6 +659,7 @@ function performActivity(
         undefined,
         quality,
         [activity.kind, ...(activity.reward.descriptorTags ?? [])],
+        { sourceActivityId: activity.id },
       )
     : null;
 
@@ -627,7 +668,7 @@ function performActivity(
     ...state,
     resources,
     flags: [...flags],
-    itemInstances: itemInstance ? [itemInstance, ...state.itemInstances].slice(0, 80) : state.itemInstances,
+    itemInstances: itemInstance ? [itemInstance, ...itemInstancesAfterCost].slice(0, 80) : itemInstancesAfterCost,
     completedActivities: activity.once
       ? [...new Set([...state.completedActivities, activityId])]
       : state.completedActivities,

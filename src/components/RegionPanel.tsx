@@ -179,7 +179,10 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
                 <button
                   className="btn btn--sm btn--bamboo"
                   disabled={!playing || !canPerformActivity(activity)}
-                  onClick={() => dispatch({ type: 'PERFORM_ACTIVITY', activityId: activity.id, quality: 0.82 })}
+                  onClick={() => {
+                    emitBus({ type: 'interact-activity', activityId: activity.id });
+                    onClose();
+                  }}
                 >
                   体验
                 </button>

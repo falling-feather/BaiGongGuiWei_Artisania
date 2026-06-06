@@ -13,6 +13,7 @@ export {
   REGION_CONTENT,
   activitiesForSubregion,
 } from './regionContent';
+export { ACTIVITY_CHALLENGE_INDEX, ACTIVITY_CHALLENGES } from './activityChallenges';
 export { ITEM_DESCRIPTOR_INDEX, ITEM_DESCRIPTOR_RULES } from './itemDescriptors';
 export { REGION_MAP_POS } from './mapLayout';
 export { ACHIEVEMENTS, ACHIEVEMENT_INDEX } from './achievements';

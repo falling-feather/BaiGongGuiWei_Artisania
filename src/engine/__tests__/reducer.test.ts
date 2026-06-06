@@ -13,6 +13,7 @@ import { RESOURCES } from '../../data/resources';
 import { ALL_NPCS, NPCS } from '../../data/npcs';
 import { QUESTS } from '../../data/quests';
 import { ITEM_DESCRIPTOR_RULES } from '../../data/itemDescriptors';
+import { ACTIVITY_CHALLENGES } from '../../data/activityChallenges';
 import { REGION_ACTIVITIES, REGION_CONTENT } from '../../data/regionContent';
 import { localIndustriesForRegion } from '../../data/regionEconomy';
 import { orderPrice } from '../reducer';
@@ -142,6 +143,8 @@ describe('gameReducer', () => {
     expect((s1.resources.ironIngot ?? 0)).toBeGreaterThan(0);
     expect(s1.resources.ironOre).toBeLessThan(s.resources.ironOre);
     expect(s1.resources.labor).toBeLessThan(before);
+    expect(s1.itemInstances[0]?.resourceId).toBe('ironIngot');
+    expect(s1.itemInstances[0]?.sourceIndustryId).toBe('smelt-iron');
   });
 
   it('GATHER_RESOURCE 采集业（仅耗工时）按本地特产授权产出', () => {
@@ -150,6 +153,9 @@ describe('gameReducer', () => {
     const s1 = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'harvest-cocoon', quality: 1 }, content);
     expect((s1.resources.cocoonSilk ?? 0)).toBeGreaterThan(0);
     expect(s1.resources.labor).toBeLessThan(s.resources.labor);
+    expect(s1.itemInstances[0]?.resourceId).toBe('cocoonSilk');
+    expect(s1.itemInstances[0]?.sourceIndustryId).toBe('harvest-cocoon');
+    expect(s1.itemInstances[0]?.appraisal.length).toBeGreaterThan(0);
   });
 
   it('地区经济：镇务与街景共享本地采集/精炼产业列表', () => {
@@ -173,6 +179,39 @@ describe('gameReducer', () => {
     }
   });
 
+  it('活动挑战库覆盖所有新增 miniGame 原型，并与活动 miniGame 对齐', () => {
+    const activityById = new Map(REGION_ACTIVITIES.map((activity) => [activity.id, activity]));
+    const plannedMiniGames = new Set([
+      'couplet_choice',
+      'calligraphy_trace',
+      'crop_calendar',
+      'appraise_select',
+      'route_plan',
+      'dialogue_check',
+    ]);
+    const challengeIds = new Set<string>();
+    for (const challenge of ACTIVITY_CHALLENGES) {
+      const activity = activityById.get(challenge.activityId);
+      expect(activity, challenge.activityId).toBeTruthy();
+      expect(activity?.miniGames).toContain(challenge.miniGame);
+      expect(challengeIds.has(challenge.id)).toBe(false);
+      challengeIds.add(challenge.id);
+      expect(challenge.choices.length).toBeGreaterThanOrEqual(2);
+      for (const choice of challenge.choices) {
+        expect(choice.quality).toBeGreaterThanOrEqual(0);
+        expect(choice.quality).toBeLessThanOrEqual(1);
+        expect(choice.feedback.length).toBeGreaterThan(0);
+      }
+    }
+    const covered = new Set(ACTIVITY_CHALLENGES.map((challenge) => challenge.activityId));
+    const uncovered = REGION_ACTIVITIES.filter((activity) =>
+      activity.miniGames.some((miniGame) => plannedMiniGames.has(miniGame)),
+    )
+      .filter((activity) => !covered.has(activity.id))
+      .map((activity) => activity.id);
+    expect(uncovered).toEqual([]);
+  });
+
   it('PERFORM_ACTIVITY 在当前小地区结算生活/商贸活动并生成评鉴文本', () => {
     let s = freshState();
     s = gameReducer(s, { type: 'TRAVEL_SUBREGION', subregionId: 'jiangnan-linan' }, content);
@@ -185,6 +224,7 @@ describe('gameReducer', () => {
     expect(s1.resources.teaLeaf).toBe((s.resources.teaLeaf ?? 0) - 1);
     expect(s1.profile.attributes.knowledge).toBeGreaterThan(beforeKnowledge);
     expect(s1.itemInstances[0]?.resourceId).toBe('tea');
+    expect(s1.itemInstances[0]?.sourceActivityId).toBe('jn-lake-tea-house');
     expect(s1.itemInstances[0]?.appraisal.length).toBeGreaterThan(0);
   });
 
@@ -341,6 +381,32 @@ describe('gameReducer', () => {
     );
     expect(s1.resources.indigoCloth ?? 0).toBe(1);
     expect(s1.resources.indigoVat ?? 0).toBe(before - 3);
+  });
+
+  it('供应链：RUN_PROCESS 同步消耗已记录的半成品实例', () => {
+    let s = freshState();
+    const marker = {
+      id: 'tracked-indigo-vat',
+      resourceId: 'indigoVat',
+      originRegionId: s.currentRegion,
+      originSubregionId: s.currentSubregion,
+      createdTurn: s.turn,
+      quality: 0.8,
+      descriptors: ['tracked'],
+      appraisal: 'tracked vat',
+    };
+    s = {
+      ...s,
+      resources: { ...s.resources, indigoVat: 3 },
+      itemInstances: [marker],
+    };
+    const s1 = gameReducer(
+      s,
+      { type: 'RUN_PROCESS', craftId: 'indigo-dyeing', skipStepIds: [] },
+      content,
+    );
+    expect(s1.itemInstances.some((item) => item.id === marker.id)).toBe(false);
+    expect(s1.itemInstances[0]?.resourceId).toBe('indigoCloth');
   });
 
   it('供应链：半成品不足时拒绝开工，不产成品也不计数', () => {
