@@ -645,6 +645,41 @@ describe('gameReducer', () => {
     expect(s.flags).toContain('npc-appraisal:jn-ning-ciqiu');
   });
 
+  it('第一圈外地 NPC 已具备功能、偏好、见闻和委托入口', () => {
+    const firstRingNpcIds = [
+      'bs-luo-qingmie',
+      'bs-mabang-ayue',
+      'qd-yinniang-alan',
+      'qd-mu-luozi',
+      'jj-lan-daqi',
+      'jj-song-yasi',
+    ];
+    const questNpcIds = new Set(QUESTS.map((quest) => quest.npcId));
+    for (const npcId of firstRingNpcIds) {
+      const npc = ALL_NPCS.find((item) => item.id === npcId);
+      expect(npc, npcId).toBeTruthy();
+      expect(npc?.functions?.length ?? 0).toBeGreaterThan(0);
+      expect(npc?.preferences?.length ?? 0).toBeGreaterThan(0);
+      expect(npc?.intel?.length ?? 0).toBeGreaterThan(0);
+      expect(npc?.relationshipLines?.familiar?.length ?? 0).toBeGreaterThan(0);
+      expect(questNpcIds.has(npcId)).toBe(true);
+    }
+  });
+
+  it('外地路线委托会写入结构化路线情报', () => {
+    let s = freshState();
+    s = {
+      ...s,
+      npcAffinity: { ...s.npcAffinity, 'bs-mabang-ayue': 8 },
+      completedActivities: ['bs-tea-horse-post'],
+    };
+    const next = gameReducer(s, { type: 'COMPLETE_QUEST', questId: 'q-bashu-tea-horse-snow-pass' }, content);
+    expect(next.completedQuests).toContain('q-bashu-tea-horse-snow-pass');
+    expect(next.flags).toContain('bashu-mabang-roadbook');
+    expect(next.flags).toContain('route-known:route-bashu-qiandian-tea-horse');
+    expect(next.flags).toContain('route-known:route-bashu-xueyu-snow-pass');
+  });
+
   it('COMPLETE_QUEST：好感不足时拒绝交付', () => {
     const quest = QUESTS[0];
     let s = freshState();

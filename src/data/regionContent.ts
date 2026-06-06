@@ -1,4 +1,80 @@
-import type { ActivityDef, NpcDef, RegionContentSpec, RouteSpec } from '../engine/types';
+import type { ActivityDef, NpcDef, NpcFunctionKind, NpcGiftPreference, RegionContentSpec, RouteSpec } from '../engine/types';
+
+type NpcOverride = Partial<
+  Pick<
+    NpcDef,
+    | 'functions'
+    | 'preferences'
+    | 'relationshipLines'
+    | 'intel'
+    | 'personalDilemma'
+    | 'endingInfluence'
+    | 'personality'
+  >
+>;
+
+const FIRST_RING_NPC_OVERRIDES: Record<string, NpcOverride> = {
+  'bs-luo-qingmie': {
+    functions: ['mentor', 'quest', 'order', 'collab'],
+    personality: 'patient',
+    preferences: [
+      { label: '细直青竹或竹篾', resourceIds: ['bambooRaw', 'bambooSplit'], affinityBonus: 5 },
+      { label: '可入外地订单的竹器', resourceIds: ['bambooWare', 'qingshenBamboo'], minQuality: 0.55, affinityBonus: 7 },
+    ],
+    personalDilemma: '她想把青神竹编从旅游小物里救出来，证明细竹也能撑起跨地区订单。',
+    endingInfluence: '罗青篾认可玩家后，巴蜀竹料会成为江南伞、徽州纸和百工院棚架的稳定支点。',
+  },
+  'bs-mabang-ayue': {
+    functions: ['route', 'quest', 'order'],
+    personality: 'steady',
+    preferences: [
+      { label: '轻便耐走的补给', resourceIds: ['tea', 'teaLeaf', 'bambooWare'], affinityBonus: 5 },
+      { label: '走过远路的货样', originRegionIds: ['jiangnan', 'huizhou', 'qiandian'], minQuality: 0.6, affinityBonus: 5 },
+    ],
+    personalDilemma: '他讨厌只看路资的人，因为山路真正收的是敬畏和信用。',
+    endingInfluence: '阿越的路书会把巴蜀、黔滇和雪域接成第一条远行训练线。',
+  },
+  'qd-yinniang-alan': {
+    functions: ['mentor', 'quest', 'order', 'collab', 'appraisal'],
+    personality: 'warm',
+    preferences: [
+      { label: '银料或银饰', resourceIds: ['silverStock', 'silverOrnament', 'tibetanSilver'], affinityBonus: 7 },
+      { label: '尊重纹样来历的作品', descriptorIncludes: ['纹', '细', '正'], minQuality: 0.65, affinityBonus: 5 },
+    ],
+    personalDilemma: '她不愿苗银只被当作漂亮装饰，纹样里的礼法也要有人听见。',
+    endingInfluence: '银娘阿岚会让贵金属线从单纯冶炼变成礼俗、装饰与订单并重的支线。',
+  },
+  'qd-mu-luozi': {
+    functions: ['route', 'quest'],
+    personality: 'practical',
+    preferences: [
+      { label: '能换脚力的茶与货样', resourceIds: ['tea', 'teaLeaf', 'indigoCloth'], affinityBonus: 5 },
+      { label: '外地带来的稳妥货', originRegionIds: ['bashu', 'jiangnan', 'jingchu'], minQuality: 0.58, affinityBonus: 4 },
+    ],
+    personalDilemma: '他看着茶马道被便宜快货挤压，却仍相信熟路和熟人能救一批好货。',
+    endingInfluence: '木骡子的信任会让黔滇成为银铜、茶和染料的交通扣。',
+  },
+  'jj-lan-daqi': {
+    functions: ['mentor', 'quest', 'order', 'collab', 'appraisal'],
+    personality: 'demanding',
+    preferences: [
+      { label: '铜料与颜料齐备的宫造坯', resourceIds: ['copperStock', 'pigmentRefined', 'cloisonne'], minQuality: 0.6, affinityBonus: 7 },
+      { label: '名声过得去的重器', descriptorIncludes: ['稳', '正', '细'], minQuality: 0.7, affinityBonus: 6 },
+    ],
+    personalDilemma: '他知道宫造规矩苛刻，却怕规矩一松，重器就只剩富贵皮相。',
+    endingInfluence: '蓝大器会把京畿宫造订单变成中期门槛，要求材料、商誉与技艺同时达标。',
+  },
+  'jj-song-yasi': {
+    functions: ['route', 'quest', 'order'],
+    personality: 'cautious',
+    preferences: [
+      { label: '带题名或凭据的样货', descriptorIncludes: ['名', '题', '款'], minQuality: 0.6, affinityBonus: 6 },
+      { label: '可入采办账的货物', resourceIds: ['cloisonne', 'filigreeOrnament', 'treasureSword'], affinityBonus: 5 },
+    ],
+    personalDilemma: '他不是不通人情，只是官署门口每一次放行都要有人担责。',
+    endingInfluence: '宋押司的许可会把商誉和宫造订单真正扣在一起。',
+  },
+};
 
 function act(
   id: string,
@@ -42,6 +118,10 @@ function npc(
   greetings: string[],
   knowledgeTags: string[] = [],
 ): NpcDef {
+  const override = FIRST_RING_NPC_OVERRIDES[id] ?? {};
+  const activity = REGION_ACTIVITIES.find((item) => item.id === anchorId);
+  const functions = override.functions ?? inferNpcFunctions(knowledgeTags, activity);
+  const routeIds = activity?.reward.routeIds ?? [];
   return {
     id,
     name,
@@ -49,10 +129,63 @@ function npc(
     regionId,
     subregionId,
     profession,
-    personality: 'placeholder',
+    personality: override.personality ?? 'regional',
     knowledgeTags,
+    functions,
+    preferences: override.preferences ?? inferNpcPreferences(knowledgeTags),
+    relationshipLines: override.relationshipLines ?? regionalRelationshipLines(name, profession),
+    intel: override.intel ?? [
+      {
+        id: `intel-${id}-local`,
+        title: `${profession}的地方门路`,
+        body: routeIds.length > 0
+          ? `${name}把${profession}背后的路资、熟人和风险讲给你听，这不是地图上一条线就能说完的事。`
+          : `${name}讲起${profession}的本地规矩：材料从哪里来、谁肯担保、什么火候或手势最不能省。`,
+        unlockAffinity: 8,
+        topics: [...new Set([...knowledgeTags, `activity:${anchorId}`])],
+        routeIds,
+        setFlags: [`intel-${id}-local`],
+      },
+    ],
+    personalDilemma: override.personalDilemma ?? `${name}想让${profession}不只停在地方名片上，而是真正接入百工院的长期生产。`,
+    endingInfluence: override.endingInfluence ?? `${name}的认可会让${regionId}的地方技艺进入玩家的跨地区人情网。`,
     anchorCraftId: anchorId,
     greetings,
+  };
+}
+
+function inferNpcFunctions(knowledgeTags: string[], activity?: ActivityDef): NpcFunctionKind[] {
+  const tags = new Set(knowledgeTags);
+  const functions = new Set<NpcFunctionKind>();
+  const routeLike = tags.has('route') || tags.has('trade') || activity?.kind === 'route' || activity?.kind === 'trade';
+  const appraisalLike = ['appraisal', 'stone', 'jade', 'pigment'].some((tag) => tags.has(tag));
+  const craftLike = !routeLike || ['metal', 'bamboo', 'brocade', 'silver', 'dye', 'ceramic', 'lacquer', 'embroidery', 'paper', 'ink', 'textile', 'ornament', 'painting', 'food'].some((tag) => tags.has(tag));
+
+  if (craftLike) functions.add('mentor');
+  if (routeLike) functions.add('route');
+  if (routeLike || activity?.kind === 'workshop') functions.add('order');
+  if (craftLike && !routeLike) functions.add('collab');
+  if (appraisalLike || tags.has('luxury')) functions.add('appraisal');
+  return [...functions];
+}
+
+function inferNpcPreferences(knowledgeTags: string[]): NpcGiftPreference[] {
+  const tags = new Set(knowledgeTags);
+  if (tags.has('bamboo')) return [{ label: '竹料与竹器', resourceIds: ['bambooRaw', 'bambooSplit', 'bambooWare', 'qingshenBamboo'], affinityBonus: 5 }];
+  if (tags.has('silver')) return [{ label: '银料与银饰', resourceIds: ['silverStock', 'silverOrnament', 'tibetanSilver'], affinityBonus: 5 }];
+  if (tags.has('metal')) return [{ label: '火候稳的金属料', resourceIds: ['ironIngot', 'copperStock', 'treasureSword', 'cloisonne'], affinityBonus: 5 }];
+  if (tags.has('route') || tags.has('trade')) return [{ label: '适合远行验货的样品', minQuality: 0.6, affinityBonus: 4 }];
+  if (tags.has('stone') || tags.has('jade')) return [{ label: '纹理可辨的石玉', resourceIds: ['duanStone', 'sheStone', 'jadeRough', 'jadeCarving'], affinityBonus: 5 }];
+  if (tags.has('textile') || tags.has('brocade') || tags.has('embroidery')) return [{ label: '丝线与织物', resourceIds: ['rawSilkThread', 'brocade', 'atlasSilk', 'gambieredSilk'], affinityBonus: 5 }];
+  return [{ label: '有地方手法的作品', minQuality: 0.58, affinityBonus: 4 }];
+}
+
+function regionalRelationshipLines(name: string, profession: string): NpcDef['relationshipLines'] {
+  return {
+    stranger: [`${name}打量你手上的旧茧，只说：先听规矩，再谈${profession}。`],
+    familiar: [`你已经能听懂${profession}里几句门道，话也就能往深处说。`],
+    trusted: [`若百工院真要接这条线，我愿意替你担一次保。`],
+    confidant: [`这门手艺要往外走，也要有人记得它从哪里来。你若肯记，我就肯教。`],
   };
 }
 

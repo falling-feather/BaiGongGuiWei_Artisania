@@ -105,6 +105,103 @@ export const QUESTS: QuestDef[] = [
     },
     completeLog: '陆寒泉听剑出鞘，低声说{name}已经懂得“铁净、火稳、刃正”的第一层。'
   },
+  {
+    id: 'q-bashu-qingshen-bamboo',
+    npcId: 'bs-luo-qingmie',
+    title: '青神细篾样',
+    desc: '罗青篾要看你是不是只把竹当便宜材料。带来足够顺直的竹料或做出一件能入样的竹器。',
+    requireAffinity: 12,
+    condition: (s) =>
+      (s.resources.bambooRaw ?? 0) >= 2 ||
+      (s.resources.bambooSplit ?? 0) >= 2 ||
+      (s.resources.qingshenBamboo ?? 0) >= 1 ||
+      (s.resources.bambooWare ?? 0) >= 1,
+    reward: {
+      coin: 18,
+      resources: { bambooSplit: 2 },
+      metrics: { heritage: 2, life: 1 },
+      attributes: { craft: 1, stamina: 1 },
+      flags: ['bashu-bamboo-sample-approved'],
+    },
+    completeLog: '罗青篾抽出一缕细篾，确认{name}没有把竹性看轻。巴蜀竹料线可以放心接进百工院。'
+  },
+  {
+    id: 'q-bashu-tea-horse-snow-pass',
+    npcId: 'bs-mabang-ayue',
+    title: '马帮雪口路书',
+    desc: '阿越不先收路资，只问你有没有真正走过茶马驿，把风口、货重和熟人记明白。',
+    requireAffinity: 8,
+    condition: (s) => s.completedActivities.includes('bs-tea-horse-post') || s.flags.includes('heard-snow-pass'),
+    reward: {
+      coin: 12,
+      metrics: { market: 1, life: 1 },
+      attributes: { commerce: 1, stamina: 1 },
+      flags: ['bashu-mabang-roadbook', 'route-known:route-bashu-qiandian-tea-horse', 'route-known:route-bashu-xueyu-snow-pass'],
+    },
+    completeLog: '马帮阿越替{name}把雪口和南线都画进路书：快慢可以商量，敬畏不能省。'
+  },
+  {
+    id: 'q-qiandian-silver-etiquette',
+    npcId: 'qd-yinniang-alan',
+    title: '苗银不是空花',
+    desc: '银娘阿岚愿意教你看纹样礼法，但要先确认你带来的银饰不是只图亮。',
+    requireAffinity: 12,
+    condition: (s) => (s.resources.silverOrnament ?? 0) >= 1 || s.completedActivities.includes('qd-miao-silver-shop'),
+    reward: {
+      coin: 20,
+      metrics: { heritage: 2, spirit: 2 },
+      attributes: { craft: 1, people: 1 },
+      flags: ['qiandian-silver-etiquette'],
+    },
+    completeLog: '银娘阿岚把纹样来历一一讲给{name}听：银饰先是礼，再是器。'
+  },
+  {
+    id: 'q-qiandian-tea-road-contact',
+    npcId: 'qd-mu-luozi',
+    title: '铃声认路',
+    desc: '木骡子要你真正走一回茶马驿道，再谈黔楚矿路和茶马南线的熟人。',
+    requireAffinity: 8,
+    condition: (s) => s.completedActivities.includes('qd-tea-horse-road') || s.flags.includes('tea-horse-contact'),
+    reward: {
+      coin: 10,
+      metrics: { market: 1 },
+      attributes: { commerce: 1, stamina: 1 },
+      flags: ['qiandian-tea-road-contact', 'route-known:route-bashu-qiandian-tea-horse', 'route-known:route-qiandian-jingchu-mine'],
+    },
+    completeLog: '木骡子听{name}复述铃声和风向，点头把黔楚矿苗山路的熟人名写在路引背面。'
+  },
+  {
+    id: 'q-jingji-official-nameproof',
+    npcId: 'jj-song-yasi',
+    title: '官署名帖',
+    desc: '宋押司要看的不是钱袋，而是来路、凭据和有人愿意担保的样货名声。',
+    requireAffinity: 8,
+    condition: (s) => s.completedActivities.includes('jj-official-gate') || s.flags.includes('met-palace-clerk'),
+    reward: {
+      coin: 10,
+      metrics: { market: 2 },
+      attributes: { commerce: 1, people: 1 },
+      flags: ['jingji-official-permit', 'route-known:route-jiangnan-jingji-canal', 'route-known:route-jingji-sanjin-official'],
+    },
+    completeLog: '宋押司替{name}把名帖压上官署印角：门可以开，但货名也要担得住。'
+  },
+  {
+    id: 'q-jingji-cloisonne-sample',
+    npcId: 'jj-lan-daqi',
+    title: '景泰蓝小样',
+    desc: '蓝大器要一件真正铜胎、掐丝、点蓝都站得住的小样，才肯把宫造订单往你这里递。',
+    requireAffinity: 16,
+    condition: (s) =>
+      (s.resources.cloisonne ?? 0) >= 1 ||
+      s.itemInstances.some((item) => item.resourceId === 'cloisonne' && item.status !== 'gifted' && item.quality >= 0.6),
+    reward: {
+      coin: 42,
+      metrics: { heritage: 2, market: 3 },
+      attributes: { craft: 2, commerce: 1 },
+      flags: ['jingji-cloisonne-sample-approved'],
+    },
+    completeLog: '蓝大器挑完铜胎和丝线，终于说{name}这件小样可以进宫造候单。'
+  },
 ];
 
 export const QUEST_INDEX: Record<string, QuestDef> = Object.fromEntries(
