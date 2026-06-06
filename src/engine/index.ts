@@ -8,3 +8,4 @@ export * from './rng';
 export * from './state';
 export * from './reducer';
 export * from './npcFunctions';
+export * from './routeCosts';

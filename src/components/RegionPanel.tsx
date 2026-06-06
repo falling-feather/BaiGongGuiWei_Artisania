@@ -2,6 +2,7 @@ import { useGameStore } from '../store/gameStore';
 import { RESOURCE_INDEX } from '../data';
 import { localIndustriesForRegion } from '../data/regionEconomy';
 import { emitBus } from '../game/EventBus';
+import { routeCostWithIntel, routeIntelKnown } from '../engine';
 import type { CropId, IndustryDef, RegionDef, RouteSpec } from '../engine';
 
 const CROP_OPTIONS: { id: CropId; name: string; output: string }[] = [
@@ -30,10 +31,6 @@ function otherRouteEnd(route: RouteSpec, regionId: string): string {
   return route.fromRegionId === regionId ? route.toRegionId : route.fromRegionId;
 }
 
-function routeCost(route: RouteSpec): number {
-  return route.unlockCost ?? route.requirements?.coin ?? 30;
-}
-
 /** 资源键 → 中文名（无定义则原样显示） */
 function resName(key: string): string {
   return RESOURCE_INDEX[key]?.name ?? key;
@@ -59,6 +56,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const currentRegion = useGameStore((s) => s.state.currentRegion);
   const currentSubregion = useGameStore((s) => s.state.currentSubregion);
   const unlockedRegions = useGameStore((s) => s.state.unlockedRegions);
+  const flags = useGameStore((s) => s.state.flags);
   const calendar = useGameStore((s) => s.state.calendar);
   const playing = useGameStore((s) => s.state.status === 'playing');
   const dispatch = useGameStore((s) => s.dispatch);
@@ -287,14 +285,15 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
           {frontierRouteRows.length === 0 && <p className="panel-empty">当前地区暂无可开拓的新路线。</p>}
           <ul className="ind-list">
             {frontierRouteRows.map(({ route, target }) => {
-              const cost = routeCost(route);
+              const cost = routeCostWithIntel(route, flags);
+              const known = routeIntelKnown(route, flags);
               const enoughCoin = (resources.coin ?? 0) >= cost;
               return (
                 <li className="ind-item" key={route.id}>
                   <div className="ind-item__main">
                     <span className="ind-item__name">{route.name} · {target.name}</span>
                     <span className="ind-item__io">
-                      路资 {cost} 文 · {enoughCoin ? '可在场景出入口开通' : '路资不足'}
+                      路资 {cost} 文 · {known ? '已掌握路线情报' : '未掌握路线情报'} · {enoughCoin ? '可在场景出入口开通' : '路资不足'}
                     </span>
                     <span className="ind-item__blurb">{route.unlockHint}</span>
                   </div>

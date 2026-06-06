@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { REGION_INDEX, REGION_MAP_POS, REGION_ROUTES } from '../data';
+import { routeCostWithIntel, routeIntelKnown } from '../engine';
 import type { RegionDef, RouteSpec } from '../engine';
 
 /** 节点状态：当前所在 / 已通可经场景出入口前往 / 相邻可开通 / 暂不可达 */
@@ -14,13 +15,10 @@ function otherRouteEnd(route: RouteSpec, regionId: string): string {
   return route.fromRegionId === regionId ? route.toRegionId : route.fromRegionId;
 }
 
-function routeCost(route?: RouteSpec): number {
-  return route?.unlockCost ?? route?.requirements?.coin ?? 30;
-}
-
 export function WorldMapModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const currentRegion = useGameStore((s) => s.state.currentRegion);
   const unlockedRegions = useGameStore((s) => s.state.unlockedRegions);
+  const flags = useGameStore((s) => s.state.flags);
   const coin = useGameStore((s) => s.state.resources.coin ?? 0);
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
   if (!open) return null;
@@ -61,13 +59,14 @@ export function WorldMapModal({ open, onClose }: { open: boolean; onClose: () =>
   const selectedKind = selectedRegion ? kindOf(selectedRegion) : 'locked';
   const selectedRoute =
     selectedRegion && selectedRegion.id !== currentRegion ? routeForTarget(selectedRegion.id) : undefined;
-  const selectedRouteCost = routeCost(selectedRoute);
+  const selectedRouteCost = routeCostWithIntel(selectedRoute, flags);
   const selectedSummary = (() => {
     if (!selectedRegion) return '暂无地区信息。';
     if (selectedKind === 'current') return '当前所在大地区。继续行脚请在场景内寻找出入口牌坊或商路节点。';
     if (selectedKind === 'unlocked') return '此地已开通。正式迁移请回到场景，靠近对应出入口并按 E 前往。';
     if (selectedKind === 'reachable' && selectedRoute) {
-      return `可经「${selectedRoute.name}」开通，路资 ${selectedRouteCost} 文。${selectedRoute.unlockHint}`;
+      const known = routeIntelKnown(selectedRoute, flags);
+      return `可经「${selectedRoute.name}」开通，路资 ${selectedRouteCost} 文。${known ? '已有路线情报，可省路资。' : ''}${selectedRoute.unlockHint}`;
     }
     return '尚未发现直达路线。请先从已通地区继续开拓相邻商路。';
   })();
@@ -103,7 +102,7 @@ export function WorldMapModal({ open, onClose }: { open: boolean; onClose: () =>
             const targetRoute = routeForTarget(r.id);
             const title =
               kind === 'reachable' && targetRoute
-                ? `${r.blurb}｜${targetRoute.name}，${routeCost(targetRoute)} 文`
+                ? `${r.blurb}｜${targetRoute.name}，${routeCostWithIntel(targetRoute, flags)} 文`
                 : `${r.blurb}｜${kind === 'unlocked' ? '已通，需经场景出入口前往' : '仅供查看'}`;
             return (
               <button

@@ -40,6 +40,7 @@ import { applyDelta, aggregateTownMetrics, METRIC_KEYS, METRIC_LABELS } from './
 import { createCalendar, createInitialState, LABOR_PER_TURN, titleForRank } from './state';
 import { createRng, weightedPick } from './rng';
 import { NPC_FUNCTION_LABELS, npcFunctionNeedsItem, npcFunctionRequirement } from './npcFunctions';
+import { routeCostWithIntel, routeIntelDiscount } from './routeCosts';
 
 /** reducer 运行所需的内容包（由 store 层从 data 注入） */
 export interface GameContent {
@@ -925,19 +926,20 @@ function unlockRegion(state: GameState, content: GameContent, regionId: string):
       return { ...state, log: pushLog(state.log, `「${route.name}」尚不能开通：${failure}${route.unlockHint}`) };
     }
   }
-  const unlockCost = route?.unlockCost ?? route?.requirements?.coin ?? REGION_UNLOCK_COST;
+  const unlockCost = routeCostWithIntel(route ?? undefined, state.flags, REGION_UNLOCK_COST);
   if ((state.resources.coin ?? 0) < unlockCost) {
     return {
       ...state,
       log: pushLog(state.log, `路资不足，解锁「${target.name}」需 ${unlockCost} 文。`),
     };
   }
+  const discount = routeIntelDiscount(route ?? undefined, state.flags, REGION_UNLOCK_COST);
   return {
     ...state,
     resources: { ...state.resources, coin: (state.resources.coin ?? 0) - unlockCost },
     unlockedRegions: [...state.unlockedRegions, regionId],
     log: pushLog(state.log, route
-      ? `打通「${route.name}」，解锁新地区「${target.name}」。${route.preview ?? ''}`
+      ? `打通「${route.name}」，解锁新地区「${target.name}」。${discount > 0 ? `凭路线情报省下 ${discount} 文。` : ''}${route.preview ?? ''}`
       : `打通商路，解锁新地区「${target.name}」。`),
   };
 }

@@ -341,6 +341,19 @@ describe('gameReducer', () => {
     expect(s1.log.some((line) => line.includes('江南纸墨路'))).toBe(true);
   });
 
+  it('UNLOCK_REGION 掌握路线情报后会降低开路路资', () => {
+    let s = freshState();
+    s = {
+      ...s,
+      flags: [...s.flags, 'route-known:route-jiangnan-huizhou-paper'],
+      resources: { ...s.resources, coin: 100 },
+    };
+    const s1 = gameReducer(s, { type: 'UNLOCK_REGION', regionId: 'huizhou' }, content);
+    expect(s1.unlockedRegions).toContain('huizhou');
+    expect(s1.resources.coin).toBe(77);
+    expect(s1.log.some((line) => line.includes('省下 7 文'))).toBe(true);
+  });
+
   it('UNLOCK_REGION 会执行路线属性门槛', () => {
     let s = freshState();
     s = { ...s, resources: { ...s.resources, coin: 100 } };
