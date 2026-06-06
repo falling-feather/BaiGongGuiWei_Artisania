@@ -133,6 +133,7 @@ describe('gameReducer', () => {
     expect(s.calendar.day).toBe(1);
     expect(s.calendar.phase).toBe('morning');
     expect(s.farmPlots.length).toBeGreaterThanOrEqual(3);
+    expect(s.regionReputation.jiangnan).toBe(5);
   });
 
   it('ADVANCE_TIME 推进日内时段，夜间后进入下一日', () => {
@@ -268,6 +269,7 @@ describe('gameReducer', () => {
     expect(s1.resources.teaLeaf).toBe((s.resources.teaLeaf ?? 0) - 1);
     expect(s1.profile.attributes.knowledge).toBeGreaterThan(beforeKnowledge);
     expect(s1.completedActivities).toContain('jn-lake-tea-house');
+    expect(s1.regionReputation.jiangnan).toBeGreaterThan(s.regionReputation.jiangnan);
     expect(s1.flags).toContain('route-known:route-jiangnan-huizhou-paper');
     expect(s1.npcStates['jn-su-xiaocha']?.knownTopics).toContain('route:route-jiangnan-huizhou-paper');
     expect(s1.npcAffinity['jn-su-xiaocha']).toBeGreaterThan(0);
@@ -284,6 +286,7 @@ describe('gameReducer', () => {
     const high = gameReducer(s, { type: 'PERFORM_ACTIVITY', activityId: 'jn-lake-tea-house', quality: 0.92 }, content);
 
     expect(low.npcAffinity['jn-su-xiaocha']).toBeLessThan(high.npcAffinity['jn-su-xiaocha']);
+    expect(low.regionReputation.jiangnan).toBeLessThan(high.regionReputation.jiangnan);
     expect(high.completedActivities).toContain('jn-lake-tea-house');
     expect(high.npcStates['jn-su-xiaocha']?.knownTopics).toContain('activity:jn-lake-tea-house');
   });
@@ -373,6 +376,8 @@ describe('gameReducer', () => {
     const s1 = gameReducer(s, { type: 'UNLOCK_REGION', regionId: 'huizhou' }, content);
     expect(s1.unlockedRegions).toContain('huizhou');
     expect(s1.resources.coin).toBeLessThan(s.resources.coin);
+    expect(s1.regionReputation.huizhou).toBe(3);
+    expect(s1.regionReputation.jiangnan).toBeGreaterThan(s.regionReputation.jiangnan);
     expect(s1.log.some((line) => line.includes('江南纸墨路'))).toBe(true);
   });
 
@@ -704,6 +709,7 @@ describe('gameReducer', () => {
     expect(next.activeOrders.find((item) => item.id === order.id)?.status).toBe('completed');
     expect(next.flags).toContain(`order-completed:${order.id}`);
     expect(next.npcAffinity['jn-bamboo-master']).toBeGreaterThan(s.npcAffinity['jn-bamboo-master']);
+    expect(next.regionReputation.jiangnan).toBeGreaterThan(s.regionReputation.jiangnan);
   });
 
   it('USE_NPC_FUNCTION 联作和鉴评会写入作品实例', () => {
@@ -754,6 +760,7 @@ describe('gameReducer', () => {
     };
     const next = gameReducer(s, { type: 'COMPLETE_QUEST', questId: 'q-bashu-tea-horse-snow-pass' }, content);
     expect(next.completedQuests).toContain('q-bashu-tea-horse-snow-pass');
+    expect(next.regionReputation.bashu).toBeGreaterThan(s.regionReputation.bashu ?? 0);
     expect(next.flags).toContain('bashu-mabang-roadbook');
     expect(next.flags).toContain('route-known:route-bashu-qiandian-tea-horse');
     expect(next.flags).toContain('route-known:route-bashu-xueyu-snow-pass');
@@ -778,6 +785,7 @@ describe('gameReducer', () => {
     const coinBefore = s.resources.coin ?? 0;
     s = gameReducer(s, { type: 'COMPLETE_QUEST', questId: quest.id }, content);
     expect(s.completedQuests).toContain(quest.id);
+    expect(s.regionReputation.jiangnan).toBeGreaterThan(5);
     expect(s.resources.coin).toBe(coinBefore + (quest.reward.coin ?? 0));
     // 重复交付无效
     const again = gameReducer(s, { type: 'COMPLETE_QUEST', questId: quest.id }, content);

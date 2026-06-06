@@ -9,3 +9,4 @@ export * from './state';
 export * from './reducer';
 export * from './npcFunctions';
 export * from './routeCosts';
+export * from './regionReputation';

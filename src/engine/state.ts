@@ -162,6 +162,7 @@ export function createInitialState(
     npcStates: {},
     completedQuests: [],
     completedActivities: [],
+    regionReputation: currentRegion ? { [currentRegion]: devMode ? 30 : 5 } : {},
     activeOrders: [],
   };
 }

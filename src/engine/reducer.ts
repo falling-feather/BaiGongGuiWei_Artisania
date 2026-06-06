@@ -42,6 +42,7 @@ import { createCalendar, createInitialState, LABOR_PER_TURN, titleForRank } from
 import { createRng, weightedPick } from './rng';
 import { NPC_FUNCTION_LABELS, npcFunctionNeedsItem, npcFunctionRequirement } from './npcFunctions';
 import { routeCostWithIntel, routeIntelDiscount } from './routeCosts';
+import { addRegionReputation, regionReputationOf } from './regionReputation';
 
 /** reducer 运行所需的内容包（由 store 层从 data 注入） */
 export interface GameContent {
@@ -704,6 +705,43 @@ function activityAffinityGain(activity: ActivityDef, quality: number) {
   return Math.max(1, baseByKind[activity.kind] + qualityBonus);
 }
 
+function activityReputationGain(activity: ActivityDef, quality: number) {
+  const baseByKind: Record<ActivityDef['kind'], number> = {
+    resource: 1,
+    workshop: 2,
+    training: 2,
+    trade: 3,
+    life: 2,
+    festival: 3,
+    route: 4,
+  };
+  const qualityBonus = quality >= 0.85 ? 2 : quality >= 0.65 ? 1 : quality < 0.5 ? -1 : 0;
+  return Math.max(1, baseByKind[activity.kind] + qualityBonus);
+}
+
+function regionNameFor(content: GameContent, regionId: string) {
+  return (content.regions ?? []).find((region) => region.id === regionId)?.name ?? regionId;
+}
+
+function grantRegionReputation(
+  state: GameState,
+  content: GameContent,
+  regionId: string | undefined,
+  amount: number,
+  reason: string,
+): GameState {
+  if (!regionId || amount === 0) return state;
+  const before = regionReputationOf(state, regionId);
+  const regionReputation = addRegionReputation(state.regionReputation, regionId, amount);
+  const after = regionReputation[regionId] ?? before;
+  const next = { ...state, regionReputation };
+  if (after === before) return next;
+  return {
+    ...next,
+    log: pushLog(next.log, `${regionNameFor(content, regionId)}声望 ${before}→${after}（${reason}）。`),
+  };
+}
+
 function routeNamesForIds(content: GameContent, routeIds: string[] | undefined) {
   return [...new Set(routeIds ?? [])].map((routeId) => routeNameForId(content, routeId));
 }
@@ -724,6 +762,13 @@ function applyActivityProgress(
     flags: [...flags],
     completedActivities: [...new Set([...state.completedActivities, activity.id])],
   };
+  next = grantRegionReputation(
+    next,
+    content,
+    activity.regionId,
+    activityReputationGain(activity, quality),
+    `完成「${activity.name}」`,
+  );
 
   const notes: string[] = [];
   const routeNames = routeNamesForIds(content, routeIds);
@@ -951,7 +996,7 @@ function unlockRegion(state: GameState, content: GameContent, regionId: string):
     };
   }
   const discount = routeIntelDiscount(route ?? undefined, state.flags, REGION_UNLOCK_COST);
-  return {
+  const opened: GameState = {
     ...state,
     resources: { ...state.resources, coin: (state.resources.coin ?? 0) - unlockCost },
     unlockedRegions: [...state.unlockedRegions, regionId],
@@ -959,6 +1004,10 @@ function unlockRegion(state: GameState, content: GameContent, regionId: string):
       ? `打通「${route.name}」，解锁新地区「${target.name}」。${discount > 0 ? `凭路线情报省下 ${discount} 文。` : ''}${route.preview ?? ''}`
       : `打通商路，解锁新地区「${target.name}」。`),
   };
+  const withTargetReputation = grantRegionReputation(opened, content, target.id, 3, '初次落脚');
+  const originId =
+    route?.fromRegionId === target.id ? route.toRegionId : route?.fromRegionId ?? state.currentRegion;
+  return grantRegionReputation(withTargetReputation, content, originId, 1, '打通商路');
 }
 
 /** 生成结局命运报告 */
@@ -1658,7 +1707,8 @@ function fulfillOrder(state: GameState, content: GameContent, orderId: string): 
     ),
   };
   const withMetrics = order.rewardMetrics ? applyEffect(base, { metrics: order.rewardMetrics }) : recompute(base);
-  return applyProfileXp(withMetrics, order.rewardAttributes ?? { commerce: 1 });
+  const withProfile = applyProfileXp(withMetrics, order.rewardAttributes ?? { commerce: 1 });
+  return grantRegionReputation(withProfile, content, npc?.regionId ?? state.currentRegion, 3, `交付「${order.title}」`);
 }
 
 function useNpcFunction(
@@ -1931,8 +1981,9 @@ function completeQuest(state: GameState, content: GameContent, questId: string):
     { commerce: quest.reward.coin ? 1 : 0, people: 1 },
     profileXpFromAttributes(quest.reward.attributes),
   );
-  return applyProfileXp(
+  const withProfile = applyProfileXp(
     { ...rewarded, completedQuests: [...rewarded.completedQuests, questId] },
     xp,
   );
+  return grantRegionReputation(withProfile, content, npc?.regionId ?? state.currentRegion, 5, `完成委托「${quest.title}」`);
 }

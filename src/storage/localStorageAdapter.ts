@@ -49,6 +49,7 @@ function migrateState(state: GameState): GameState {
     itemInstances: state.itemInstances ?? [],
     npcStates: state.npcStates ?? {},
     completedActivities: state.completedActivities ?? [],
+    regionReputation: state.regionReputation ?? (state.currentRegion ? { [state.currentRegion]: 5 } : {}),
     activeOrders: state.activeOrders ?? [],
   };
 }

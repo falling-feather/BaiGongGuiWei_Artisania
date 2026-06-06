@@ -2,7 +2,7 @@ import { useGameStore } from '../store/gameStore';
 import { RESOURCE_INDEX } from '../data';
 import { localIndustriesForSubregion } from '../data/subregionContent';
 import { emitBus } from '../game/EventBus';
-import { routeCostWithIntel, routeIntelKnown } from '../engine';
+import { regionReputationLabel, regionReputationOf, routeCostWithIntel, routeIntelKnown } from '../engine';
 import type { CropId, IndustryDef, RegionDef, RouteSpec } from '../engine';
 
 const CROP_OPTIONS: { id: CropId; name: string; output: string }[] = [
@@ -55,6 +55,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const completedActivities = useGameStore((s) => s.state.completedActivities);
   const currentRegion = useGameStore((s) => s.state.currentRegion);
   const currentSubregion = useGameStore((s) => s.state.currentSubregion);
+  const regionReputation = useGameStore((s) => s.state.regionReputation);
   const unlockedRegions = useGameStore((s) => s.state.unlockedRegions);
   const flags = useGameStore((s) => s.state.flags);
   const calendar = useGameStore((s) => s.state.calendar);
@@ -66,6 +67,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const regions = content.regions ?? [];
   const industries = content.industries ?? [];
   const region = regions.find((r) => r.id === currentRegion);
+  const currentReputation = regionReputationOf({ regionReputation }, currentRegion);
   const labor = resources.labor ?? 0;
   const currentSub = region?.subregions.find((s) => s.id === currentSubregion) ?? region?.subregions[0];
   const routeSpecs = Array.from(
@@ -280,6 +282,17 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
                 </li>
               ))}
             </ul>
+          </section>
+        )}
+
+        {region && (
+          <section className="panel-block">
+            <h4 className="panel-block__title">地区声望</h4>
+            <div className="stock-grid">
+              <span className="stock-chip">
+                {region.name} <b>{currentReputation}</b> {regionReputationLabel(currentReputation)}
+              </span>
+            </div>
           </section>
         )}
 
