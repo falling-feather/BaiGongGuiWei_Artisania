@@ -48,6 +48,17 @@ function endDemoDay(state: ReturnType<typeof freshState>) {
   );
 }
 
+function forgeHighQualitySword(seedState: ReturnType<typeof freshState> = freshState()) {
+  let s: ReturnType<typeof freshState> = {
+    ...seedState,
+    resources: { ...seedState.resources, ironOre: 4, coal: 4, labor: 20 },
+  };
+  s = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'smelt-iron', quality: 1 }, content);
+  const ingotId = s.itemInstances.find((item) => item.resourceId === 'ironIngot')?.id;
+  s = gameReducer(s, { type: 'RUN_PROCESS', craftId: 'longquan-sword', skipStepIds: [] }, content);
+  return { state: s, ingotId };
+}
+
 describe('gameReducer', () => {
   it('NEW_GAME 重置为可游玩状态', () => {
     const s = gameReducer(freshState(), { type: 'NEW_GAME', seed: 1 }, content);
@@ -179,6 +190,19 @@ describe('gameReducer', () => {
     }
   });
 
+  it('逐地区内容数据库：路线均有结构化端点与解锁提示', () => {
+    const regionIds = new Set(REGIONS.map((item) => item.id));
+    const routesById = new Map(REGION_CONTENT.flatMap((item) => item.routes).map((route) => [route.id, route]));
+    const routes = [...routesById.values()];
+    expect(routesById.size).toBeGreaterThan(0);
+    for (const route of routes) {
+      expect(regionIds.has(route.fromRegionId)).toBe(true);
+      expect(regionIds.has(route.toRegionId)).toBe(true);
+      expect(route.name.length).toBeGreaterThan(0);
+      expect(route.unlockHint.length).toBeGreaterThan(0);
+    }
+  });
+
   it('活动挑战库覆盖所有新增 miniGame 原型，并与活动 miniGame 对齐', () => {
     const activityById = new Map(REGION_ACTIVITIES.map((activity) => [activity.id, activity]));
     const plannedMiniGames = new Set([
@@ -235,6 +259,18 @@ describe('gameReducer', () => {
     expect(s1.itemInstances.length).toBe(0);
   });
 
+  it('PERFORM_ACTIVITY 按时段限制秦淮灯市夜间事件', () => {
+    let s = gameReducer(freshState(), { type: 'TRAVEL_SUBREGION', subregionId: 'jiangnan-jinling' }, content);
+    const morning = gameReducer(s, { type: 'PERFORM_ACTIVITY', activityId: 'jn-qinhuai-lantern', quality: 0.9 }, content);
+    expect(morning.flags).not.toContain('seen-qinhuai-lantern');
+
+    s = { ...s, calendar: { ...s.calendar, phase: 'dusk' } };
+    const dusk = gameReducer(s, { type: 'PERFORM_ACTIVITY', activityId: 'jn-qinhuai-lantern', quality: 0.9 }, content);
+    expect(dusk.flags).toContain('seen-qinhuai-lantern');
+    expect(dusk.resources.coin).toBeGreaterThan(s.resources.coin ?? 0);
+    expect(dusk.itemInstances.some((item) => item.resourceId === 'coin')).toBe(false);
+  });
+
   it('地图规格会带出当前小地区活动点和占位 NPC 锚点', () => {
     const s = gameReducer(
       freshState(),
@@ -260,6 +296,19 @@ describe('gameReducer', () => {
     const s1 = gameReducer(s, { type: 'UNLOCK_REGION', regionId: 'huizhou' }, content);
     expect(s1.unlockedRegions).toContain('huizhou');
     expect(s1.resources.coin).toBeLessThan(s.resources.coin);
+    expect(s1.log.some((line) => line.includes('江南纸墨路'))).toBe(true);
+  });
+
+  it('UNLOCK_REGION 会执行路线属性门槛', () => {
+    let s = freshState();
+    s = { ...s, resources: { ...s.resources, coin: 100 } };
+    const blocked = gameReducer(s, { type: 'UNLOCK_REGION', regionId: 'jingji' }, content);
+    expect(blocked.unlockedRegions).not.toContain('jingji');
+
+    s = { ...s, profile: { ...s.profile, attributes: { ...s.profile.attributes, commerce: 8 } } };
+    const opened = gameReducer(s, { type: 'UNLOCK_REGION', regionId: 'jingji' }, content);
+    expect(opened.unlockedRegions).toContain('jingji');
+    expect(opened.resources.coin).toBe(64);
   });
 
   it('TRAVEL 切换大地区时进入该地区默认小地区', () => {
@@ -409,6 +458,40 @@ describe('gameReducer', () => {
     expect(s1.itemInstances[0]?.resourceId).toBe('indigoCloth');
   });
 
+  it('龙泉链路：上游铁锭品质会传入最终剑器实例', () => {
+    const { state: s, ingotId } = forgeHighQualitySword();
+    const sword = s.itemInstances[0];
+    expect(sword.resourceId).toBe('treasureSword');
+    expect(sword.sourceCraftId).toBe('longquan-sword');
+    expect(sword.sourceItemIds).toContain(ingotId);
+    expect(sword.quality).toBeGreaterThan(0.75);
+    expect(sword.descriptors.some((word) => ['仙逸', '寒光', '百折', '刚柔并济'].includes(word))).toBe(true);
+  });
+
+  it('代表作：高品质作品可题名、陈列并赠予 NPC', () => {
+    let s = forgeHighQualitySword().state;
+    const swordId = s.itemInstances[0].id;
+
+    s = gameReducer(s, { type: 'NAME_ITEM', itemId: swordId }, content);
+    let sword = s.itemInstances.find((item) => item.id === swordId)!;
+    expect(sword.displayName).toBeTruthy();
+    expect(sword.authorName).toBe('无名匠人');
+    expect(s.flags).toContain('named-first-masterwork');
+
+    s = gameReducer(s, { type: 'DISPLAY_ITEM', itemId: swordId }, content);
+    sword = s.itemInstances.find((item) => item.id === swordId)!;
+    expect(sword.status).toBe('displayed');
+    expect(s.flags).toContain('displayed-first-masterwork');
+
+    const beforeGiftStock = s.resources.treasureSword ?? 0;
+    s = gameReducer(s, { type: 'GIFT_ITEM', itemId: swordId, npcId: 'jn-ning-ciqiu' }, content);
+    sword = s.itemInstances.find((item) => item.id === swordId)!;
+    expect(sword.status).toBe('gifted');
+    expect(sword.giftedToNpcId).toBe('jn-ning-ciqiu');
+    expect(s.resources.treasureSword).toBe(beforeGiftStock - 1);
+    expect(s.npcAffinity['jn-ning-ciqiu']).toBeGreaterThan(0);
+  });
+
   it('供应链：半成品不足时拒绝开工，不产成品也不计数', () => {
     let s = freshState();
     s = { ...s, resources: { ...s.resources, indigoVat: 1 } };
@@ -472,6 +555,39 @@ describe('gameReducer', () => {
     // 重复交付无效
     const again = gameReducer(s, { type: 'COMPLETE_QUEST', questId: quest.id }, content);
     expect(again.resources.coin).toBe(s.resources.coin);
+  });
+
+  it('宁辞秋人物线：文房任务消耗纸墨，题跋任务写入代表作', () => {
+    let s = forgeHighQualitySword().state;
+    const swordId = s.itemInstances[0].id;
+    s = {
+      ...s,
+      flags: [...s.flags, 'met-ning-poetry'],
+      resources: { ...s.resources, paperSheet: 1, inkStick: 1 },
+      npcAffinity: { ...s.npcAffinity, 'jn-ning-ciqiu': 24 },
+    };
+
+    s = gameReducer(s, { type: 'COMPLETE_QUEST', questId: 'q-ning-stationery' }, content);
+    expect(s.completedQuests).toContain('q-ning-stationery');
+    expect(s.resources.paperSheet).toBe(0);
+    expect(s.resources.inkStick).toBe(0);
+    expect(s.flags).toContain('ning-stationery-ready');
+
+    s = gameReducer(s, { type: 'COMPLETE_QUEST', questId: 'q-ning-inscription' }, content);
+    const sword = s.itemInstances.find((item) => item.id === swordId)!;
+    expect(s.completedQuests).toContain('q-ning-inscription');
+    expect(sword.displayName).toBeTruthy();
+    expect(sword.inscription).toContain('器成于手');
+    expect(sword.collaboratorNpcIds).toContain('jn-ning-ciqiu');
+    expect(s.flags).toContain('ning-inscribed-masterwork');
+  });
+
+  it('龙泉人物线：陆寒泉验收亲手锻出的第一把剑', () => {
+    let s = forgeHighQualitySword().state;
+    s = { ...s, npcAffinity: { ...s.npcAffinity, 'jn-lu-hanquan': 16 } };
+    s = gameReducer(s, { type: 'COMPLETE_QUEST', questId: 'q-longquan-first-sword' }, content);
+    expect(s.completedQuests).toContain('q-longquan-first-sword');
+    expect(s.flags).toContain('longquan-first-sword-approved');
   });
 
   it('全流程 demo：家园种植→江南制作订单→解锁徽州→跨区制纸订单可自循环', () => {

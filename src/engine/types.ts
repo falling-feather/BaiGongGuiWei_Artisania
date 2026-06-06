@@ -223,6 +223,8 @@ export interface ActivityDef {
   laborCost: number;
   resourceCost?: ResourcePool;
   reward: ActivityReward;
+  /** 可进行的时段；缺省表示全天可进行 */
+  availablePhases?: TimePhase[];
   evaluationId?: string;
   once?: boolean;
 }
@@ -243,9 +245,29 @@ export interface ActivityChallengeDef {
   choices: ActivityChallengeChoice[];
 }
 
+export interface RouteRequirement {
+  coin?: number;
+  flags?: string[];
+  completedActivities?: string[];
+  completedQuests?: string[];
+  attributes?: Partial<PlayerAttributes>;
+}
+
+export interface RouteSpec {
+  id: string;
+  fromRegionId: string;
+  toRegionId: string;
+  name: string;
+  mode: 'water' | 'road' | 'mountain' | 'caravan' | 'official';
+  unlockHint: string;
+  unlockCost?: number;
+  preview?: string;
+  requirements?: RouteRequirement;
+}
+
 export interface RegionContentSpec {
   regionId: string;
-  routes: string[];
+  routes: RouteSpec[];
   mainNpcIds: string[];
   activityIds: string[];
 }
@@ -278,12 +300,19 @@ export interface ItemInstance {
   sourceCraftId?: string;
   sourceActivityId?: string;
   sourceIndustryId?: string;
+  sourceItemIds?: string[];
   originRegionId: string;
   originSubregionId: string;
   createdTurn: number;
   quality: number;
   descriptors: string[];
   appraisal: string;
+  displayName?: string;
+  authorName?: string;
+  collaboratorNpcIds?: string[];
+  inscription?: string;
+  status?: 'held' | 'displayed' | 'gifted';
+  giftedToNpcId?: string;
 }
 
 /** 游戏整体状态机 —— 单一事实来源（Single Source of Truth） */
@@ -376,6 +405,17 @@ export interface QuestReward {
   resources?: ResourcePool;
   /** 镇级四维变化 */
   metrics?: Partial<Metrics>;
+  /** 玩家属性变化 */
+  attributes?: Partial<PlayerAttributes>;
+  /** 写入叙事标记 */
+  flags?: string[];
+  /** 自动为一件合格作品题跋 */
+  inscribe?: {
+    resourceIds?: string[];
+    minQuality?: number;
+    collaboratorNpcId?: string;
+    inscription: string;
+  };
 }
 
 /** 任务定义（数据驱动；condition 为纯函数，满足即可交付） */
@@ -389,6 +429,8 @@ export interface QuestDef {
   requireAffinity: number;
   /** 是否满足交付条件（只读当前状态） */
   condition: (state: GameState) => boolean;
+  /** 交付时消耗的资源 */
+  cost?: ResourcePool;
   /** 交付奖励 */
   reward: QuestReward;
   /** 完成后追加的日志（支持 {name} 占位符） */
@@ -432,7 +474,15 @@ export type GameAction =
   /** 与 NPC 对话一次（提升好感度） */
   | { type: 'TALK_NPC'; npcId: string }
   /** 交付/领取一个任务奖励 */
-  | { type: 'COMPLETE_QUEST'; questId: string };
+  | { type: 'COMPLETE_QUEST'; questId: string }
+  /** 为一件高品质作品题名 */
+  | { type: 'NAME_ITEM'; itemId: string; displayName?: string }
+  /** 将一件作品放入珍品陈列 */
+  | { type: 'DISPLAY_ITEM'; itemId: string }
+  /** 将一件作品赠予 NPC */
+  | { type: 'GIFT_ITEM'; itemId: string; npcId: string }
+  /** 为作品写题跋，通常由 NPC 人物线奖励触发 */
+  | { type: 'INSCRIBE_ITEM'; itemId: string; npcId?: string; inscription: string };
 
 // ───────────────────────────────────────────────────────────────────────────
 // 地区 · 资源 · 供应链（地区优先世界设计，详见 doc/项目规划.md 第三部分）

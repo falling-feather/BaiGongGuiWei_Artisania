@@ -35,10 +35,16 @@ const WEATHER_LABEL = {
   rain: '雨',
   snow: '雪',
 } as const;
+const ITEM_STATUS_LABEL = {
+  held: '持有',
+  displayed: '陈列',
+  gifted: '已赠',
+} as const;
 
 /** 背包：按分层罗列当前持有的资源；通货与工时单列。 */
 export function InventoryModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const state = useGameStore((s) => s.state);
+  const dispatch = useGameStore((s) => s.dispatch);
   const resources = state.resources;
   const profile = state.profile;
   const calendar = state.calendar;
@@ -110,12 +116,18 @@ export function InventoryModal({ open, onClose }: { open: boolean; onClose: () =
                   <div className="panel-block item-appraisals">
                     <div className="panel-block__title">近作评鉴</div>
                     {itemInstances.map((item) => (
-                      <article className="item-appraisal" key={item.id}>
+                      <article className={`item-appraisal item-appraisal--${item.status ?? 'held'}`} key={item.id}>
                         <div className="item-appraisal__head">
-                          <b>{RESOURCE_INDEX[item.resourceId]?.name ?? item.resourceId}</b>
+                          <b>{item.displayName ?? RESOURCE_INDEX[item.resourceId]?.name ?? item.resourceId}</b>
                           <span>品相 {Math.round(item.quality * 100)}</span>
                         </div>
+                        <div className="item-appraisal__meta">
+                          <span>{RESOURCE_INDEX[item.resourceId]?.name ?? item.resourceId}</span>
+                          <span>{ITEM_STATUS_LABEL[item.status ?? 'held']}</span>
+                          {item.authorName && <span>作者 {item.authorName}</span>}
+                        </div>
                         <p>{item.appraisal}</p>
+                        {item.inscription && <p className="item-appraisal__inscription">题跋：{item.inscription}</p>}
                         {item.descriptors.length > 0 && (
                           <div className="item-appraisal__tags">
                             {item.descriptors.map((descriptor) => (
@@ -123,6 +135,23 @@ export function InventoryModal({ open, onClose }: { open: boolean; onClose: () =
                             ))}
                           </div>
                         )}
+                        <div className="item-appraisal__actions">
+                          <button
+                            className="btn btn--sm btn--ghost"
+                            disabled={item.quality < 0.7 || item.status === 'gifted' || Boolean(item.displayName)}
+                            title={item.quality < 0.7 ? '品相 70 以上才可列为代表作' : '为作品自动题名'}
+                            onClick={() => dispatch({ type: 'NAME_ITEM', itemId: item.id })}
+                          >
+                            题名
+                          </button>
+                          <button
+                            className="btn btn--sm btn--bamboo"
+                            disabled={item.status === 'gifted' || item.status === 'displayed'}
+                            onClick={() => dispatch({ type: 'DISPLAY_ITEM', itemId: item.id })}
+                          >
+                            陈列
+                          </button>
+                        </div>
                       </article>
                     ))}
                   </div>

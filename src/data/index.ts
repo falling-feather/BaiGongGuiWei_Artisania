@@ -11,6 +11,7 @@ export {
   PLACEHOLDER_NPCS,
   REGION_ACTIVITIES,
   REGION_CONTENT,
+  REGION_ROUTES,
   activitiesForSubregion,
 } from './regionContent';
 export { ACTIVITY_CHALLENGE_INDEX, ACTIVITY_CHALLENGES } from './activityChallenges';

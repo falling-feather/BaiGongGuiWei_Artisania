@@ -1,5 +1,11 @@
 import { useGameStore } from '../store/gameStore';
-import { NPC_INDEX, questsForNpc } from '../data';
+import { NPC_INDEX, RESOURCE_INDEX, questsForNpc } from '../data';
+
+const ITEM_STATUS_LABEL = {
+  held: '持有',
+  displayed: '陈列',
+  gifted: '已赠',
+} as const;
 
 /**
  * NPC 对话面板：玩家在街上靠近 NPC 按 E 后弹出。
@@ -21,6 +27,9 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
   const runtime = npcStates[npcId];
   const quests = questsForNpc(npcId);
   const greeting = npc.greetings[0] ?? '……';
+  const giftCandidates = state.itemInstances
+    .filter((item) => item.status !== 'gifted' && (state.resources[item.resourceId] ?? 0) > 0)
+    .slice(0, 3);
 
   return (
     <div className="modal__backdrop" onClick={onClose}>
@@ -86,6 +95,38 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {giftCandidates.length > 0 && (
+          <div className="npc-quests npc-gifts">
+            <h4 className="npc-quests__title">赠礼</h4>
+            {giftCandidates.map((item) => (
+              <div className="npc-quest" key={item.id}>
+                <div className="npc-quest__head">
+                  <span className="npc-quest__name">
+                    {item.displayName ?? RESOURCE_INDEX[item.resourceId]?.name ?? item.resourceId}
+                  </span>
+                  <span className="npc-quest__done">{ITEM_STATUS_LABEL[item.status ?? 'held']}</span>
+                </div>
+                <p className="npc-quest__desc">
+                  品相 {Math.round(item.quality * 100)}
+                  {item.inscription ? ` · 题跋：${item.inscription}` : ` · ${item.appraisal}`}
+                </p>
+                <div className="npc-quest__foot">
+                  <span className="npc-quest__req">
+                    {RESOURCE_INDEX[item.resourceId]?.name ?? item.resourceId}
+                    {item.authorName ? ` · 作者 ${item.authorName}` : ''}
+                  </span>
+                  <button
+                    className="btn btn--bamboo btn--sm"
+                    onClick={() => dispatch({ type: 'GIFT_ITEM', itemId: item.id, npcId })}
+                  >
+                    赠予
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 

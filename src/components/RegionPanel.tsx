@@ -14,6 +14,13 @@ const CROP_LABEL: Record<CropId, string> = {
   mulberry: '桑蚕',
   tea: '茶树',
 };
+const PHASE_LABEL = {
+  dawn: '清晨',
+  morning: '上午',
+  afternoon: '下午',
+  dusk: '黄昏',
+  night: '夜间',
+} as const;
 
 /** 资源键 → 中文名（无定义则原样显示） */
 function resName(key: string): string {
@@ -40,6 +47,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const currentRegion = useGameStore((s) => s.state.currentRegion);
   const currentSubregion = useGameStore((s) => s.state.currentSubregion);
   const unlockedRegions = useGameStore((s) => s.state.unlockedRegions);
+  const calendar = useGameStore((s) => s.state.calendar);
   const playing = useGameStore((s) => s.state.status === 'playing');
   const dispatch = useGameStore((s) => s.dispatch);
 
@@ -50,6 +58,17 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const region = regions.find((r) => r.id === currentRegion);
   const labor = resources.labor ?? 0;
   const currentSub = region?.subregions.find((s) => s.id === currentSubregion) ?? region?.subregions[0];
+  const routeSpecs = content.regionContent?.flatMap((spec) => spec.routes) ?? [];
+  const routeForTarget = (regionId: string) =>
+    routeSpecs.find((route) => (
+      route.toRegionId === regionId && unlockedRegions.includes(route.fromRegionId)
+    ) || (
+      route.fromRegionId === regionId && unlockedRegions.includes(route.toRegionId)
+    ));
+  const routeCost = (regionId: string) => {
+    const route = routeForTarget(regionId);
+    return route?.unlockCost ?? route?.requirements?.coin ?? 30;
+  };
 
   const localIndustries: IndustryDef[] = localIndustriesForRegion(region, industries);
   const currentActivities = (content.activities ?? []).filter(
@@ -67,6 +86,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const canPerformActivity = (activity: (typeof currentActivities)[number]): boolean => {
     if (labor < activity.laborCost) return false;
     if (activity.once && completedActivities.includes(activity.id)) return false;
+    if (activity.availablePhases && !activity.availablePhases.includes(calendar.phase)) return false;
     return Object.entries(activity.resourceCost ?? {}).every(([k, v]) => (resources[k] ?? 0) >= v);
   };
 
@@ -173,12 +193,14 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
                   <span className="ind-item__name">{activity.name}</span>
                   <span className="ind-item__io">
                     {activity.kind} · {describeInput(activity.resourceCost ?? {})} → {describeInput(activity.reward.resources ?? {})} · 工时{activity.laborCost}
+                    {activity.availablePhases ? ` · ${activity.availablePhases.map((phase) => PHASE_LABEL[phase]).join('/')}` : ''}
                   </span>
                   <span className="ind-item__blurb">{activity.blurb}</span>
                 </div>
                 <button
                   className="btn btn--sm btn--bamboo"
                   disabled={!playing || !canPerformActivity(activity)}
+                  title={activity.availablePhases ? `可用时段：${activity.availablePhases.map((phase) => PHASE_LABEL[phase]).join(' / ')}` : activity.blurb}
                   onClick={() => {
                     emitBus({ type: 'interact-activity', activityId: activity.id });
                     onClose();
@@ -263,20 +285,24 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
         )}
 
         <section className="panel-block">
-          <h4 className="panel-block__title">开拓商路 · 解锁相邻（30 文）</h4>
+          <h4 className="panel-block__title">开拓商路 · 解锁相邻</h4>
           {reachable.length === 0 && <p className="panel-empty">暂无可直达的新地区。</p>}
           <div className="region-chips">
-            {reachable.map((r) => (
-              <button
-                key={r.id}
-                className="btn btn--sm"
-                disabled={!playing || (resources.coin ?? 0) < 30}
-                title={r.blurb}
-                onClick={() => dispatch({ type: 'UNLOCK_REGION', regionId: r.id })}
-              >
-                {r.name} · 解锁
-              </button>
-            ))}
+            {reachable.map((r) => {
+              const route = routeForTarget(r.id);
+              const cost = routeCost(r.id);
+              return (
+                <button
+                  key={r.id}
+                  className="btn btn--sm"
+                  disabled={!playing || (resources.coin ?? 0) < cost}
+                  title={route ? `${route.name}：${route.unlockHint}` : r.blurb}
+                  onClick={() => dispatch({ type: 'UNLOCK_REGION', regionId: r.id })}
+                >
+                  {route?.name ?? r.name} · {cost} 文
+                </button>
+              );
+            })}
           </div>
         </section>
 

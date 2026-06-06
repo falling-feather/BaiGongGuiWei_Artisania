@@ -32,6 +32,7 @@ import type {
   ItemInstance,
   PlayerAttributes,
   RegionContentSpec,
+  RouteSpec,
 } from './types';
 import { applyDelta, aggregateTownMetrics, METRIC_KEYS, METRIC_LABELS } from './metrics';
 import { createCalendar, createInitialState, LABOR_PER_TURN, titleForRank } from './state';
@@ -175,6 +176,7 @@ function descriptorRuleFor(
 type ItemSourceContext = {
   sourceActivityId?: string;
   sourceIndustryId?: string;
+  sourceItemIds?: string[];
 };
 
 function createItemInstance(
@@ -211,7 +213,20 @@ function createItemInstance(
     quality,
     descriptors,
     appraisal,
+    status: 'held',
   };
+}
+
+function consumedItemInstances(items: ItemInstance[], cost: ResourcePool): ItemInstance[] {
+  const remaining: ResourcePool = { ...cost };
+  const consumed: ItemInstance[] = [];
+  for (const item of items) {
+    const need = remaining[item.resourceId] ?? 0;
+    if (need <= 0 || item.status === 'gifted') continue;
+    remaining[item.resourceId] = need - 1;
+    consumed.push(item);
+  }
+  return consumed;
 }
 
 /** 根据资源消耗同步移除已追踪的物品实例。 */
@@ -219,10 +234,36 @@ function consumeItemInstances(items: ItemInstance[], cost: ResourcePool): ItemIn
   const remaining: ResourcePool = { ...cost };
   return items.filter((item) => {
     const need = remaining[item.resourceId] ?? 0;
-    if (need <= 0) return true;
+    if (need <= 0 || item.status === 'gifted') return true;
     remaining[item.resourceId] = need - 1;
     return false;
   });
+}
+
+function inputQualityFromItems(items: ItemInstance[], cost: ResourcePool): number | null {
+  const consumed = consumedItemInstances(items, cost);
+  if (consumed.length === 0) return null;
+  return consumed.reduce((sum, item) => sum + item.quality, 0) / consumed.length;
+}
+
+function resourceName(content: GameContent, resourceId: string) {
+  return content.resources?.find((resource) => resource.id === resourceId)?.name ?? resourceId;
+}
+
+function suggestItemTitle(item: ItemInstance, content: GameContent): string {
+  const name = resourceName(content, item.resourceId);
+  const descriptor = item.descriptors.find(Boolean);
+  if (item.resourceId === 'treasureSword') return `${descriptor ?? '龙泉'}剑`;
+  return `${descriptor ?? '初成'}${name}`;
+}
+
+function withNamedItem(state: GameState, content: GameContent, item: ItemInstance): ItemInstance {
+  return {
+    ...item,
+    displayName: item.displayName ?? suggestItemTitle(item, content),
+    authorName: item.authorName ?? (state.playerName.trim() || '无名匠人'),
+    status: item.status ?? 'held',
+  };
 }
 
 /**
@@ -340,6 +381,8 @@ function runProcess(
   for (const [key, amount] of Object.entries(resourceNeed)) {
     resources[key] = (resources[key] ?? 0) - amount;
   }
+  const consumedMaterials = consumedItemInstances(state.itemInstances, resourceNeed);
+  const materialQuality = inputQualityFromItems(state.itemInstances, resourceNeed);
   const itemInstancesAfterCost = consumeItemInstances(state.itemInstances, resourceNeed);
 
   // 累积四维影响
@@ -361,9 +404,20 @@ function runProcess(
   const outputId = craftDef.outputResourceId;
   if (outputId) {
     resources[outputId] = (resources[outputId] ?? 0) + 1;
-    const productName = content.resources?.find((r) => r.id === outputId)?.name ?? outputId;
-    const quality = Math.max(0.25, Math.min(0.98, (craftMetrics.heritage + craftMetrics.spirit) / 200));
-    itemInstance = createItemInstance(state, content, outputId, craftDef.id, quality, craftDef.synergyTags);
+    const productName = resourceName(content, outputId);
+    const craftQuality = Math.max(0.25, Math.min(0.98, (craftMetrics.heritage + craftMetrics.spirit) / 200));
+    const quality = materialQuality === null
+      ? craftQuality
+      : Math.max(0.25, Math.min(0.98, craftQuality * 0.55 + materialQuality * 0.45));
+    itemInstance = createItemInstance(
+      state,
+      content,
+      outputId,
+      craftDef.id,
+      quality,
+      craftDef.synergyTags,
+      { sourceItemIds: consumedMaterials.map((item) => item.id) },
+    );
     productNote = `，得「${productName}」×1（${itemInstance.descriptors.join('、') || '可用'}）`;
   }
 
@@ -626,6 +680,10 @@ function performActivity(
   if (activity.once && state.completedActivities.includes(activityId)) {
     return { ...state, log: pushLog(state.log, `「${activity.name}」已经完成过了。`) };
   }
+  if (activity.availablePhases && !activity.availablePhases.includes(state.calendar.phase)) {
+    const phaseList = activity.availablePhases.map((phase) => TIME_PHASE_LABEL[phase]).join(' / ');
+    return { ...state, log: pushLog(state.log, `「${activity.name}」须在${phaseList}进行。`) };
+  }
   if ((state.resources.labor ?? 0) < activity.laborCost) {
     return { ...state, log: pushLog(state.log, `工时不足，无法体验「${activity.name}」。`) };
   }
@@ -650,7 +708,9 @@ function performActivity(
   const flags = new Set(state.flags);
   for (const flag of activity.reward.flags ?? []) flags.add(flag);
 
-  const firstRewardResource = Object.keys(activity.reward.resources ?? {})[0];
+  const firstRewardResource = Object.keys(activity.reward.resources ?? {}).find(
+    (key) => key !== 'coin' && key !== 'labor',
+  );
   const itemInstance = firstRewardResource
     ? createItemInstance(
         state,
@@ -710,32 +770,83 @@ function travelSubregion(state: GameState, content: GameContent, subregionId: st
   };
 }
 
+function allRouteSpecs(content: GameContent): RouteSpec[] {
+  const seen = new Set<string>();
+  const routes: RouteSpec[] = [];
+  for (const spec of content.regionContent ?? []) {
+    for (const route of spec.routes) {
+      if (seen.has(route.id)) continue;
+      seen.add(route.id);
+      routes.push(route);
+    }
+  }
+  return routes;
+}
+
+function findUnlockRoute(state: GameState, content: GameContent, targetRegionId: string): RouteSpec | null {
+  return (
+    allRouteSpecs(content).find((route) => {
+      const forward = route.toRegionId === targetRegionId && state.unlockedRegions.includes(route.fromRegionId);
+      const reverse = route.fromRegionId === targetRegionId && state.unlockedRegions.includes(route.toRegionId);
+      return forward || reverse;
+    }) ?? null
+  );
+}
+
+function routeRequirementFailure(state: GameState, route: RouteSpec): string | null {
+  const req = route.requirements;
+  if (!req) return null;
+  for (const flag of req.flags ?? []) {
+    if (!state.flags.includes(flag)) return `还缺路线线索「${flag}」。`;
+  }
+  for (const activityId of req.completedActivities ?? []) {
+    if (!state.completedActivities.includes(activityId)) return `还未完成活动「${activityId}」。`;
+  }
+  for (const questId of req.completedQuests ?? []) {
+    if (!state.completedQuests.includes(questId)) return `还未完成委托「${questId}」。`;
+  }
+  for (const [key, value] of Object.entries(req.attributes ?? {}) as [PlayerAttributeKey, number][]) {
+    if ((state.profile.attributes[key] ?? 0) < value) return `「${key}」阅历不足。`;
+  }
+  return null;
+}
+
 /** 花费解锁一个与已解锁地区相邻的新地区 */
 function unlockRegion(state: GameState, content: GameContent, regionId: string): GameState {
   const regions = content.regions ?? [];
   const target = regions.find((r) => r.id === regionId);
   if (!target) return state;
   if (state.unlockedRegions.includes(regionId)) return state;
+  const route = findUnlockRoute(state, content, regionId);
 
   // 需与某已解锁地区相邻
   const adjacent = state.unlockedRegions.some((uid) => {
     const r = regions.find((x) => x.id === uid);
     return r?.neighbors.includes(regionId) || target.neighbors.includes(uid);
   });
-  if (!adjacent) {
+  if (!adjacent && !route) {
     return { ...state, log: pushLog(state.log, `「${target.name}」与已探地区不相邻，无法直达。`) };
   }
-  if ((state.resources.coin ?? 0) < REGION_UNLOCK_COST) {
+  if (route) {
+    const failure = routeRequirementFailure(state, route);
+    if (failure) {
+      return { ...state, log: pushLog(state.log, `「${route.name}」尚不能开通：${failure}${route.unlockHint}`) };
+    }
+  }
+  const unlockCost = route?.unlockCost ?? route?.requirements?.coin ?? REGION_UNLOCK_COST;
+  if ((state.resources.coin ?? 0) < unlockCost) {
     return {
       ...state,
-      log: pushLog(state.log, `路资不足，解锁「${target.name}」需 ${REGION_UNLOCK_COST} 文。`),
+      log: pushLog(state.log, `路资不足，解锁「${target.name}」需 ${unlockCost} 文。`),
     };
   }
   return {
     ...state,
-    resources: { ...state.resources, coin: (state.resources.coin ?? 0) - REGION_UNLOCK_COST },
+    resources: { ...state.resources, coin: (state.resources.coin ?? 0) - unlockCost },
     unlockedRegions: [...state.unlockedRegions, regionId],
-    log: pushLog(state.log, `打通商路，解锁新地区「${target.name}」。`),
+    log: pushLog(state.log, route
+      ? `打通「${route.name}」，解锁新地区「${target.name}」。${route.preview ?? ''}`
+      : `打通商路，解锁新地区「${target.name}」。`),
   };
 }
 
@@ -867,7 +978,9 @@ function reduce(
       const craftState = findCraftState(state, action.craftId);
       const heritage = craftState?.metrics.heritage ?? 50;
       const price = orderPrice(product?.value ?? 12, heritage);
-      const soldIndex = state.itemInstances.findIndex((item) => item.resourceId === outputId);
+      const soldIndex = state.itemInstances.findIndex(
+        (item) => item.resourceId === outputId && (!item.status || item.status === 'held'),
+      );
       const afterOrder = applyEffect(state, {
         resources: { coin: price, [outputId]: -1 },
         craftMetrics: { [action.craftId]: { market: 6, heritage: 2, spirit: 1 } },
@@ -969,6 +1082,22 @@ function reduce(
       if (state.status !== 'playing') return state;
       return completeQuest(state, content, action.questId);
 
+    case 'NAME_ITEM':
+      if (state.status !== 'playing') return state;
+      return nameItem(state, content, action.itemId, action.displayName);
+
+    case 'DISPLAY_ITEM':
+      if (state.status !== 'playing') return state;
+      return displayItem(state, content, action.itemId);
+
+    case 'GIFT_ITEM':
+      if (state.status !== 'playing') return state;
+      return giftItem(state, content, action.itemId, action.npcId);
+
+    case 'INSCRIBE_ITEM':
+      if (state.status !== 'playing') return state;
+      return inscribeItem(state, content, action.itemId, action.npcId, action.inscription);
+
     default:
       return state;
   }
@@ -1007,6 +1136,150 @@ function talkNpc(state: GameState, content: GameContent, npcId: string): GameSta
   }, { people: 1, knowledge: npc.knowledgeTags?.length ? 1 : 0 });
 }
 
+const MASTERWORK_MIN_QUALITY = 0.7;
+
+function nameItem(
+  state: GameState,
+  content: GameContent,
+  itemId: string,
+  displayName?: string,
+): GameState {
+  const target = state.itemInstances.find((item) => item.id === itemId);
+  if (!target) return state;
+  if (target.status === 'gifted') {
+    return { ...state, log: pushLog(state.log, '这件作品已经赠出，不能再题名。') };
+  }
+  if (target.quality < MASTERWORK_MIN_QUALITY) {
+    return { ...state, log: pushLog(state.log, '这件作品品相尚浅，还不足以列为代表作。') };
+  }
+  const flags = new Set(state.flags);
+  flags.add('named-first-masterwork');
+  const named = {
+    ...withNamedItem(state, content, target),
+    displayName: displayName?.trim() || target.displayName || suggestItemTitle(target, content),
+  };
+  return applyProfileXp({
+    ...state,
+    flags: [...flags],
+    itemInstances: state.itemInstances.map((item) => (item.id === itemId ? named : item)),
+    log: pushLog(state.log, `为「${resourceName(content, target.resourceId)}」题名「${named.displayName}」。`),
+  }, { mind: 1 });
+}
+
+function displayItem(state: GameState, content: GameContent, itemId: string): GameState {
+  const target = state.itemInstances.find((item) => item.id === itemId);
+  if (!target) return state;
+  if (target.status === 'gifted') {
+    return { ...state, log: pushLog(state.log, '这件作品已经赠出，不能陈列。') };
+  }
+  const named = { ...withNamedItem(state, content, target), status: 'displayed' as const };
+  const flags = new Set(state.flags);
+  if (target.quality >= MASTERWORK_MIN_QUALITY) flags.add('displayed-first-masterwork');
+  const withDisplay = {
+    ...state,
+    flags: [...flags],
+    itemInstances: state.itemInstances.map((item) => (item.id === itemId ? named : item)),
+    log: pushLog(state.log, `将「${named.displayName}」收入珍品陈列，来客已能看见你的手上功夫。`),
+  };
+  return applyProfileXp(applyEffect(withDisplay, { metrics: { spirit: 3, life: 1 } }), { mind: 1 });
+}
+
+function giftItem(state: GameState, content: GameContent, itemId: string, npcId: string): GameState {
+  const target = state.itemInstances.find((item) => item.id === itemId);
+  const npc = (content.npcs ?? []).find((item) => item.id === npcId);
+  if (!target || !npc) return state;
+  if (target.status === 'gifted') {
+    return { ...state, log: pushLog(state.log, '这件作品已经赠出。') };
+  }
+  if ((state.resources[target.resourceId] ?? 0) < 1) {
+    return { ...state, log: pushLog(state.log, '库存中已没有这件作品可赠。') };
+  }
+  const named = {
+    ...withNamedItem(state, content, target),
+    status: 'gifted' as const,
+    giftedToNpcId: npcId,
+  };
+  const runtime = state.npcStates[npcId] ?? emptyNpcState();
+  const cur = runtime.affinity || state.npcAffinity[npcId] || 0;
+  const gain = Math.max(6, Math.round(6 + target.quality * 10));
+  const nextAffinity = Math.min(AFFINITY_MAX, cur + gain);
+  const npcState: NpcRuntimeState = {
+    ...runtime,
+    affinity: nextAffinity,
+    stage: relationshipStageForAffinity(nextAffinity),
+    lastTalkTurn: state.turn,
+  };
+  const flags = new Set(state.flags);
+  if (target.quality >= MASTERWORK_MIN_QUALITY) flags.add('gifted-first-masterwork');
+  return applyProfileXp({
+    ...state,
+    flags: [...flags],
+    resources: {
+      ...state.resources,
+      [target.resourceId]: Math.max(0, (state.resources[target.resourceId] ?? 0) - 1),
+    },
+    npcAffinity: { ...state.npcAffinity, [npcId]: nextAffinity },
+    npcStates: { ...state.npcStates, [npcId]: npcState },
+    itemInstances: state.itemInstances.map((item) => (item.id === itemId ? named : item)),
+    log: pushLog(state.log, `把「${named.displayName}」赠予「${npc.name}」（好感 ${cur}→${nextAffinity}）。`),
+  }, { people: 2, commerce: npc.role === 'vendor' ? 1 : 0 });
+}
+
+function inscribeItem(
+  state: GameState,
+  content: GameContent,
+  itemId: string,
+  npcId: string | undefined,
+  inscription: string,
+): GameState {
+  const target = state.itemInstances.find((item) => item.id === itemId);
+  if (!target) return state;
+  if (target.status === 'gifted') {
+    return { ...state, log: pushLog(state.log, '这件作品已经赠出，题跋只能另寻作品。') };
+  }
+  const npc = npcId ? (content.npcs ?? []).find((item) => item.id === npcId) : null;
+  const named = withNamedItem(state, content, target);
+  const collaboratorNpcIds = new Set(named.collaboratorNpcIds ?? []);
+  if (npcId) collaboratorNpcIds.add(npcId);
+  const inscribed = {
+    ...named,
+    collaboratorNpcIds: [...collaboratorNpcIds],
+    inscription,
+  };
+  const flags = new Set(state.flags);
+  flags.add('inscribed-first-masterwork');
+  return applyProfileXp({
+    ...state,
+    flags: [...flags],
+    itemInstances: state.itemInstances.map((item) => (item.id === itemId ? inscribed : item)),
+    log: pushLog(state.log, `${npc?.name ?? '来客'}为「${inscribed.displayName}」题跋：${inscription}`),
+  }, { knowledge: 1, mind: 1 });
+}
+
+function findQuestInscribeTarget(state: GameState, quest: QuestDef): ItemInstance | null {
+  const reward = quest.reward.inscribe;
+  if (!reward) return null;
+  const minQuality = reward.minQuality ?? MASTERWORK_MIN_QUALITY;
+  const candidates = state.itemInstances.filter((item) => {
+    if (item.status === 'gifted') return false;
+    if (item.quality < minQuality) return false;
+    if (reward.resourceIds && !reward.resourceIds.includes(item.resourceId)) return false;
+    return (state.resources[item.resourceId] ?? 0) > 0 || item.status === 'displayed';
+  });
+  return candidates.sort((a, b) => b.quality - a.quality)[0] ?? null;
+}
+
+function mergeProfileXp(
+  base: Partial<Record<PlayerAttributeKey, number>>,
+  add: Partial<Record<PlayerAttributeKey, number>>,
+) {
+  const next = { ...base };
+  for (const [key, value] of Object.entries(add) as [PlayerAttributeKey, number][]) {
+    next[key] = (next[key] ?? 0) + value;
+  }
+  return next;
+}
+
 /** 交付一个任务：校验好感度门槛与达成条件，发放奖励并标记完成 */
 function completeQuest(state: GameState, content: GameContent, questId: string): GameState {
   const quest = (content.quests ?? []).find((q) => q.id === questId);
@@ -1024,18 +1297,49 @@ function completeQuest(state: GameState, content: GameContent, questId: string):
   if (!quest.condition(state)) {
     return { ...state, log: pushLog(state.log, `任务「${quest.title}」的条件尚未达成。`) };
   }
+  for (const [key, amount] of Object.entries(quest.cost ?? {})) {
+    if ((state.resources[key] ?? 0) < amount) {
+      return { ...state, log: pushLog(state.log, `任务「${quest.title}」缺少交付物：${key}×${amount}。`) };
+    }
+  }
   // 发放奖励
+  const rewardResources: ResourcePool = {};
+  for (const [key, amount] of Object.entries(quest.cost ?? {})) {
+    rewardResources[key] = (rewardResources[key] ?? 0) - amount;
+  }
+  if (quest.reward.coin) rewardResources.coin = (rewardResources.coin ?? 0) + quest.reward.coin;
+  for (const [key, amount] of Object.entries(quest.reward.resources ?? {})) {
+    rewardResources[key] = (rewardResources[key] ?? 0) + amount;
+  }
   const effect: GameEffect = {
-    resources: {
-      ...(quest.reward.coin ? { coin: quest.reward.coin } : {}),
-      ...(quest.reward.resources ?? {}),
-    },
+    resources: rewardResources,
     metrics: quest.reward.metrics,
+    setFlags: quest.reward.flags,
     logMessage: quest.completeLog.replace(/\{name\}/g, state.playerName.trim() || '无名匠人'),
   };
-  const rewarded = applyEffect(state, effect);
+  const withCost = {
+    ...state,
+    itemInstances: consumeItemInstances(state.itemInstances, quest.cost ?? {}),
+  };
+  let rewarded = applyEffect(withCost, effect);
+  if (quest.reward.inscribe) {
+    const target = findQuestInscribeTarget(rewarded, quest);
+    rewarded = target
+      ? inscribeItem(
+          rewarded,
+          content,
+          target.id,
+          quest.reward.inscribe.collaboratorNpcId ?? quest.npcId,
+          quest.reward.inscribe.inscription,
+        )
+      : { ...rewarded, log: pushLog(rewarded.log, '尚无合格作品可题跋。') };
+  }
+  const xp = mergeProfileXp(
+    { commerce: quest.reward.coin ? 1 : 0, people: 1 },
+    profileXpFromAttributes(quest.reward.attributes),
+  );
   return applyProfileXp(
     { ...rewarded, completedQuests: [...rewarded.completedQuests, questId] },
-    { commerce: quest.reward.coin ? 1 : 0, people: 1 },
+    xp,
   );
 }

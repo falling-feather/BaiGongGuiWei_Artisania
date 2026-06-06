@@ -1,4 +1,4 @@
-import type { ActivityDef, NpcDef, RegionContentSpec } from '../engine/types';
+import type { ActivityDef, NpcDef, RegionContentSpec, RouteSpec } from '../engine/types';
 
 function act(
   id: string,
@@ -13,6 +13,7 @@ function act(
   reward: ActivityDef['reward'],
   laborCost = 1,
   resourceCost?: ActivityDef['resourceCost'],
+  availablePhases?: ActivityDef['availablePhases'],
 ): ActivityDef {
   return {
     id,
@@ -27,6 +28,7 @@ function act(
     laborCost,
     resourceCost,
     reward,
+    availablePhases,
   };
 }
 
@@ -56,7 +58,7 @@ function npc(
 
 export const REGION_ACTIVITIES: ActivityDef[] = [
   act('jn-lanxi-orchid', 'jiangnan', 'jiangnan-jinling', '兰溪竹林', 'training', 'jn-ning-ciqiu', ['drag_path', 'couplet_choice'], '采兰、谈诗、赠花与题跋。', '你在竹影里采得一枝兰，又同宁辞秋拆了半首旧诗。', { resources: { tea: 1 }, attributes: { knowledge: 2, mind: 1 }, flags: ['met-ning-poetry'], descriptorTags: ['literati'] }),
-  act('jn-qinhuai-lantern', 'jiangnan', 'jiangnan-jinling', '秦淮灯市', 'festival', 'jn-qiao-zhaoye', ['couplet_choice', 'aim_place'], '灯谜、灯彩订单与夜市摆摊。', '灯火沿水铺开，你帮乔照夜定下灯面与谜底。', { resources: { coin: 8 }, attributes: { people: 1, commerce: 1 }, metrics: { life: 1 }, flags: ['seen-qinhuai-lantern'], descriptorTags: ['festival-orders'] }),
+  act('jn-qinhuai-lantern', 'jiangnan', 'jiangnan-jinling', '秦淮灯市', 'festival', 'jn-qiao-zhaoye', ['couplet_choice', 'aim_place'], '灯谜、灯彩订单与夜市摆摊。', '灯火沿水铺开，你帮乔照夜定下灯面与谜底。', { resources: { coin: 8 }, attributes: { people: 1, commerce: 1 }, metrics: { life: 1 }, flags: ['seen-qinhuai-lantern'], descriptorTags: ['festival-orders'] }, 1, undefined, ['dusk', 'night']),
   act('jn-cloud-brocade-office', 'jiangnan', 'jiangnan-taihu', '云锦局', 'workshop', 'jn-shen-yunsuo', ['rhythm', 'drag_path'], '织造、配色、织机联作。', '沈云梭让你跟着织机节律投梭，线路一顺，纹样便活了。', { resources: { rawSilkThread: 1 }, attributes: { craft: 1, knowledge: 1 }, descriptorTags: ['textile', 'brocade'] }, 1, { cocoonSilk: 1 }),
   act('jn-gold-leaf-shop', 'jiangnan', 'jiangnan-jinling', '金箔作', 'workshop', 'jn-gu-bojin', ['rhythm'], '锤金箔与宫造材料。', '顾薄金只许你试三锤，金叶薄得像一口气。', { resources: { coin: 6 }, attributes: { craft: 1, mind: 1 }, flags: ['learned-gold-leaf'], descriptorTags: ['metalwork'] }),
   act('jn-longquan-sword-forge', 'jiangnan', 'jiangnan-longquan', '龙泉剑炉', 'workshop', 'jn-lu-hanquan', ['rhythm', 'timing_hold', 'appraise_select'], '采矿、冶铁、锻剑链路样板。', '陆寒泉让你听铁声、看火色，记下“铁净而火不躁”四字。', { resources: { ironOre: 2 }, attributes: { craft: 2, stamina: 1 }, flags: ['longquan-sword-primer'], descriptorTags: ['metal', 'weapon'] }, 1),
@@ -126,11 +128,106 @@ export function activitiesForSubregion(regionId: string, subregionId: string): A
   );
 }
 
+export const REGION_ROUTES: RouteSpec[] = [
+  {
+    id: 'route-jiangnan-huizhou-paper',
+    fromRegionId: 'jiangnan',
+    toRegionId: 'huizhou',
+    name: '江南纸墨路',
+    mode: 'mountain',
+    unlockCost: 30,
+    unlockHint: '先从湖畔茶肆或宁辞秋文房线打听纸谷消息，会更清楚这条路的价值。',
+    preview: '徽州纸谷、墨砚深巷已在路引上标出。',
+  },
+  {
+    id: 'route-jiangnan-ganpo-kiln',
+    fromRegionId: 'jiangnan',
+    toRegionId: 'ganpo',
+    name: '江南窑柴河路',
+    mode: 'water',
+    unlockCost: 30,
+    unlockHint: '龙泉山坊和瓷镇都靠柴、土与水路，这条线适合扩展青瓷与瓷器链。',
+    preview: '赣鄱高岭矿丘与窑火瓷镇进入可开拓列表。',
+  },
+  {
+    id: 'route-jiangnan-jingji-canal',
+    fromRegionId: 'jiangnan',
+    toRegionId: 'jingji',
+    name: '运河北上路',
+    mode: 'official',
+    unlockCost: 36,
+    unlockHint: '商誉越高，越容易拿到北上采办名帖。',
+    preview: '京畿宫造大院与都门订单开始向你透风。',
+    requirements: { attributes: { commerce: 8 } },
+  },
+  {
+    id: 'route-bashu-qiandian-tea-horse',
+    fromRegionId: 'bashu',
+    toRegionId: 'qiandian',
+    name: '茶马南线',
+    mode: 'mountain',
+    unlockCost: 32,
+    unlockHint: '马帮会先看你是否尊重山路规矩。',
+    preview: '黔滇苗寨银巷和东川铜矿有了前置路书。',
+  },
+  {
+    id: 'route-bashu-xueyu-snow-pass',
+    fromRegionId: 'bashu',
+    toRegionId: 'xueyu',
+    name: '雪山驿路',
+    mode: 'mountain',
+    unlockCost: 40,
+    unlockHint: '需先听过茶马驿的雪口消息。',
+    preview: '雪域唐卡画院、颜料矿谷和雪山驿口被记入远行簿。',
+    requirements: { flags: ['heard-snow-pass'] },
+  },
+  {
+    id: 'route-qiandian-lingnan-harbor',
+    fromRegionId: 'qiandian',
+    toRegionId: 'lingnan',
+    name: '滇广商货路',
+    mode: 'road',
+    unlockCost: 34,
+    unlockHint: '铜银与海贸货栈会在这里接上。',
+    preview: '珠江商港和佛山冶坊进入可预告范围。',
+  },
+  {
+    id: 'route-jingchu-ganpo-lake',
+    fromRegionId: 'jingchu',
+    toRegionId: 'ganpo',
+    name: '江湖瓷柴路',
+    mode: 'water',
+    unlockCost: 30,
+    unlockHint: '水路熟客能把矿冶与窑火接到同一条船上。',
+    preview: '赣鄱瓷土、窑柴与荆楚矿冶形成支线。',
+  },
+  {
+    id: 'route-jingji-sanjin-official',
+    fromRegionId: 'jingji',
+    toRegionId: 'sanjin',
+    name: '北地票号路',
+    mode: 'official',
+    unlockCost: 34,
+    unlockHint: '都门名帖和票号信用会互相背书。',
+    preview: '三晋票号、煤铁窑塬与推光漆院进入北地网络。',
+  },
+  {
+    id: 'route-xueyu-xiyu-caravan',
+    fromRegionId: 'xueyu',
+    toRegionId: 'xiyu',
+    name: '高原丝路驿线',
+    mode: 'caravan',
+    unlockCost: 44,
+    unlockHint: '雪山驿口与驼队补给要同时算进路耗。',
+    preview: '西域绿洲巴扎、昆仑玉场和驼队驿站露出远景。',
+  },
+];
+
 export const REGION_CONTENT: RegionContentSpec[] = Array.from(
   new Set(REGION_ACTIVITIES.map((activity) => activity.regionId)),
 ).map((regionId) => ({
   regionId,
-  routes: [],
+  routes: REGION_ROUTES.filter((route) => route.fromRegionId === regionId || route.toRegionId === regionId),
   mainNpcIds: [
     ...new Set(REGION_ACTIVITIES.filter((activity) => activity.regionId === regionId).map((activity) => activity.npcId).filter(Boolean) as string[]),
   ],
