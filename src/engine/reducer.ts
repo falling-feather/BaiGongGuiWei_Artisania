@@ -32,6 +32,7 @@ import type {
   ItemInstance,
   PlayerAttributes,
   RegionContentSpec,
+  SubregionContentSpec,
   RouteSpec,
   NpcFunctionKind,
   ActiveOrder,
@@ -65,6 +66,7 @@ export interface GameContent {
   activities?: ActivityDef[];
   /** 逐地区内容总览（路线、主 NPC、活动 id，全局剧情/任务数据库入口） */
   regionContent?: RegionContentSpec[];
+  subregionContent?: SubregionContentSpec[];
   /** 隐藏数值转古风描述词的规则 */
   itemDescriptorRules?: ItemDescriptorRule[];
 }
@@ -539,6 +541,21 @@ function gatherResource(
       return {
         ...state,
         log: pushLog(state.log, `本地（${region.name}）不具备「${industry.name}」的条件。`),
+      };
+    }
+  }
+
+  // 校验小地区作用域：大地区具备该产业，不代表当前街区/工坊点开放。
+  if (region) {
+    const subregionSpec = content.subregionContent?.find(
+      (entry) => entry.regionId === state.currentRegion && entry.subregionId === state.currentSubregion,
+    );
+    if (subregionSpec && !subregionSpec.industryIds.includes(industryId)) {
+      const subregionName =
+        region.subregions.find((subregion) => subregion.id === state.currentSubregion)?.name ?? state.currentSubregion;
+      return {
+        ...state,
+        log: pushLog(state.log, `「${subregionName}」暂不能进行「${industry.name}」，请前往对应的工坊或资源点。`),
       };
     }
   }

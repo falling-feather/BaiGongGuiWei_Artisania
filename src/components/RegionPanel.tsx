@@ -1,6 +1,6 @@
 import { useGameStore } from '../store/gameStore';
 import { RESOURCE_INDEX } from '../data';
-import { localIndustriesForRegion } from '../data/regionEconomy';
+import { localIndustriesForSubregion } from '../data/subregionContent';
 import { emitBus } from '../game/EventBus';
 import { routeCostWithIntel, routeIntelKnown } from '../engine';
 import type { CropId, IndustryDef, RegionDef, RouteSpec } from '../engine';
@@ -81,7 +81,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const openedRouteRows = currentRouteRows.filter((row) => unlockedRegions.includes(row.target.id));
   const frontierRouteRows = currentRouteRows.filter((row) => !unlockedRegions.includes(row.target.id));
 
-  const localIndustries: IndustryDef[] = localIndustriesForRegion(region, industries);
+  const localIndustries: IndustryDef[] = localIndustriesForSubregion(region, currentSubregion, industries);
   const currentActivities = (content.activities ?? []).filter(
     (activity) => activity.regionId === currentRegion && activity.subregionId === currentSubregion,
   );

@@ -3,8 +3,16 @@
  * 让 Phaser 场景与数据层解耦：场景只认 RegionMapSpec。
  */
 import type { GameState, NpcDef } from '../engine';
-import { CRAFT_INDEX, INDUSTRIES, REGION_INDEX, REGION_ROUTES, activitiesForSubregion, npcsForRegion } from '../data';
-import { industryTierFor, localIndustriesForRegion } from '../data/regionEconomy';
+import {
+  INDUSTRIES,
+  REGION_INDEX,
+  REGION_ROUTES,
+  activitiesForSubregion,
+  craftsForSubregion,
+  localIndustriesForSubregion,
+  npcsForRegion,
+} from '../data';
+import { industryTierFor } from '../data/regionEconomy';
 import type { RegionMapSpec, IndustryTier, TerrainKind, WeatherKind, WeatherSeason } from './EventBus';
 
 /** 由地区地貌基底关键字推断地形类型，驱动地图河流/山石/海岸生成 */
@@ -69,13 +77,11 @@ export function buildRegionSpec(regionId: string, state: GameState): RegionMapSp
   const season = overrides.season ?? state.calendar.season ?? seasonFromTurn(state.turn);
   const weather = overrides.weather ?? state.calendar.weather ?? weatherForSeason(season);
 
-  const industries = localIndustriesForRegion(region, INDUSTRIES)
+  const industries = localIndustriesForSubregion(region, subregion?.id ?? region.id, INDUSTRIES)
     .map((i) => ({ id: i.id, name: i.name, tier: industryTierFor(i) as IndustryTier }));
 
   // 招牌手艺中已实现的（存在于 CRAFTS）
-  const crafts = region.signatureCrafts
-    .map((id) => CRAFT_INDEX[id])
-    .filter((c): c is NonNullable<typeof c> => Boolean(c))
+  const crafts = craftsForSubregion(region, subregion?.id ?? region.id)
     .map((c) => ({ id: c.id, name: c.name }));
 
   const activities = activitiesForSubregion(region.id, subregion?.id ?? region.id).map((activity) => ({

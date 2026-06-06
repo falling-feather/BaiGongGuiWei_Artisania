@@ -5,6 +5,14 @@ export { EVENTS } from './events';
 export { RESOURCES, RESOURCE_INDEX } from './resources';
 export { INDUSTRIES, INDUSTRY_INDEX } from './industries';
 export { industryTierFor, localIndustriesForRegion } from './regionEconomy';
+export {
+  SUBREGION_CONTENT,
+  SUBREGION_CONTENT_INDEX,
+  craftIdsForSubregion,
+  craftsForSubregion,
+  localIndustriesForSubregion,
+  subregionContentFor,
+} from './subregionContent';
 export { REGIONS, REGION_INDEX } from './regions';
 export {
   ACTIVITY_INDEX,

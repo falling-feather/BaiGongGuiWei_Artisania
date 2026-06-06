@@ -16,6 +16,7 @@ import { ITEM_DESCRIPTOR_RULES } from '../../data/itemDescriptors';
 import { ACTIVITY_CHALLENGES } from '../../data/activityChallenges';
 import { REGION_ACTIVITIES, REGION_CONTENT, REGION_ROUTES } from '../../data/regionContent';
 import { localIndustriesForRegion } from '../../data/regionEconomy';
+import { SUBREGION_CONTENT, localIndustriesForSubregion } from '../../data/subregionContent';
 import { orderPrice } from '../reducer';
 import { buildRegionSpec } from '../../game/regionSpec';
 
@@ -31,6 +32,7 @@ const content: GameContent = {
   quests: QUESTS,
   activities: REGION_ACTIVITIES,
   regionContent: REGION_CONTENT,
+  subregionContent: SUBREGION_CONTENT,
   itemDescriptorRules: ITEM_DESCRIPTOR_RULES,
 };
 
@@ -49,10 +51,8 @@ function endDemoDay(state: ReturnType<typeof freshState>) {
 }
 
 function forgeHighQualitySword(seedState: ReturnType<typeof freshState> = freshState()) {
-  let s: ReturnType<typeof freshState> = {
-    ...seedState,
-    resources: { ...seedState.resources, ironOre: 4, coal: 4, labor: 20 },
-  };
+  let s = gameReducer(seedState, { type: 'TRAVEL_SUBREGION', subregionId: 'jiangnan-longquan' }, content);
+  s = { ...s, resources: { ...s.resources, ironOre: 4, coal: 4, labor: 20 } };
   s = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'smelt-iron', quality: 1 }, content);
   const ingotId = s.itemInstances.find((item) => item.resourceId === 'ironIngot')?.id;
   s = gameReducer(s, { type: 'RUN_PROCESS', craftId: 'longquan-sword', skipStepIds: [] }, content);
@@ -147,7 +147,7 @@ describe('gameReducer', () => {
 
   it('GATHER_RESOURCE 在本地产业产出半成品并消耗原料/人力', () => {
     // 江南具备 smelt-iron（冶铁）：消耗 ironOre+coal，产出 ironIngot
-    let s = freshState();
+    let s = gameReducer(freshState(), { type: 'TRAVEL_SUBREGION', subregionId: 'jiangnan-longquan' }, content);
     s = { ...s, resources: { ...s.resources, ironOre: 4, coal: 2 } };
     const before = s.resources.labor;
     const s1 = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'smelt-iron', quality: 1 }, content);
@@ -160,7 +160,7 @@ describe('gameReducer', () => {
 
   it('GATHER_RESOURCE 采集业（仅耗工时）按本地特产授权产出', () => {
     // 江南特产 cocoonSilk → harvest-cocoon 为采集业，仅耗工时
-    const s = freshState();
+    const s = gameReducer(freshState(), { type: 'TRAVEL_SUBREGION', subregionId: 'jiangnan-taihu' }, content);
     const s1 = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'harvest-cocoon', quality: 1 }, content);
     expect((s1.resources.cocoonSilk ?? 0)).toBeGreaterThan(0);
     expect(s1.resources.labor).toBeLessThan(s.resources.labor);
@@ -171,11 +171,19 @@ describe('gameReducer', () => {
 
   it('地区经济：镇务与街景共享本地采集/精炼产业列表', () => {
     const jiangnan = REGIONS.find((r) => r.id === 'jiangnan');
-    const ids = localIndustriesForRegion(jiangnan, INDUSTRIES).map((industry) => industry.id);
-    expect(ids).toContain('harvest-indigo');
-    expect(ids).toContain('harvest-bamboo');
-    expect(ids).toContain('build-indigo');
-    expect(ids).toContain('split-bamboo');
+    const regionalIds = localIndustriesForRegion(jiangnan, INDUSTRIES).map((industry) => industry.id);
+    expect(regionalIds).toContain('smelt-iron');
+    const suhangIds = localIndustriesForSubregion(jiangnan, 'jiangnan-suhang', INDUSTRIES).map(
+      (industry) => industry.id,
+    );
+    expect(suhangIds).toEqual(
+      expect.arrayContaining(['harvest-indigo', 'harvest-bamboo', 'build-indigo', 'split-bamboo']),
+    );
+    expect(suhangIds).not.toContain('smelt-iron');
+    const longquanIds = localIndustriesForSubregion(jiangnan, 'jiangnan-longquan', INDUSTRIES).map(
+      (industry) => industry.id,
+    );
+    expect(longquanIds).toEqual(expect.arrayContaining(['harvest-iron-ore', 'smelt-iron', 'forge-sword']));
   });
 
   it('逐地区内容数据库：活动均落在已定义地区与小地区中', () => {
@@ -187,6 +195,18 @@ describe('gameReducer', () => {
       expect(REGION_CONTENT.find((item) => item.regionId === activity.regionId)?.activityIds).toContain(
         activity.id,
       );
+    }
+    for (const entry of SUBREGION_CONTENT) {
+      const region = REGIONS.find((item) => item.id === entry.regionId);
+      expect(region, entry.subregionId).toBeTruthy();
+      expect(region?.subregions.some((subregion) => subregion.id === entry.subregionId)).toBe(true);
+      const regionalIndustryIds = new Set(localIndustriesForRegion(region, INDUSTRIES).map((industry) => industry.id));
+      for (const industryId of entry.industryIds) {
+        expect(regionalIndustryIds.has(industryId), `${entry.subregionId}:${industryId}`).toBe(true);
+      }
+      for (const craftId of entry.craftIds) {
+        expect(region?.signatureCrafts.includes(craftId), `${entry.subregionId}:${craftId}`).toBe(true);
+      }
     }
   });
 
@@ -295,6 +315,10 @@ describe('gameReducer', () => {
     );
     const spec = buildRegionSpec('jiangnan', s);
     expect(spec?.activities.map((activity) => activity.id)).toContain('jn-longquan-sword-forge');
+    expect(spec?.industries.map((industry) => industry.id)).toContain('smelt-iron');
+    expect(spec?.industries.map((industry) => industry.id)).not.toContain('build-indigo');
+    expect(spec?.crafts.map((craft) => craft.id)).toEqual(expect.arrayContaining(['celadon', 'longquan-sword']));
+    expect(spec?.crafts.map((craft) => craft.id)).not.toContain('indigo-dyeing');
     expect(spec?.subregionGates.map((gate) => gate.subregionId)).toContain('jiangnan-suhang');
     expect(spec?.subregionGates.map((gate) => gate.subregionId)).not.toContain('jiangnan-longquan');
     const lu = spec?.npcs.find((npc) => npc.id === 'jn-lu-hanquan');
@@ -331,6 +355,15 @@ describe('gameReducer', () => {
     const s = freshState(); // 江南不具备 refine-silver（提银）
     const s1 = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'refine-silver' }, content);
     expect(s1.resources.silverStock ?? 0).toBe(0);
+  });
+
+  it('GATHER_RESOURCE rejects industries outside the current subregion', () => {
+    const s0 = freshState();
+    const s = { ...s0, resources: { ...s0.resources, ironOre: 4, coal: 4 } };
+    const s1 = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'smelt-iron', quality: 1 }, content);
+    expect(s1.resources.ironIngot ?? 0).toBe(0);
+    expect(s1.itemInstances.length).toBe(s.itemInstances.length);
+    expect(s1.log.length).toBeGreaterThan(s.log.length);
   });
 
   it('UNLOCK_REGION 解锁相邻地区并扣除路资', () => {
@@ -801,6 +834,8 @@ describe('gameReducer', () => {
     expect(s.farmPlots[0].cropId).toBeNull();
     expect(s.resources.indigoPlant).toBeGreaterThanOrEqual(4);
 
+    s = gameReducer(s, { type: 'TRAVEL_SUBREGION', subregionId: 'jiangnan-suhang' }, demoContent);
+    expect(s.currentSubregion).toBe('jiangnan-suhang');
     s = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'build-indigo', quality: 1 }, demoContent);
     s = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'build-indigo', quality: 1 }, demoContent);
     expect(s.resources.indigoVat).toBeGreaterThanOrEqual(3);
@@ -824,6 +859,8 @@ describe('gameReducer', () => {
     s = gameReducer(s, { type: 'TRAVEL', regionId: 'huizhou' }, demoContent);
     expect(s.currentRegion).toBe('huizhou');
 
+    s = gameReducer(s, { type: 'TRAVEL_SUBREGION', subregionId: 'huizhou-paper-valley' }, demoContent);
+    expect(s.currentSubregion).toBe('huizhou-paper-valley');
     s = endDemoDay(s);
     s = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'harvest-qingtan', quality: 1 }, demoContent);
     s = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'make-paper', quality: 1 }, demoContent);

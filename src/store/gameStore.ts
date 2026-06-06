@@ -28,6 +28,7 @@ import {
   RESOURCES,
   STARTING_APPRENTICES,
   STORY_BEATS,
+  SUBREGION_CONTENT,
 } from '../data';
 import { localStorageAdapter } from '../storage/localStorageAdapter';
 import type { SaveSlotSummary } from '../storage/StorageAdapter';
@@ -45,6 +46,7 @@ const content: GameContent = {
   quests: QUESTS,
   activities: REGION_ACTIVITIES,
   regionContent: REGION_CONTENT,
+  subregionContent: SUBREGION_CONTENT,
   itemDescriptorRules: ITEM_DESCRIPTOR_RULES,
 };
 

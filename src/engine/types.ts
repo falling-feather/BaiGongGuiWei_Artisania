@@ -278,6 +278,13 @@ export interface RegionContentSpec {
   activityIds: string[];
 }
 
+export interface SubregionContentSpec {
+  regionId: string;
+  subregionId: string;
+  industryIds: string[];
+  craftIds: string[];
+}
+
 export type ItemQualityDimension =
   | 'purity'
   | 'grain'
