@@ -627,6 +627,37 @@ describe('gameReducer', () => {
     expect(s.profile.attributes.commerce).toBeGreaterThan(5);
   });
 
+  it('USE_NPC_FUNCTION 订单会生成可交付的具体 NPC 订单', () => {
+    let s = freshState();
+    s = { ...s, npcAffinity: { ...s.npcAffinity, 'jn-bamboo-master': 12 } };
+    s = gameReducer(s, { type: 'USE_NPC_FUNCTION', npcId: 'jn-bamboo-master', functionKind: 'order' }, content);
+
+    const order = s.activeOrders[0];
+    expect(order.npcId).toBe('jn-bamboo-master');
+    expect(order.status).toBe('active');
+    expect(order.quantity).toBeGreaterThan(0);
+    expect(order.rewardCoin).toBeGreaterThan(0);
+    expect(s.flags).toContain('npc-order:jn-bamboo-master');
+  });
+
+  it('FULFILL_ORDER 会消耗目标资源、结算赏钱并完成订单', () => {
+    let s = freshState();
+    s = { ...s, npcAffinity: { ...s.npcAffinity, 'jn-bamboo-master': 12 } };
+    s = gameReducer(s, { type: 'USE_NPC_FUNCTION', npcId: 'jn-bamboo-master', functionKind: 'order' }, content);
+    const order = s.activeOrders[0];
+    s = {
+      ...s,
+      resources: { ...s.resources, [order.resourceId]: order.quantity, coin: 0 },
+    };
+
+    const next = gameReducer(s, { type: 'FULFILL_ORDER', orderId: order.id }, content);
+    expect(next.resources[order.resourceId]).toBe(0);
+    expect(next.resources.coin).toBe(order.rewardCoin);
+    expect(next.activeOrders.find((item) => item.id === order.id)?.status).toBe('completed');
+    expect(next.flags).toContain(`order-completed:${order.id}`);
+    expect(next.npcAffinity['jn-bamboo-master']).toBeGreaterThan(s.npcAffinity['jn-bamboo-master']);
+  });
+
   it('USE_NPC_FUNCTION 联作和鉴评会写入作品实例', () => {
     let s = forgeHighQualitySword().state;
     const swordId = s.itemInstances[0].id;

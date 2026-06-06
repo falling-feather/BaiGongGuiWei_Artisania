@@ -34,6 +34,7 @@ import type {
   RegionContentSpec,
   RouteSpec,
   NpcFunctionKind,
+  ActiveOrder,
 } from './types';
 import { applyDelta, aggregateTownMetrics, METRIC_KEYS, METRIC_LABELS } from './metrics';
 import { createCalendar, createInitialState, LABOR_PER_TURN, titleForRank } from './state';
@@ -1193,6 +1194,10 @@ function reduce(
       if (state.status !== 'playing') return state;
       return useNpcFunction(state, content, action.npcId, action.functionKind, action.itemId);
 
+    case 'FULFILL_ORDER':
+      if (state.status !== 'playing') return state;
+      return fulfillOrder(state, content, action.orderId);
+
     default:
       return state;
   }
@@ -1502,6 +1507,141 @@ function functionBaseState(
   };
 }
 
+function resourceTierRank(content: GameContent, resourceId: string) {
+  const tier = content.resources?.find((resource) => resource.id === resourceId)?.tier;
+  if (tier === 'product') return 3;
+  if (tier === 'material') return 2;
+  if (tier === 'raw') return 1;
+  return 0;
+}
+
+function orderResourceCandidates(npc: NpcDef, content: GameContent): string[] {
+  const preferred = (npc.preferences ?? []).flatMap((preference) => preference.resourceIds ?? []);
+  const craftOutput = content.crafts.find((craft) => craft.id === npc.anchorCraftId)?.outputResourceId;
+  const activityOutput = Object.keys(
+    (content.activities ?? []).find((activity) => activity.id === npc.anchorCraftId)?.reward.resources ?? {},
+  ).filter((key) => key !== 'coin' && key !== 'labor');
+  const fallbackProducts = (content.resources ?? [])
+    .filter((resource) => resource.tier === 'product')
+    .map((resource) => resource.id);
+  return [...new Set([...preferred, craftOutput, ...activityOutput, ...fallbackProducts].filter(Boolean) as string[])];
+}
+
+function createNpcOrder(
+  state: GameState,
+  content: GameContent,
+  npc: NpcDef,
+  affinity: number,
+): ActiveOrder {
+  const candidates = orderResourceCandidates(npc, content);
+  const resourceId = candidates.sort(
+    (a, b) => resourceTierRank(content, b) - resourceTierRank(content, a),
+  )[0] ?? 'bambooWare';
+  const rank = resourceTierRank(content, resourceId);
+  const quantity = rank >= 3 ? 1 : 2;
+  const baseValue = content.resources?.find((resource) => resource.id === resourceId)?.value ?? (rank >= 2 ? 12 : 6);
+  const rewardCoin = Math.max(8, Math.round(baseValue * quantity + 8 + affinity / 8));
+  const routeIds = [
+    ...new Set((npc.intel ?? []).flatMap((intel) => intel.routeIds ?? [])),
+  ];
+  const itemName = resourceName(content, resourceId);
+  return {
+    id: `order-${npc.id}-${state.calendar.day}-${state.turn}-${(state.activeOrders ?? []).length + 1}`,
+    npcId: npc.id,
+    title: `${npc.name}的${itemName}订单`,
+    desc: `${npc.name}要 ${quantity} 份${itemName}，看重来路、品相和能否按时交付。`,
+    resourceId,
+    quantity,
+    minQuality: rank >= 3 ? 0.58 : 0.45,
+    rewardCoin,
+    rewardMetrics: { market: 2, life: 1 },
+    rewardAttributes: { commerce: 2, people: 1 },
+    routeIds,
+    createdDay: state.calendar.day,
+    expiresDay: state.calendar.day + 7,
+    status: 'active',
+  };
+}
+
+function activeOrderForNpc(state: GameState, npcId: string) {
+  return (state.activeOrders ?? []).find((order) => order.npcId === npcId && order.status === 'active') ?? null;
+}
+
+function orderQualityFailure(state: GameState, order: ActiveOrder, content: GameContent) {
+  const tracked = state.itemInstances.filter(
+    (item) => item.status !== 'gifted' && item.resourceId === order.resourceId,
+  );
+  if (tracked.length === 0) return null;
+  const eligible = tracked.filter((item) => item.quality >= order.minQuality);
+  if (eligible.length < order.quantity) {
+    return `「${resourceName(content, order.resourceId)}」品相不足，需 ${order.quantity} 份达到 ${Math.round(order.minQuality * 100)} 分。`;
+  }
+  return null;
+}
+
+function consumeOrderItems(items: ItemInstance[], order: ActiveOrder) {
+  let remaining = order.quantity;
+  return items.filter((item) => {
+    if (remaining <= 0) return true;
+    if (item.status === 'gifted' || item.resourceId !== order.resourceId || item.quality < order.minQuality) {
+      return true;
+    }
+    remaining -= 1;
+    return false;
+  });
+}
+
+function fulfillOrder(state: GameState, content: GameContent, orderId: string): GameState {
+  const order = (state.activeOrders ?? []).find((candidate) => candidate.id === orderId);
+  if (!order || order.status !== 'active') return state;
+  if ((state.resources[order.resourceId] ?? 0) < order.quantity) {
+    return {
+      ...state,
+      log: pushLog(state.log, `库存不足，无法交付「${order.title}」。`),
+    };
+  }
+  const qualityFailure = orderQualityFailure(state, order, content);
+  if (qualityFailure) return { ...state, log: pushLog(state.log, qualityFailure) };
+
+  const npc = (content.npcs ?? []).find((item) => item.id === order.npcId);
+  const runtime = state.npcStates[order.npcId] ?? emptyNpcState();
+  const cur = runtime.affinity || state.npcAffinity[order.npcId] || 0;
+  const nextAffinity = Math.min(AFFINITY_MAX, cur + 6);
+  const npcState: NpcRuntimeState = {
+    ...runtime,
+    affinity: nextAffinity,
+    stage: relationshipStageForAffinity(nextAffinity),
+    lastTalkTurn: state.turn,
+    usedFunctionDays: runtime.usedFunctionDays ?? {},
+  };
+  const flags = new Set(state.flags);
+  flags.add(`order-completed:${order.id}`);
+  flags.add(`npc-order-completed:${order.npcId}`);
+  for (const routeId of order.routeIds ?? []) flags.add(`route-known:${routeId}`);
+
+  const base: GameState = {
+    ...state,
+    resources: {
+      ...state.resources,
+      [order.resourceId]: (state.resources[order.resourceId] ?? 0) - order.quantity,
+      coin: (state.resources.coin ?? 0) + order.rewardCoin,
+    },
+    itemInstances: consumeOrderItems(state.itemInstances, order),
+    activeOrders: (state.activeOrders ?? []).map((candidate) =>
+      candidate.id === order.id ? { ...candidate, status: 'completed' } : candidate,
+    ),
+    flags: [...flags],
+    npcAffinity: { ...state.npcAffinity, [order.npcId]: nextAffinity },
+    npcStates: { ...state.npcStates, [order.npcId]: npcState },
+    log: pushLog(
+      state.log,
+      `交付「${order.title}」，入账 ${order.rewardCoin} 文（${npc?.name ?? order.npcId}好感 ${cur}→${nextAffinity}）。`,
+    ),
+  };
+  const withMetrics = order.rewardMetrics ? applyEffect(base, { metrics: order.rewardMetrics }) : recompute(base);
+  return applyProfileXp(withMetrics, order.rewardAttributes ?? { commerce: 1 });
+}
+
 function useNpcFunction(
   state: GameState,
   content: GameContent,
@@ -1590,12 +1730,26 @@ function useNpcFunction(
   }
 
   if (functionKind === 'order') {
+    const existing = activeOrderForNpc(state, npcId);
+    if (existing) {
+      return {
+        ...state,
+        log: pushLog(
+          state.log,
+          `「${npc.name}」已有一张未交付订单：${existing.title}，先备齐 ${existing.quantity} 份${resourceName(content, existing.resourceId)}。`,
+        ),
+      };
+    }
     const affinityResult = updateNpcAffinityAfterFunction(state, npcId, runtime, functionKind);
-    const base = functionBaseState(state, npcId, affinityResult.runtime, functionKind, [`npc-order:${npcId}`]);
+    const order = createNpcOrder(state, content, npc, affinity);
+    const base = {
+      ...functionBaseState(state, npcId, affinityResult.runtime, functionKind, [`npc-order:${npcId}`]),
+      activeOrders: [order, ...(state.activeOrders ?? [])].slice(0, 12),
+    };
     return applyProfileXp(
       applyEffect(base, {
         metrics: { market: 2, life: 1 },
-        logMessage: `「${npc.name}」替你牵线一批熟客，镇上订单风声更稳（好感 ${affinityResult.cur}→${affinityResult.nextAffinity}）。`,
+        logMessage: `「${npc.name}」递来订单「${order.title}」：${order.desc}（好感 ${affinityResult.cur}→${affinityResult.nextAffinity}）。`,
       }),
       { commerce: 2, people: 1 },
     );

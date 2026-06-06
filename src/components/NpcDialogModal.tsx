@@ -1,7 +1,7 @@
 import { useGameStore } from '../store/gameStore';
 import { NPC_INDEX, RESOURCE_INDEX, questsForNpc } from '../data';
 import { NPC_FUNCTION_LABELS, npcFunctionNeedsItem, npcFunctionRequirement } from '../engine';
-import type { ItemInstance, NpcFunctionKind, NpcGiftPreference } from '../engine';
+import type { ActiveOrder, ItemInstance, NpcFunctionKind, NpcGiftPreference, GameState } from '../engine';
 
 const ITEM_STATUS_LABEL = {
   held: '持有',
@@ -37,6 +37,19 @@ function preferenceMatches(
   return true;
 }
 
+function orderResourceName(order: ActiveOrder): string {
+  return RESOURCE_INDEX[order.resourceId]?.name ?? order.resourceId;
+}
+
+function orderCanDeliver(order: ActiveOrder, state: GameState): boolean {
+  if ((state.resources[order.resourceId] ?? 0) < order.quantity) return false;
+  const tracked = state.itemInstances.filter(
+    (item) => item.status !== 'gifted' && item.resourceId === order.resourceId,
+  );
+  if (tracked.length === 0) return true;
+  return tracked.filter((item) => item.quality >= order.minQuality).length >= order.quantity;
+}
+
 /**
  * NPC 对话面板：玩家在街上靠近 NPC 按 E 后弹出。
  * - 攀谈：提升好感度（TALK_NPC）；
@@ -56,6 +69,7 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
   const affinity = affinityMap[npcId] ?? 0;
   const runtime = npcStates[npcId];
   const quests = questsForNpc(npcId);
+  const activeOrders = (state.activeOrders ?? []).filter((order) => order.npcId === npcId && order.status === 'active');
   const stage = runtime?.stage ?? 'stranger';
   const greeting = npc.relationshipLines?.[stage]?.[0] ?? npc.greetings[0] ?? '……';
   const giftCandidates = state.itemInstances
@@ -194,6 +208,39 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {activeOrders.length > 0 && (
+          <div className="npc-quests npc-orders">
+            <h4 className="npc-quests__title">接单</h4>
+            {activeOrders.map((order) => {
+              const canDeliver = orderCanDeliver(order, state);
+              const stock = state.resources[order.resourceId] ?? 0;
+              return (
+                <div className="npc-quest" key={order.id}>
+                  <div className="npc-quest__head">
+                    <span className="npc-quest__name">{order.title}</span>
+                    <span className="npc-quest__done">{order.rewardCoin} 文</span>
+                  </div>
+                  <p className="npc-quest__desc">{order.desc}</p>
+                  <div className="npc-quest__foot">
+                    <span className="npc-quest__req">
+                      需 {orderResourceName(order)} {stock}/{order.quantity}
+                      {` · 品相 ${Math.round(order.minQuality * 100)}+`}
+                    </span>
+                    <button
+                      className="btn btn--bamboo btn--sm"
+                      disabled={!canDeliver}
+                      title={canDeliver ? '交付订单' : '库存或品相不足'}
+                      onClick={() => dispatch({ type: 'FULFILL_ORDER', orderId: order.id })}
+                    >
+                      交付
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 

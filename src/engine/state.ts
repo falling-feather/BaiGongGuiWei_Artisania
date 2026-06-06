@@ -162,5 +162,6 @@ export function createInitialState(
     npcStates: {},
     completedQuests: [],
     completedActivities: [],
+    activeOrders: [],
   };
 }

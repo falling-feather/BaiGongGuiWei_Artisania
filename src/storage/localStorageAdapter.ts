@@ -19,7 +19,7 @@ const ACTIVE_KEY = 'artisania:saves:active';
 const SLOT_PREFIX = 'artisania:saves:slot:';
 const DEFAULT_SLOT_ID = 'slot-1';
 const MAX_SAVE_SLOTS = 5;
-const COMPATIBLE_SAVE_VERSIONS = new Set([5, 6, 7, SAVE_VERSION]);
+const COMPATIBLE_SAVE_VERSIONS = new Set([5, 6, 7, 8, SAVE_VERSION]);
 
 function slotKey(slotId: string) {
   return `${SLOT_PREFIX}${slotId}`;
@@ -49,6 +49,7 @@ function migrateState(state: GameState): GameState {
     itemInstances: state.itemInstances ?? [],
     npcStates: state.npcStates ?? {},
     completedActivities: state.completedActivities ?? [],
+    activeOrders: state.activeOrders ?? [],
   };
 }
 

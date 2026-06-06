@@ -371,6 +371,8 @@ export interface GameState {
   completedQuests: string[];
   /** 已完成的一次性地区活动 id 列表 */
   completedActivities: string[];
+  /** 已接取或完成的 NPC 订单 */
+  activeOrders: ActiveOrder[];
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -471,6 +473,23 @@ export interface QuestDef {
   completeLog: string;
 }
 
+export interface ActiveOrder {
+  id: string;
+  npcId: string;
+  title: string;
+  desc: string;
+  resourceId: string;
+  quantity: number;
+  minQuality: number;
+  rewardCoin: number;
+  rewardMetrics?: Partial<Metrics>;
+  rewardAttributes?: Partial<PlayerAttributes>;
+  routeIds?: string[];
+  createdDay: number;
+  expiresDay?: number;
+  status: 'active' | 'completed';
+}
+
 /** 结局命运报告 */
 export interface GameReport {
   title: string;
@@ -518,7 +537,9 @@ export type GameAction =
   /** 为作品写题跋，通常由 NPC 人物线奖励触发 */
   | { type: 'INSCRIBE_ITEM'; itemId: string; npcId?: string; inscription: string }
   /** 使用 NPC 的功能入口：授艺、路线、订单、联作、鉴评、家园来访 */
-  | { type: 'USE_NPC_FUNCTION'; npcId: string; functionKind: NpcFunctionKind; itemId?: string };
+  | { type: 'USE_NPC_FUNCTION'; npcId: string; functionKind: NpcFunctionKind; itemId?: string }
+  /** 交付一个 NPC 订单 */
+  | { type: 'FULFILL_ORDER'; orderId: string };
 
 // ───────────────────────────────────────────────────────────────────────────
 // 地区 · 资源 · 供应链（地区优先世界设计，详见 doc/项目规划.md 第三部分）
