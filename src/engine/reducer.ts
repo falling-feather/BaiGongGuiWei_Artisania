@@ -41,9 +41,9 @@ import { applyDelta, aggregateTownMetrics, METRIC_KEYS, METRIC_LABELS } from './
 import { createCalendar, createInitialState, LABOR_PER_TURN, titleForRank } from './state';
 import { createRng, weightedPick } from './rng';
 import { NPC_FUNCTION_LABELS, npcFunctionNeedsItem, npcFunctionRequirement } from './npcFunctions';
-import { routeCostWithIntel, routeIntelDiscount } from './routeCosts';
+import { routeCostWithIntel, routeIntelDiscount, routeIntelKnown } from './routeCosts';
 import { addRegionReputation, regionReputationOf } from './regionReputation';
-import { addRouteStability, routeRiskScore, routeStabilityOf } from './routeStability';
+import { addRouteStability, routeRiskLabel, routeRiskScore, routeStabilityOf } from './routeStability';
 
 /** reducer 运行所需的内容包（由 store 层从 data 注入） */
 export interface GameContent {
@@ -75,6 +75,7 @@ export interface GameContent {
 
 /** 解锁一个新地区的费用（文） */
 const REGION_UNLOCK_COST = 30;
+const ESCORT_LABOR_COST = 2;
 
 /** 每回合自然补充的资源（轻量半成品回补，模拟持续供料） */
 const TURN_RESOURCE_REGEN: Record<string, number> = {
@@ -1605,6 +1606,52 @@ function currentRegionRouteIds(state: GameState, content: GameContent) {
     .map((route) => route.id);
 }
 
+function routeById(content: GameContent, routeId: string): RouteSpec | null {
+  return allRouteSpecs(content).find((route) => route.id === routeId) ?? null;
+}
+
+function npcRouteIdsForAction(state: GameState, content: GameContent, npc: NpcDef): string[] {
+  return [
+    ...new Set(
+      (npc.intel ?? [])
+        .flatMap((intel) => intel.routeIds ?? [])
+        .concat(npc.regionId === state.currentRegion ? currentRegionRouteIds(state, content) : []),
+    ),
+  ];
+}
+
+function escortCandidateRoutes(state: GameState, content: GameContent, npc: NpcDef): RouteSpec[] {
+  const unlocked = new Set(state.unlockedRegions);
+  return npcRouteIdsForAction(state, content, npc)
+    .map((routeId) => routeById(content, routeId))
+    .filter((route): route is RouteSpec => Boolean(route))
+    .filter((route) => unlocked.has(route.fromRegionId) || unlocked.has(route.toRegionId))
+    .sort((a, b) => routeRiskScore(state, b) - routeRiskScore(state, a));
+}
+
+function escortQuality(state: GameState, npc: NpcDef, route: RouteSpec): number {
+  const attributes = state.profile.attributes;
+  const preparation =
+    attributes.stamina * 1.4 +
+    attributes.commerce * 0.9 +
+    regionReputationOf(state, npc.regionId) * 0.25 +
+    routeStabilityOf(state, route.id) * 0.2 +
+    (routeIntelKnown(route, state.flags) ? 6 : 0);
+  return Math.max(0.35, Math.min(0.96, Number(((60 + preparation - routeRiskScore(state, route)) / 100).toFixed(2))));
+}
+
+function escortStabilityGain(quality: number): number {
+  if (quality >= 0.78) return 11;
+  if (quality >= 0.58) return 8;
+  return 5;
+}
+
+function escortQualityLabel(quality: number): string {
+  if (quality >= 0.78) return '稳妥';
+  if (quality >= 0.58) return '可交差';
+  return '惊险';
+}
+
 function markNpcFunctionUsed(
   runtime: NpcRuntimeState,
   functionKind: NpcFunctionKind,
@@ -1626,6 +1673,7 @@ function markNpcFunctionUsed(
 }
 
 function functionAffinityGain(functionKind: NpcFunctionKind) {
+  if (functionKind === 'escort') return 4;
   if (functionKind === 'collab') return 5;
   if (functionKind === 'appraisal') return 4;
   return 3;
@@ -1968,6 +2016,62 @@ function useNpcFunction(
         ),
       },
       { knowledge: 1, commerce: 1 },
+    );
+  }
+
+  if (functionKind === 'escort') {
+    if ((state.resources.labor ?? 0) < ESCORT_LABOR_COST) {
+      return { ...state, log: pushLog(state.log, `工时不足，无法请「${npc.name}」安排护商。`) };
+    }
+    const route = escortCandidateRoutes(state, content, npc)[0];
+    if (!route) {
+      return { ...state, log: pushLog(state.log, `「${npc.name}」暂时没有可安排的护商路线。`) };
+    }
+    const risk = routeRiskScore(state, route);
+    const quality = escortQuality(state, npc, route);
+    const stabilityGain = escortStabilityGain(quality);
+    const rewardCoin = Math.max(6, Math.round(6 + risk * 0.16 + quality * 10));
+    const regionGain = quality >= 0.78 ? 3 : 2;
+    const affinityResult = updateNpcAffinityAfterFunction(
+      state,
+      npcId,
+      runtime,
+      functionKind,
+      quality >= 0.78 ? 5 : 4,
+    );
+    const knownTopics = new Set(runtime.knownTopics);
+    for (const topic of npc.knowledgeTags ?? []) knownTopics.add(topic);
+    knownTopics.add(`route:${route.id}`);
+    knownTopics.add(`escort:${route.id}`);
+    const nextRuntime = {
+      ...affinityResult.runtime,
+      knownTopics: [...knownTopics],
+    };
+    const flags = [`npc-escort:${npcId}`, `escort:${route.id}`, `route-known:${route.id}`];
+    const base = functionBaseState(state, npcId, nextRuntime, functionKind, flags);
+    const withEscortRun: GameState = {
+      ...base,
+      routeEscortRuns: {
+        ...base.routeEscortRuns,
+        [route.id]: (base.routeEscortRuns[route.id] ?? 0) + 1,
+      },
+    };
+    const withEffect = applyEffect(withEscortRun, {
+      resources: { labor: -ESCORT_LABOR_COST, coin: rewardCoin },
+      metrics: { market: 1, life: quality >= 0.78 ? 1 : 0 },
+      logMessage:
+        `随「${npc.name}」护送「${route.name}」，路况${routeRiskLabel(risk)}，` +
+        `结果${escortQualityLabel(quality)}，入账 ${rewardCoin} 文（好感 ${affinityResult.cur}→${affinityResult.nextAffinity}）。`,
+    });
+    const withProfile = applyProfileXp(withEffect, { stamina: 1, commerce: 1 });
+    let next = grantRouteStability(withProfile, content, [route.id], stabilityGain, `护送「${route.name}」`);
+    next = grantRegionReputation(next, content, route.fromRegionId, regionGain, `护送「${route.name}」`);
+    return grantRegionReputation(
+      next,
+      content,
+      route.toRegionId,
+      Math.max(1, regionGain - 1),
+      `护送「${route.name}」`,
     );
   }
 

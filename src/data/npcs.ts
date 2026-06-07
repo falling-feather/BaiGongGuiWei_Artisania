@@ -192,7 +192,7 @@ export const NPCS: NpcDef[] = [
     profession: '金箔匠',
     personality: 'demanding',
     knowledgeTags: ['gold-leaf', 'metalwork', 'palace-orders'],
-    functions: ['mentor', 'order', 'route'],
+    functions: ['mentor', 'order', 'route', 'escort'],
     schedule: [
       { phase: 'morning', subregionId: 'jiangnan-jinling', note: '金箔作开槌' },
       { phase: 'dusk', subregionId: 'jiangnan-jinling', note: '灯市验货' },
@@ -275,7 +275,7 @@ export const NPCS: NpcDef[] = [
     profession: '码头商人',
     personality: 'practical',
     knowledgeTags: ['logistics', 'trade-route', 'consignment'],
-    functions: ['route', 'order', 'appraisal'],
+    functions: ['route', 'escort', 'order', 'appraisal'],
     schedule: [
       { phase: 'morning', subregionId: 'jiangnan-linan', note: '江平码头点货' },
       { phase: 'afternoon', subregionId: 'jiangnan-linan', note: '湖港议价' },

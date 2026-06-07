@@ -382,6 +382,8 @@ export interface GameState {
   regionReputation: Record<string, number>;
   /** 商路稳定度（routeId -> 0–100），由开路、护送/指路、订单交付和季节压力共同影响 */
   routeStability: Record<string, number>;
+  /** 护商/押运完成次数（routeId -> count），用于地区活动记忆与后续结局/称号 */
+  routeEscortRuns: Record<string, number>;
   /** 已接取或完成的 NPC 订单 */
   activeOrders: ActiveOrder[];
 }
@@ -400,7 +402,15 @@ export interface NpcScheduleRule {
   note?: string;
 }
 
-export type NpcFunctionKind = 'mentor' | 'quest' | 'route' | 'order' | 'collab' | 'appraisal' | 'homeVisit';
+export type NpcFunctionKind =
+  | 'mentor'
+  | 'quest'
+  | 'route'
+  | 'escort'
+  | 'order'
+  | 'collab'
+  | 'appraisal'
+  | 'homeVisit';
 
 export interface NpcGiftPreference {
   label: string;

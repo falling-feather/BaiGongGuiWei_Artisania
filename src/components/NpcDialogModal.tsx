@@ -90,6 +90,7 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
     const required = npcFunctionRequirement(fn);
     if (affinity < required) return `好感不足：${affinity}/${required}`;
     if (runtime?.usedFunctionDays?.[fn] === state.calendar.day) return '今日已使用';
+    if (fn === 'escort' && (state.resources.labor ?? 0) < 2) return '工时不足：2';
     if (npcFunctionNeedsItem(fn) && !item) return '需要选择作品';
     return '';
   };

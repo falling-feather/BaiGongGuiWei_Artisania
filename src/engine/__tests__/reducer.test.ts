@@ -151,6 +151,7 @@ describe('gameReducer', () => {
     expect(s.farmPlots.length).toBeGreaterThanOrEqual(3);
     expect(s.regionReputation.jiangnan).toBe(5);
     expect(s.routeStability).toEqual({});
+    expect(s.routeEscortRuns).toEqual({});
   });
 
   it('ADVANCE_TIME 推进日内时段，夜间后进入下一日', () => {
@@ -702,6 +703,33 @@ describe('gameReducer', () => {
     expect(s.profile.attributes.commerce).toBeGreaterThan(5);
   });
 
+  it('USE_NPC_FUNCTION 护商会消耗工时、稳定路线并写入护商记忆', () => {
+    let s = freshState();
+    s = {
+      ...s,
+      npcAffinity: { ...s.npcAffinity, 'jn-fang-jiheng': 10 },
+      resources: { ...s.resources, labor: 4, coin: 0 },
+      routeStability: { ...s.routeStability, 'route-jiangnan-huizhou-paper': 20 },
+    };
+    const beforeStability = routeStabilityOf(s, 'route-jiangnan-huizhou-paper');
+
+    s = gameReducer(s, { type: 'USE_NPC_FUNCTION', npcId: 'jn-fang-jiheng', functionKind: 'escort' }, content);
+
+    expect(s.flags).toContain('npc-escort:jn-fang-jiheng');
+    expect(s.flags).toContain('escort:route-jiangnan-huizhou-paper');
+    expect(s.flags).toContain('route-known:route-jiangnan-huizhou-paper');
+    expect(s.routeEscortRuns['route-jiangnan-huizhou-paper']).toBe(1);
+    expect(routeStabilityOf(s, 'route-jiangnan-huizhou-paper')).toBeGreaterThan(beforeStability);
+    expect(s.resources.labor).toBe(2);
+    expect(s.resources.coin).toBeGreaterThan(0);
+    expect(s.profile.attributes.stamina).toBeGreaterThan(5);
+    expect(s.regionReputation.jiangnan).toBeGreaterThan(5);
+    expect(s.npcStates['jn-fang-jiheng'].usedFunctionDays?.escort).toBe(s.calendar.day);
+
+    const sameDay = gameReducer(s, { type: 'USE_NPC_FUNCTION', npcId: 'jn-fang-jiheng', functionKind: 'escort' }, content);
+    expect(sameDay.routeEscortRuns['route-jiangnan-huizhou-paper']).toBe(1);
+  });
+
   it('USE_NPC_FUNCTION 订单会生成可交付的具体 NPC 订单', () => {
     let s = freshState();
     s = { ...s, npcAffinity: { ...s.npcAffinity, 'jn-bamboo-master': 12 } };
@@ -756,25 +784,42 @@ describe('gameReducer', () => {
     expect(s.flags).toContain('npc-appraisal:jn-ning-ciqiu');
   });
 
-  it('第一圈外地 NPC 已具备功能、偏好、见闻和委托入口', () => {
-    const firstRingNpcIds = [
-      'bs-luo-qingmie',
-      'bs-mabang-ayue',
-      'qd-yinniang-alan',
-      'qd-mu-luozi',
-      'jj-lan-daqi',
-      'jj-song-yasi',
-    ];
+  it('逐地区主要 NPC 已具备功能、偏好、见闻和人物线文本', () => {
     const questNpcIds = new Set(QUESTS.map((quest) => quest.npcId));
-    for (const npcId of firstRingNpcIds) {
+    const mainNpcIds = [...new Set(REGION_CONTENT.flatMap((region) => region.mainNpcIds))];
+    const questRegionIds = new Set(
+      QUESTS.map((quest) => ALL_NPCS.find((npc) => npc.id === quest.npcId)?.regionId).filter(Boolean),
+    );
+    for (const npcId of mainNpcIds) {
       const npc = ALL_NPCS.find((item) => item.id === npcId);
       expect(npc, npcId).toBeTruthy();
       expect(npc?.functions?.length ?? 0).toBeGreaterThan(0);
       expect(npc?.preferences?.length ?? 0).toBeGreaterThan(0);
       expect(npc?.intel?.length ?? 0).toBeGreaterThan(0);
       expect(npc?.relationshipLines?.familiar?.length ?? 0).toBeGreaterThan(0);
-      expect(questNpcIds.has(npcId)).toBe(true);
+      expect(npc?.personalDilemma?.length ?? 0).toBeGreaterThan(0);
+      expect(npc?.endingInfluence?.length ?? 0).toBeGreaterThan(0);
     }
+    for (const region of REGIONS) expect(questRegionIds.has(region.id), region.id).toBe(true);
+    for (const npcId of [
+      'bs-luo-qingmie',
+      'bs-mabang-ayue',
+      'qd-yinniang-alan',
+      'qd-mu-luozi',
+      'jj-lan-daqi',
+      'jj-song-yasi',
+      'ln-wu-haichao',
+      'jc-qinglu',
+      'gp-chai-yazi',
+      'hz-wang-zhiniang',
+      'sj-lei-zhanggui',
+      'xy-yak-captain',
+      'xu-tuoling-shu',
+    ]) expect(questNpcIds.has(npcId), npcId).toBe(true);
+    expect(ALL_NPCS.find((item) => item.id === 'bs-mabang-ayue')?.functions).toContain('escort');
+    expect(ALL_NPCS.find((item) => item.id === 'qd-mu-luozi')?.functions).toContain('escort');
+    expect(ALL_NPCS.find((item) => item.id === 'xy-yak-captain')?.functions).toContain('escort');
+    expect(ALL_NPCS.find((item) => item.id === 'xu-tuoling-shu')?.functions).toContain('escort');
   });
 
   it('外地路线委托会写入结构化路线情报', () => {
@@ -790,6 +835,74 @@ describe('gameReducer', () => {
     expect(next.flags).toContain('bashu-mabang-roadbook');
     expect(next.flags).toContain('route-known:route-bashu-qiandian-tea-horse');
     expect(next.flags).toContain('route-known:route-bashu-xueyu-snow-pass');
+  });
+
+  it('后续地区路线委托会写入路线情报与地区声望', () => {
+    const cases = [
+      {
+        questId: 'q-lingnan-export-ledger',
+        npcId: 'ln-wu-haichao',
+        regionId: 'lingnan',
+        completedActivities: ['ln-pearl-river-harbor'],
+        flags: ['lingnan-export-ledger', 'route-known:route-qiandian-lingnan-harbor'],
+      },
+      {
+        questId: 'q-jingchu-water-ledger',
+        npcId: 'jc-qinglu',
+        regionId: 'jingchu',
+        completedActivities: ['jc-ferry-market'],
+        flags: ['jingchu-water-ledger', 'route-known:route-jingchu-ganpo-lake'],
+      },
+      {
+        questId: 'q-ganpo-kiln-firewood',
+        npcId: 'gp-chai-yazi',
+        regionId: 'ganpo',
+        completedActivities: ['gp-river-wood-yard'],
+        flags: ['ganpo-kiln-firewood-ledger', 'route-known:route-ganpo-huizhou-merchant'],
+      },
+      {
+        questId: 'q-huizhou-paper-ink-pledge',
+        npcId: 'hz-wang-zhiniang',
+        regionId: 'huizhou',
+        completedActivities: ['hz-paper-valley'],
+        flags: ['huizhou-paper-ink-pledge', 'route-known:route-jiangnan-huizhou-paper'],
+      },
+      {
+        questId: 'q-sanjin-piaohao-credit',
+        npcId: 'sj-lei-zhanggui',
+        regionId: 'sanjin',
+        completedActivities: ['sj-piaohao'],
+        flags: ['sanjin-piaohao-credit-note', 'route-known:route-jingji-sanjin-official'],
+      },
+      {
+        questId: 'q-xueyu-snow-pass-supply',
+        npcId: 'xy-yak-captain',
+        regionId: 'xueyu',
+        completedActivities: ['xy-snow-pass'],
+        flags: ['xueyu-snow-pass-supply', 'route-known:route-xueyu-xiyu-caravan'],
+      },
+      {
+        questId: 'q-xiyu-caravan-contract',
+        npcId: 'xu-tuoling-shu',
+        regionId: 'xiyu',
+        completedActivities: ['xiyu-caravan-post'],
+        flags: ['xiyu-caravan-contract', 'route-known:route-xueyu-xiyu-caravan'],
+      },
+    ];
+
+    for (const testCase of cases) {
+      const s = {
+        ...freshState(),
+        npcAffinity: { [testCase.npcId]: 16 },
+        completedActivities: testCase.completedActivities,
+      };
+      const next = gameReducer(s, { type: 'COMPLETE_QUEST', questId: testCase.questId }, content);
+      expect(next.completedQuests, testCase.questId).toContain(testCase.questId);
+      expect(next.regionReputation[testCase.regionId], testCase.questId).toBeGreaterThan(
+        s.regionReputation[testCase.regionId] ?? 0,
+      );
+      for (const flag of testCase.flags) expect(next.flags, `${testCase.questId}:${flag}`).toContain(flag);
+    }
   });
 
   it('COMPLETE_QUEST：好感不足时拒绝交付', () => {

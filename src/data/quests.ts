@@ -202,6 +202,145 @@ export const QUESTS: QuestDef[] = [
     },
     completeLog: '蓝大器挑完铜胎和丝线，终于说{name}这件小样可以进宫造候单。'
   },
+  {
+    id: 'q-lingnan-export-ledger',
+    npcId: 'ln-wu-haichao',
+    title: '珠江船期账',
+    desc: '伍海潮要你先在珠江货栈摸清船期和货名，再谈外销订单与护商。',
+    requireAffinity: 8,
+    condition: (s) => s.completedActivities.includes('ln-pearl-river-harbor') || s.flags.includes('lingnan-export-contact'),
+    reward: {
+      coin: 16,
+      metrics: { market: 2, life: 1 },
+      attributes: { commerce: 2, people: 1 },
+      flags: ['lingnan-export-ledger', 'route-known:route-qiandian-lingnan-harbor'],
+    },
+    completeLog: '伍海潮把船期抄给{name}：外销先看货名，再看风向，最后才看谁喊价更高。'
+  },
+  {
+    id: 'q-lingnan-gambiered-sun',
+    npcId: 'ln-he-yunsha',
+    title: '莨绸晒场的耐心',
+    desc: '何云纱要你亲自去晒场看过日光、河泥与反复浸染，才肯把染整手法接入百工院。',
+    requireAffinity: 12,
+    condition: (s) => s.completedActivities.includes('ln-gambiered-yard') || (s.resources.gambieredSilk ?? 0) >= 1,
+    reward: {
+      coin: 22,
+      metrics: { heritage: 2, spirit: 1 },
+      attributes: { craft: 1, mind: 2 },
+      flags: ['lingnan-gambiered-sun-method'],
+    },
+    completeLog: '何云纱见{name}没有催快晒场，便把“看天、看泥、看丝性”的口诀写进工簿。'
+  },
+  {
+    id: 'q-jingchu-water-ledger',
+    npcId: 'jc-qinglu',
+    title: '江湖水路凭风',
+    desc: '船娘清芦要确认你在渡口市集听过风向和水路规矩，再替你引见江湖熟船。',
+    requireAffinity: 8,
+    condition: (s) => s.completedActivities.includes('jc-ferry-market'),
+    reward: {
+      coin: 12,
+      metrics: { market: 1, life: 1 },
+      attributes: { commerce: 1, stamina: 1 },
+      flags: ['jingchu-water-ledger', 'route-known:route-bashu-jingchu-river', 'route-known:route-qiandian-jingchu-mine', 'route-known:route-jingchu-ganpo-lake'],
+    },
+    completeLog: '清芦听{name}说完芦荡风向，给了三条熟船名号：江湖路可以走，但不能欺水。'
+  },
+  {
+    id: 'q-ganpo-kiln-firewood',
+    npcId: 'gp-chai-yazi',
+    title: '窑柴不只是柴',
+    desc: '柴牙子要看你是否明白窑期、柴价和水路互相牵动，而不是只会往炉里添煤。',
+    requireAffinity: 8,
+    condition: (s) => s.completedActivities.includes('gp-river-wood-yard') || (s.resources.coal ?? 0) >= 2 || (s.resources.timber ?? 0) >= 1,
+    reward: {
+      coin: 14,
+      resources: { coal: 1 },
+      metrics: { market: 1 },
+      attributes: { commerce: 1, knowledge: 1 },
+      flags: ['ganpo-kiln-firewood-ledger', 'route-known:route-jiangnan-ganpo-kiln', 'route-known:route-jingchu-ganpo-lake', 'route-known:route-ganpo-huizhou-merchant'],
+    },
+    completeLog: '柴牙子把一笔窑柴账摊给{name}看：火候在窑里，风险在路上。'
+  },
+  {
+    id: 'q-huizhou-paper-ink-pledge',
+    npcId: 'hz-wang-zhiniang',
+    title: '纸墨要经得住题跋',
+    desc: '汪纸娘不急着卖纸，她要确认你知道纸、墨、砚与作品题名之间的关系。',
+    requireAffinity: 12,
+    condition: (s) =>
+      s.completedActivities.includes('hz-paper-valley') ||
+      ((s.resources.paperSheet ?? 0) >= 1 && ((s.resources.inkStick ?? 0) >= 1 || (s.resources.huiInk ?? 0) >= 1)),
+    reward: {
+      coin: 18,
+      resources: { paperSheet: 1 },
+      metrics: { spirit: 2, heritage: 1 },
+      attributes: { knowledge: 2, mind: 1 },
+      flags: ['huizhou-paper-ink-pledge', 'route-known:route-jiangnan-huizhou-paper', 'route-known:route-ganpo-huizhou-merchant'],
+    },
+    completeLog: '汪纸娘把一张薄而有骨的纸交给{name}：能载字，也要能载名声。'
+  },
+  {
+    id: 'q-sanjin-piaohao-credit',
+    npcId: 'sj-lei-zhanggui',
+    title: '票号信用小票',
+    desc: '雷掌柜不先借钱，只让你在日升票号过一遍押货和兑付规矩。',
+    requireAffinity: 8,
+    condition: (s) => s.completedActivities.includes('sj-piaohao') || s.flags.includes('piaohao-credit'),
+    reward: {
+      coin: 16,
+      metrics: { market: 2 },
+      attributes: { commerce: 2, people: 1 },
+      flags: ['sanjin-piaohao-credit-note', 'route-known:route-jingji-sanjin-official'],
+    },
+    completeLog: '雷掌柜给{name}开出一张小额信用票：钱可借，名声不可透支。'
+  },
+  {
+    id: 'q-xueyu-snow-pass-supply',
+    npcId: 'xy-yak-captain',
+    title: '雪山驿口补给',
+    desc: '牦牛队长要你证明自己知道高寒路上的货重、补给和风口，再谈雪域远行。',
+    requireAffinity: 8,
+    condition: (s) => s.completedActivities.includes('xy-snow-pass') || s.flags.includes('snow-pass-known'),
+    reward: {
+      coin: 12,
+      metrics: { life: 1 },
+      attributes: { stamina: 2, commerce: 1 },
+      flags: ['xueyu-snow-pass-supply', 'route-known:route-bashu-xueyu-snow-pass', 'route-known:route-xueyu-xiyu-caravan'],
+    },
+    completeLog: '牦牛队长把风口和补给点标给{name}：少带虚货，多给路留余地。'
+  },
+  {
+    id: 'q-xiyu-caravan-contract',
+    npcId: 'xu-tuoling-shu',
+    title: '驼队护商契约',
+    desc: '驼铃叔要你先去驿站摸清沙路补给，再签第一份西域护商契约。',
+    requireAffinity: 8,
+    condition: (s) => s.completedActivities.includes('xiyu-caravan-post') || s.flags.includes('caravan-route-known'),
+    reward: {
+      coin: 14,
+      metrics: { market: 1, life: 1 },
+      attributes: { stamina: 1, commerce: 2 },
+      flags: ['xiyu-caravan-contract', 'route-known:route-xueyu-xiyu-caravan'],
+    },
+    completeLog: '驼铃叔把第一份护商契约塞给{name}：沙路可以赚钱，但不许侥幸。'
+  },
+  {
+    id: 'q-xiyu-jade-by-material',
+    npcId: 'xu-a-yue',
+    title: '因材施艺',
+    desc: '玉师阿月要看你是否愿意先相玉、顺绺裂，而不是一上来就按流行样式动刀。',
+    requireAffinity: 12,
+    condition: (s) => s.completedActivities.includes('xiyu-jade-yard') || (s.resources.jadeRough ?? 0) >= 1,
+    reward: {
+      coin: 24,
+      metrics: { heritage: 2, spirit: 1 },
+      attributes: { knowledge: 2, craft: 1 },
+      flags: ['xiyu-jade-by-material'],
+    },
+    completeLog: '阿月见{name}愿意先看玉性，才准你记下“因材施艺”四字。'
+  },
 ];
 
 export const QUEST_INDEX: Record<string, QuestDef> = Object.fromEntries(

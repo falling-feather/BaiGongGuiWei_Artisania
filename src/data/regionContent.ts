@@ -13,7 +13,7 @@ type NpcOverride = Partial<
   >
 >;
 
-const FIRST_RING_NPC_OVERRIDES: Record<string, NpcOverride> = {
+const REGIONAL_NPC_OVERRIDES: Record<string, NpcOverride> = {
   'bs-luo-qingmie': {
     functions: ['mentor', 'quest', 'order', 'collab'],
     personality: 'patient',
@@ -25,7 +25,7 @@ const FIRST_RING_NPC_OVERRIDES: Record<string, NpcOverride> = {
     endingInfluence: '罗青篾认可玩家后，巴蜀竹料会成为江南伞、徽州纸和百工院棚架的稳定支点。',
   },
   'bs-mabang-ayue': {
-    functions: ['route', 'quest', 'order'],
+    functions: ['route', 'escort', 'quest', 'order'],
     personality: 'steady',
     preferences: [
       { label: '轻便耐走的补给', resourceIds: ['tea', 'teaLeaf', 'bambooWare'], affinityBonus: 5 },
@@ -45,7 +45,7 @@ const FIRST_RING_NPC_OVERRIDES: Record<string, NpcOverride> = {
     endingInfluence: '银娘阿岚会让贵金属线从单纯冶炼变成礼俗、装饰与订单并重的支线。',
   },
   'qd-mu-luozi': {
-    functions: ['route', 'quest'],
+    functions: ['route', 'escort', 'quest'],
     personality: 'practical',
     preferences: [
       { label: '能换脚力的茶与货样', resourceIds: ['tea', 'teaLeaf', 'indigoCloth'], affinityBonus: 5 },
@@ -65,7 +65,7 @@ const FIRST_RING_NPC_OVERRIDES: Record<string, NpcOverride> = {
     endingInfluence: '蓝大器会把京畿宫造订单变成中期门槛，要求材料、商誉与技艺同时达标。',
   },
   'jj-song-yasi': {
-    functions: ['route', 'quest', 'order'],
+    functions: ['route', 'escort', 'quest', 'order'],
     personality: 'cautious',
     preferences: [
       { label: '带题名或凭据的样货', descriptorIncludes: ['名', '题', '款'], minQuality: 0.6, affinityBonus: 6 },
@@ -73,6 +73,166 @@ const FIRST_RING_NPC_OVERRIDES: Record<string, NpcOverride> = {
     ],
     personalDilemma: '他不是不通人情，只是官署门口每一次放行都要有人担责。',
     endingInfluence: '宋押司的许可会把商誉和宫造订单真正扣在一起。',
+  },
+  'ln-wu-haichao': {
+    functions: ['route', 'escort', 'quest', 'order', 'appraisal'],
+    personality: 'calculating',
+    preferences: [
+      { label: '适合压舱外销的成批样货', resourceIds: ['gambieredSilk', 'duanStone', 'indigoCloth', 'oilpaperUmbrella'], affinityBonus: 6 },
+      { label: '带外地来路的高品相样货', originRegionIds: ['jiangnan', 'qiandian', 'jingchu'], minQuality: 0.62, affinityBonus: 6 },
+    ],
+    personalDilemma: '他懂海贸利润，也怕好手艺被船期和低价压成粗货。',
+    endingInfluence: '伍海潮会把岭南外销订单接入跨区商路，让船期、货名与商誉同时影响中后期经济。',
+  },
+  'ln-he-yunsha': {
+    functions: ['mentor', 'quest', 'order', 'collab'],
+    personality: 'patient',
+    preferences: [
+      { label: '丝料与沉色染物', resourceIds: ['rawSilkThread', 'gambieredSilk', 'indigoCloth', 'batikCloth'], affinityBonus: 6 },
+      { label: '耐晒耐磨的织物', descriptorIncludes: ['稳', '细', '沉'], minQuality: 0.62, affinityBonus: 5 },
+    ],
+    personalDilemma: '晒场看天吃饭，她想让玩家明白香云纱不是黑色布匹，而是一整套日光、水土与耐心。',
+    endingInfluence: '何云纱的联作会把岭南染整线接入丝织供应链，并强化天气对工艺的长期意义。',
+  },
+  'ln-tan-yanbo': {
+    functions: ['mentor', 'quest', 'order', 'appraisal'],
+    personality: 'quiet',
+    preferences: [
+      { label: '有石眼和润声的砚材', resourceIds: ['duanStone', 'sheStone'], affinityBonus: 7 },
+      { label: '能配纸墨的文房器', resourceIds: ['inkStick', 'paperSheet', 'xuanPaper', 'huiInk'], affinityBonus: 4 },
+    ],
+    personalDilemma: '他不怕端石难采，只怕人人只问名坑不问石性。',
+    endingInfluence: '谭砚伯的鉴评会让岭南端砚和徽州纸墨形成文房路线的南北呼应。',
+  },
+  'jc-qinglu': {
+    functions: ['route', 'escort', 'quest', 'order'],
+    personality: 'nimble',
+    preferences: [
+      { label: '轻便防潮的水路货', resourceIds: ['oilpaperUmbrella', 'tea', 'bambooWare'], affinityBonus: 5 },
+      { label: '走过江湖的样货', originRegionIds: ['bashu', 'qiandian', 'ganpo'], minQuality: 0.58, affinityBonus: 5 },
+    ],
+    personalDilemma: '她知道水路能救货，也知道贪快的客商最容易把整船人拖进风险。',
+    endingInfluence: '船娘清芦会把荆楚变成矿冶、漆作与窑火之间的水路缓冲带。',
+  },
+  'jc-xiong-zhuxi': {
+    functions: ['mentor', 'quest', 'order', 'collab', 'appraisal'],
+    personality: 'expressive',
+    preferences: [
+      { label: '漆料与朱黑彩器', resourceIds: ['rawLacquer', 'lacquerRefined', 'chuLacquer', 'pingyaoLacquer'], affinityBonus: 6 },
+      { label: '纹样有来处的作品', descriptorIncludes: ['纹', '正', '深'], minQuality: 0.64, affinityBonus: 5 },
+    ],
+    personalDilemma: '他担心楚漆只剩仿古图案，忘了水泽、木胎与礼器之间的关系。',
+    endingInfluence: '熊朱漆的认可会把漆艺从装饰工序扩成跨地区器物修复与展陈支线。',
+  },
+  'gp-wen-yaotou': {
+    functions: ['mentor', 'quest', 'order', 'appraisal'],
+    personality: 'stern',
+    preferences: [
+      { label: '瓷土、柴火与成瓷样', resourceIds: ['kaolin', 'porcelainClay', 'jingdezhenPorcelain', 'celadonWare'], affinityBonus: 6 },
+      { label: '火候不躁的器物', descriptorIncludes: ['稳', '润', '正'], minQuality: 0.65, affinityBonus: 5 },
+    ],
+    personalDilemma: '他嘴上骂新手不懂火，心里怕窑镇只剩赶单，不再敬畏开窑那一刻。',
+    endingInfluence: '窑头老温会让赣鄱瓷镇成为龙泉青瓷和京畿重器之间的高温工艺样板。',
+  },
+  'gp-chai-yazi': {
+    functions: ['route', 'escort', 'quest', 'order'],
+    personality: 'practical',
+    preferences: [
+      { label: '能赶窑期的补给与样货', resourceIds: ['coal', 'timber', 'tea', 'bambooWare'], affinityBonus: 5 },
+      { label: '水路带来的外地货', originRegionIds: ['jiangnan', 'jingchu', 'huizhou'], minQuality: 0.58, affinityBonus: 4 },
+    ],
+    personalDilemma: '他常被当成牙人，却清楚窑火背后先是柴路和船期。',
+    endingInfluence: '柴牙子会把窑柴、瓷土、湖路和徽商账本扣成赣鄱供应链的风险节点。',
+  },
+  'hz-wang-zhiniang': {
+    functions: ['mentor', 'quest', 'order', 'collab'],
+    personality: 'careful',
+    preferences: [
+      { label: '纸料、好墨与可题跋器', resourceIds: ['qingtanBark', 'paperSheet', 'xuanPaper', 'inkStick', 'huiInk'], affinityBonus: 6 },
+      { label: '心境清正的作品', descriptorIncludes: ['净', '雅', '正'], minQuality: 0.65, affinityBonus: 5 },
+    ],
+    personalDilemma: '她不愿纸只被看成消耗品，一张好纸应当撑住字、画和器物的名声。',
+    endingInfluence: '汪纸娘会把徽州纸谷变成宁辞秋题跋线和高级文房订单的材料根基。',
+  },
+  'hz-cheng-yuanzhou': {
+    functions: ['route', 'escort', 'quest', 'order', 'appraisal'],
+    personality: 'worldly',
+    preferences: [
+      { label: '可押货的文房与瓷样', resourceIds: ['xuanPaper', 'huiInk', 'sheStone', 'jingdezhenPorcelain'], affinityBonus: 6 },
+      { label: '账面清楚的外地样货', originRegionIds: ['jiangnan', 'ganpo', 'jingji'], minQuality: 0.62, affinityBonus: 5 },
+    ],
+    personalDilemma: '他讲利，却不想徽商信用变成只会放贷的冷账本。',
+    endingInfluence: '程远舟的会馆能把徽州纸墨、赣鄱窑火和江南题跋组成可循环的文房经济线。',
+  },
+  'sj-lei-zhanggui': {
+    functions: ['route', 'escort', 'quest', 'order', 'appraisal'],
+    personality: 'cautious',
+    preferences: [
+      { label: '带凭据的押货样品', descriptorIncludes: ['名', '题', '款'], minQuality: 0.6, affinityBonus: 6 },
+      { label: '北地可流通的重货', resourceIds: ['coal', 'ironIngot', 'pingyaoLacquer', 'agedVinegar'], affinityBonus: 5 },
+    ],
+    personalDilemma: '他相信信用，却也见过太多人把信用当成借口透支。',
+    endingInfluence: '雷掌柜会让三晋票号成为长距离订单、押金、断供补救与商誉风险的系统入口。',
+  },
+  'sj-pingyao-qipo': {
+    functions: ['mentor', 'quest', 'order', 'collab', 'appraisal'],
+    personality: 'stubborn',
+    preferences: [
+      { label: '漆料与经得住掌温的器物', resourceIds: ['rawLacquer', 'lacquerRefined', 'pingyaoLacquer', 'chuLacquer'], affinityBonus: 6 },
+      { label: '慢工细磨的作品', descriptorIncludes: ['厚', '稳', '光'], minQuality: 0.65, affinityBonus: 5 },
+    ],
+    personalDilemma: '她不怕漆慢，只怕玩家把慢当成落后。',
+    endingInfluence: '平遥漆婆会让北地漆艺与荆楚楚漆互相照见，形成漆艺进阶线。',
+  },
+  'xy-losang': {
+    functions: ['mentor', 'quest', 'appraisal', 'collab'],
+    personality: 'reverent',
+    preferences: [
+      { label: '矿彩、好纸与心境清明的作品', resourceIds: ['mineralPigment', 'pigmentRefined', 'paperSheet', 'xuanPaper', 'thangka'], affinityBonus: 6 },
+      { label: '不轻慢题材的作品', descriptorIncludes: ['正', '净', '定'], minQuality: 0.68, affinityBonus: 5 },
+    ],
+    personalDilemma: '他愿意教工序，但不愿唐卡被当作普通稀有商品刷价。',
+    endingInfluence: '洛桑画师会把雪域内容锁定在尊重、心境和矿彩供应链上，避免远行后期只剩稀有材料。',
+  },
+  'xy-yak-captain': {
+    functions: ['route', 'escort', 'quest', 'order'],
+    personality: 'steady',
+    preferences: [
+      { label: '高寒路上能用的补给', resourceIds: ['tea', 'teaLeaf', 'agedVinegar', 'bambooWare'], affinityBonus: 5 },
+      { label: '轻而贵的远行样货', originRegionIds: ['bashu', 'xiyu', 'qiandian'], minQuality: 0.6, affinityBonus: 5 },
+    ],
+    personalDilemma: '他看多了把高原当捷径的人，知道少带一份敬畏就会多一分风险。',
+    endingInfluence: '牦牛队长会让雪域成为远行风险、补给和护商系统的高压测试场。',
+  },
+  'xu-sali': {
+    functions: ['route', 'escort', 'quest', 'order', 'appraisal'],
+    personality: 'shrewd',
+    preferences: [
+      { label: '可换货的高品相器物', minQuality: 0.68, affinityBonus: 6 },
+      { label: '丝路两端都认的货', resourceIds: ['jadeRough', 'jadeCarving', 'atlasSilk', 'tibetanSilver'], affinityBonus: 6 },
+    ],
+    personalDilemma: '他爱议价，但也在试探玩家是否只看便宜，不看一件货的来路。',
+    endingInfluence: '萨里会把西域巴扎从商店升级为换货、估价、稀有料和远行信用的综合系统入口。',
+  },
+  'xu-tuoling-shu': {
+    functions: ['route', 'escort', 'quest', 'order'],
+    personality: 'weathered',
+    preferences: [
+      { label: '沙路补给与轻货', resourceIds: ['tea', 'teaLeaf', 'agedVinegar', 'bambooWare'], affinityBonus: 5 },
+      { label: '走过高原驿线的货样', originRegionIds: ['xueyu', 'jiangnan', 'jingji'], minQuality: 0.6, affinityBonus: 5 },
+    ],
+    personalDilemma: '他不怕沙路远，只怕人把驼队当成随叫随到的工具。',
+    endingInfluence: '驼铃叔会把西域后期远行落实到补给、护商和路线稳定，而不是单纯开放一张远图。',
+  },
+  'xu-a-yue': {
+    functions: ['mentor', 'quest', 'order', 'appraisal', 'collab'],
+    personality: 'direct',
+    preferences: [
+      { label: '顺势而作的玉料玉器', resourceIds: ['jadeRough', 'jadeCarving'], affinityBonus: 7 },
+      { label: '不暴殄材料的细作', descriptorIncludes: ['润', '正', '活'], minQuality: 0.66, affinityBonus: 5 },
+    ],
+    personalDilemma: '她最厌恶把玉料硬雕成流行样式，因材施艺才是玉作的底线。',
+    endingInfluence: '玉师阿月会让西域玉石线承担后期鉴材、稀有料和名作风险。',
   },
 };
 
@@ -118,7 +278,7 @@ function npc(
   greetings: string[],
   knowledgeTags: string[] = [],
 ): NpcDef {
-  const override = FIRST_RING_NPC_OVERRIDES[id] ?? {};
+  const override = REGIONAL_NPC_OVERRIDES[id] ?? {};
   const activity = REGION_ACTIVITIES.find((item) => item.id === anchorId);
   const functions = override.functions ?? inferNpcFunctions(knowledgeTags, activity);
   const routeIds = activity?.reward.routeIds ?? [];
@@ -163,6 +323,7 @@ function inferNpcFunctions(knowledgeTags: string[], activity?: ActivityDef): Npc
 
   if (craftLike) functions.add('mentor');
   if (routeLike) functions.add('route');
+  if (routeLike) functions.add('escort');
   if (routeLike || activity?.kind === 'workshop') functions.add('order');
   if (craftLike && !routeLike) functions.add('collab');
   if (appraisalLike || tags.has('luxury')) functions.add('appraisal');

@@ -65,6 +65,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const currentSubregion = useGameStore((s) => s.state.currentSubregion);
   const regionReputation = useGameStore((s) => s.state.regionReputation);
   const routeStability = useGameStore((s) => s.state.routeStability);
+  const routeEscortRuns = useGameStore((s) => s.state.routeEscortRuns);
   const unlockedRegions = useGameStore((s) => s.state.unlockedRegions);
   const flags = useGameStore((s) => s.state.flags);
   const calendar = useGameStore((s) => s.state.calendar);
@@ -97,6 +98,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
       risk,
       riskLabel: routeRiskLabel(risk),
       stability: routeStabilityOf({ routeStability }, route.id),
+      escortRuns: routeEscortRuns[route.id] ?? 0,
     };
   };
 
@@ -296,7 +298,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
                     <div className="ind-item__main">
                       <span className="ind-item__name">{route.name} · {target.name}</span>
                       <span className="ind-item__io">
-                        已通行 · 稳定 {routeState.stability} · 风险 {routeState.riskLabel}({routeState.risk}) · 场景出入口按 E 前往
+                        已通行 · 稳定 {routeState.stability} · 风险 {routeState.riskLabel}({routeState.risk}) · 护商 {routeState.escortRuns} 次 · 场景出入口按 E 前往
                       </span>
                       <span className="ind-item__blurb">{route.preview ?? target.blurb}</span>
                     </div>
@@ -332,7 +334,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
                   <div className="ind-item__main">
                     <span className="ind-item__name">{route.name} · {target.name}</span>
                     <span className="ind-item__io">
-                      路资 {cost} 文 · 风险 {routeState.riskLabel}({routeState.risk}) · {known ? '已掌握路线情报' : '未掌握路线情报'} · {enoughCoin ? '可在场景出入口开通' : '路资不足'}
+                      路资 {cost} 文 · 风险 {routeState.riskLabel}({routeState.risk}) · 护商 {routeState.escortRuns} 次 · {known ? '已掌握路线情报' : '未掌握路线情报'} · {enoughCoin ? '可在场景出入口开通' : '路资不足'}
                     </span>
                     <span className="ind-item__blurb">{route.unlockHint}</span>
                   </div>
