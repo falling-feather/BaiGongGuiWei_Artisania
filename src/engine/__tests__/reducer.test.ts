@@ -4168,6 +4168,73 @@ describe('gameReducer', () => {
     expect(s.regionReputation.bashu).toBeGreaterThan(beforeReputation);
   });
 
+  it('赣鄱柴运护商：窑柴赶期簿是选择型危机，处置后才结算', () => {
+    let s = freshState();
+    const routeId = 'route-ganpo-huizhou-merchant';
+    s = {
+      ...s,
+      currentRegion: 'ganpo',
+      unlockedRegions: [...new Set([...s.unlockedRegions, 'ganpo', 'huizhou'])],
+      npcAffinity: { ...s.npcAffinity, 'gp-chai-yazi': 20 },
+      resources: { ...s.resources, labor: 4 },
+      flags: [...s.flags, 'route-known:route-ganpo-huizhou-merchant'],
+      regionReputation: { ...s.regionReputation, ganpo: 30, huizhou: 20 },
+      routeStability: { ...s.routeStability, [routeId]: 18 },
+      profile: {
+        ...s.profile,
+        attributes: { ...s.profile.attributes, stamina: 70, commerce: 60 },
+      },
+    };
+    const beforeStability = routeStabilityOf(s, routeId);
+
+    s = gameReducer(s, { type: 'USE_NPC_FUNCTION', npcId: 'gp-chai-yazi', functionKind: 'escort' }, content);
+    expect(s.pendingEscortCrisis?.encounterId).toBe('escort-ganpo-kiln-firewood');
+    // 待处理危机会拦下时辰推进
+    const blocked = gameReducer(s, { type: 'ADVANCE_TIME' }, content);
+    expect(blocked.calendar.phase).toBe(s.calendar.phase);
+
+    s = gameReducer(s, { type: 'RESOLVE_ESCORT_CRISIS', choiceId: 'dry-firewood-first' }, content);
+    expect(s.pendingEscortCrisis).toBeNull();
+    expect(s.routeEscortRuns[routeId]).toBe(1);
+    expect(s.flags).toContain('escort-encounter:escort-ganpo-kiln-firewood');
+    expect(s.flags).toContain('escort-encounter-success:escort-ganpo-kiln-firewood');
+    expect(s.flags).toContain('escort-choice:dry-firewood-first');
+    expect(s.flags).toContain('ganpo-kiln-firewood-on-schedule');
+    expect(routeStabilityOf(s, routeId)).toBeGreaterThan(beforeStability);
+    expect(s.log.some((line) => line.includes('窑柴赶期簿'))).toBe(true);
+  });
+
+  it('京畿漕运护商：漕运料账簿处置成功会稳住宫造料路', () => {
+    let s = freshState();
+    const routeId = 'route-jiangnan-jingji-canal';
+    s = {
+      ...s,
+      currentRegion: 'jingji',
+      unlockedRegions: [...new Set([...s.unlockedRegions, 'jiangnan', 'jingji'])],
+      npcAffinity: { ...s.npcAffinity, 'jj-song-yasi': 20 },
+      resources: { ...s.resources, labor: 4 },
+      flags: [...s.flags, 'route-known:route-jiangnan-jingji-canal'],
+      regionReputation: { ...s.regionReputation, jingji: 30, jiangnan: 20 },
+      routeStability: { ...s.routeStability, [routeId]: 18 },
+      profile: {
+        ...s.profile,
+        attributes: { ...s.profile.attributes, stamina: 60, commerce: 75, people: 40 },
+      },
+    };
+    const beforeStability = routeStabilityOf(s, routeId);
+
+    s = gameReducer(s, { type: 'USE_NPC_FUNCTION', npcId: 'jj-song-yasi', functionKind: 'escort' }, content);
+    expect(s.pendingEscortCrisis?.encounterId).toBe('escort-jingji-canal-tribute');
+
+    s = gameReducer(s, { type: 'RESOLVE_ESCORT_CRISIS', choiceId: 'seal-tribute-manifest' }, content);
+    expect(s.pendingEscortCrisis).toBeNull();
+    expect(s.flags).toContain('escort-encounter-success:escort-jingji-canal-tribute');
+    expect(s.flags).toContain('escort-choice:seal-tribute-manifest');
+    expect(s.flags).toContain('jingji-canal-tribute-cleared');
+    expect(routeStabilityOf(s, routeId)).toBeGreaterThan(beforeStability);
+    expect(s.log.some((line) => line.includes('漕运料账簿'))).toBe(true);
+  });
+
   it('驼道护商事件失败会写入短缺记忆并压低路线稳定', () => {
     let s = freshState();
     const routeId = 'route-xueyu-xiyu-caravan';
