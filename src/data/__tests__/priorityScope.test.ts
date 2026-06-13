@@ -5,6 +5,7 @@ import {
   ALL_NPCS,
   CRAFTS,
   CRAFT_INTERACTIONS,
+  LORE_ENTRY_INDEX,
   LORE_ENTRIES,
   PRIORITY_ANCHOR_REGION_IDS,
   PRIORITY_ART_ASSET_MANIFEST,
@@ -12,9 +13,11 @@ import {
   PRIORITY_SCOPE_REGION_IDS,
   PRIORITY_SCOPE_REQUIREMENTS,
   PRIORITY_SKELETON_REGION_IDS,
+  REGION_ACTIVITIES,
   REGIONS,
   REGION_ROUTES,
   RUNTIME_MAP_LAYOUTS,
+  SUBREGION_CONTENT_INDEX,
 } from '..';
 
 describe('current priority scope guard', () => {
@@ -153,6 +156,71 @@ describe('current priority scope guard', () => {
           (object) => object.interaction === 'gate' || object.interaction === 'subregionGate',
         );
         if (!hasGate) errors.push(`${subregionId}: priority layout has no gate object`);
+      }
+    }
+
+    expect(errors).toEqual([]);
+  });
+
+  it('keeps skeleton region entry cards backed by local content and lore summaries', () => {
+    const errors: string[] = [];
+
+    for (const requirement of PRIORITY_SCOPE_REQUIREMENTS.filter((entry) => entry.tier === 'skeleton')) {
+      const region = REGIONS.find((entry) => entry.id === requirement.regionId);
+      if (!region) {
+        errors.push(`${requirement.regionId}: missing region`);
+        continue;
+      }
+
+      const requiredCrafts = new Set(requirement.requiredCraftIds);
+      const requiredNpcs = new Set(requirement.requiredNpcIds);
+
+      for (const subregionId of requirement.requiredLayoutSubregionIds) {
+        const subregion = region.subregions.find((entry) => entry.id === subregionId);
+        const content = SUBREGION_CONTENT_INDEX[subregionId];
+        const lore = LORE_ENTRY_INDEX[`subregion-${subregionId}`];
+        const localActivityIds = REGION_ACTIVITIES.filter(
+          (activity) => activity.regionId === requirement.regionId && activity.subregionId === subregionId,
+        ).map((activity) => activity.id);
+        const localNpcIds = ALL_NPCS.filter(
+          (npc) =>
+            npc.regionId === requirement.regionId &&
+            (npc.subregionId === subregionId ||
+              (npc.schedule ?? []).some((rule) => rule.subregionId === subregionId)),
+        ).map((npc) => npc.id);
+
+        if (!subregion) errors.push(`${requirement.regionId}: missing subregion ${subregionId}`);
+        if (!content) {
+          errors.push(`${subregionId}: missing subregion content index`);
+          continue;
+        }
+
+        if (!content.craftIds.some((craftId) => requiredCrafts.has(craftId))) {
+          errors.push(`${subregionId}: no required craft is placed in the entry subregion`);
+        }
+        if (content.industryIds.length === 0) errors.push(`${subregionId}: entry summary has no local industry`);
+        if (content.craftIds.length === 0) errors.push(`${subregionId}: entry summary has no local craft`);
+        if (localActivityIds.length === 0) errors.push(`${subregionId}: entry summary has no local activity`);
+        if (!localNpcIds.some((npcId) => requiredNpcs.has(npcId))) {
+          errors.push(`${subregionId}: required NPC is not scheduled in the entry subregion`);
+        }
+
+        if (!lore) {
+          errors.push(`${subregionId}: missing generated subregion lore card`);
+          continue;
+        }
+
+        if (lore.category !== 'region') errors.push(`${lore.id}: lore card must be a region entry`);
+        if (lore.regionId !== requirement.regionId) errors.push(`${lore.id}: wrong region ${lore.regionId}`);
+        if (lore.subregionId !== subregionId) errors.push(`${lore.id}: wrong subregion ${lore.subregionId}`);
+        if (!lore.unlock?.regions?.includes(requirement.regionId)) {
+          errors.push(`${lore.id}: lore card must unlock with its region`);
+        }
+        if (!lore.npcIds?.some((npcId) => requiredNpcs.has(npcId))) {
+          errors.push(`${lore.id}: lore card does not reference the required NPC`);
+        }
+        if ((lore.tags?.length ?? 0) < 4) errors.push(`${lore.id}: lore card tags are too thin for search`);
+        if (lore.body.join('').trim().length < 80) errors.push(`${lore.id}: lore card body is too thin`);
       }
     }
 
