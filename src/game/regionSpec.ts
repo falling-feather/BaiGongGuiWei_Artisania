@@ -5,12 +5,14 @@
 import {
   MAX_WORKSHOP_CAPACITY,
   buildLoreTravelGuide,
+  buildPriorityJourneyGuide,
   routeCostWithIntel,
   workshopCapacityForCraft,
   workshopExpansionCostForCraft,
   workshopUpgradeSpaceCost,
   workshopUsedSpaceForCraft,
   type GameState,
+  type LoreTravelGuide,
   type NpcDef,
   type NpcScheduleRule,
   type ResourcePool,
@@ -18,7 +20,9 @@ import {
 } from '../engine';
 import {
   INDUSTRIES,
+  LORE_ENTRIES,
   LORE_ENTRY_INDEX,
+  PRIORITY_JOURNEY_STEPS,
   REGION_INDEX,
   REGIONS,
   REGION_ROUTES,
@@ -151,9 +155,10 @@ function workshopStatusForCraft(state: GameState, craftId: string): RegionMapSpe
   };
 }
 
-function navigationTargetForTrackedLore(state: GameState): RegionMapSpec['navigationTarget'] {
-  const entry = state.trackedLoreEntryId ? LORE_ENTRY_INDEX[state.trackedLoreEntryId] : undefined;
-  const guide = buildLoreTravelGuide(state, entry, REGIONS, REGION_ROUTES);
+function navigationTargetFromTravelGuide(
+  guide: LoreTravelGuide | null,
+  currentRegion: string,
+): RegionMapSpec['navigationTarget'] {
   if (!guide || guide.isAtTarget || guide.status === 'locked') return undefined;
 
   if (guide.status === 'same-region' && guide.targetSubregionId) {
@@ -165,7 +170,7 @@ function navigationTargetForTrackedLore(state: GameState): RegionMapSpec['naviga
     };
   }
 
-  if (guide.nextRegionId && guide.nextRegionId !== state.currentRegion) {
+  if (guide.nextRegionId && guide.nextRegionId !== currentRegion) {
     return {
       kind: 'gate',
       payload: guide.nextRegionId,
@@ -175,6 +180,20 @@ function navigationTargetForTrackedLore(state: GameState): RegionMapSpec['naviga
   }
 
   return undefined;
+}
+
+function navigationTargetForTrackedLore(state: GameState): RegionMapSpec['navigationTarget'] {
+  const entry = state.trackedLoreEntryId ? LORE_ENTRY_INDEX[state.trackedLoreEntryId] : undefined;
+  return navigationTargetFromTravelGuide(buildLoreTravelGuide(state, entry, REGIONS, REGION_ROUTES), state.currentRegion);
+}
+
+function navigationTargetForPriorityJourney(state: GameState): RegionMapSpec['navigationTarget'] {
+  const guide = buildPriorityJourneyGuide(state, PRIORITY_JOURNEY_STEPS, LORE_ENTRIES, REGIONS, REGION_ROUTES);
+  return navigationTargetFromTravelGuide(guide?.travelGuide ?? null, state.currentRegion);
+}
+
+function navigationTargetForState(state: GameState): RegionMapSpec['navigationTarget'] {
+  return navigationTargetForTrackedLore(state) ?? navigationTargetForPriorityJourney(state);
 }
 
 /** 组装某地区在当前状态下的地图规格；地区不存在时返回 null */
@@ -268,7 +287,7 @@ export function buildRegionSpec(regionId: string, state: GameState): RegionMapSp
           tileY: layoutNpc?.y,
         };
       }),
-    navigationTarget: navigationTargetForTrackedLore(state),
+    navigationTarget: navigationTargetForState(state),
     layout,
   };
 }

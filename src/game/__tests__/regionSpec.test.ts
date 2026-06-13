@@ -145,6 +145,55 @@ describe('runtime map layouts', () => {
 });
 
 describe('lore travel target hints', () => {
+  it('uses the priority journey target when no lore entry is tracked', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const spec = buildRegionSpec('jiangnan', {
+      ...base,
+      currentRegion: 'jiangnan',
+      currentSubregion: 'jiangnan-suhang',
+      trackedLoreEntryId: null,
+    });
+
+    expect(spec?.navigationTarget).toMatchObject({
+      kind: 'subregionGate',
+      payload: 'jiangnan-longquan',
+    });
+  });
+
+  it('keeps manual lore tracking ahead of the priority journey fallback', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const spec = buildRegionSpec('jiangnan', {
+      ...base,
+      currentRegion: 'jiangnan',
+      currentSubregion: 'jiangnan-suhang',
+      trackedLoreEntryId: 'subregion-jiangnan-linan',
+    });
+
+    expect(spec?.navigationTarget).toMatchObject({
+      kind: 'subregionGate',
+      payload: 'jiangnan-linan',
+    });
+  });
+
+  it('points the priority journey at the next street gate after an anchor step closes', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const spec = buildRegionSpec('jiangnan', {
+      ...base,
+      currentRegion: 'jiangnan',
+      currentSubregion: 'jiangnan-jinling',
+      trackedLoreEntryId: null,
+      crafts: base.crafts.map((craft) =>
+        craft.craftId === 'longquan-sword' ? { ...craft, produced: 1 } : craft,
+      ),
+      flags: [...base.flags, 'stall-chain-completed:jn-qinhuai-lantern'],
+    });
+
+    expect(spec?.navigationTarget).toMatchObject({
+      kind: 'gate',
+      payload: 'ganpo',
+    });
+  });
+
   it('points tracked same-region lore at the matching subregion gate', () => {
     const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
     const spec = buildRegionSpec('jiangnan', {
