@@ -255,6 +255,80 @@ export const ACTIVITY_CHALLENGES: ActivityChallengeDef[] = [
         feedback: '乔照夜说：稳妥，可少了些秦淮夜色。',
       },
     ],
+    rounds: [
+      {
+        id: 'lantern-face',
+        prompt: '乔照夜问你灯面该怎样写，才既热闹又不俗。',
+        choices: [
+          {
+            id: 'bright-price',
+            label: '金粉满河，价高者得',
+            quality: 0.38,
+            feedback: '乔照夜摇头：这像账帖，不像灯谜。',
+          },
+          {
+            id: 'river-moon',
+            label: '一水藏千月，万人共一灯',
+            quality: 0.9,
+            feedback: '乔照夜拍案：好，灯面有水气，人也愿意停步。',
+          },
+          {
+            id: 'plain-luck',
+            label: '明灯照路，岁岁平安',
+            quality: 0.66,
+            feedback: '乔照夜说：稳妥，可少了些秦淮夜色。',
+          },
+        ],
+      },
+      {
+        id: 'riddle-bone',
+        prompt: '灯骨扎好后，文客要猜“灯里藏的匠心”。你该把谜底落在哪一处？',
+        choices: [
+          {
+            id: 'bamboo-shadow',
+            label: '让谜底应在竹篾暗扣，猜中者能看见骨法',
+            quality: 0.88,
+            feedback: '乔照夜点头：灯谜不只猜字，也该让人猜到手艺。',
+          },
+          {
+            id: 'painted-front',
+            label: '把谜底直接写在正面，免得客人猜不出',
+            quality: 0.46,
+            feedback: '乔照夜叹气：太直，灯还没亮，兴味先散了。',
+          },
+          {
+            id: 'hidden-riddle',
+            label: '藏进最偏的纸角，只让老客慢慢琢磨',
+            quality: 0.62,
+            feedback: '乔照夜说：有巧思，可灯市人多，不能只照顾少数。',
+          },
+        ],
+      },
+      {
+        id: 'guest-flow',
+        prompt: '收谜时人潮渐密，摊前该怎样留住猜中和未猜中的人？',
+        choices: [
+          {
+            id: 'tea-and-proof',
+            label: '猜中者题签，未中者续茶，再引去看灯屏工序',
+            quality: 0.92,
+            feedback: '乔照夜笑道：这才是灯市，谜、人情和买卖都能接上。',
+          },
+          {
+            id: 'scholar-only',
+            label: '只留最会猜的文客，题名越雅越好',
+            quality: 0.54,
+            feedback: '乔照夜压低声音：雅是雅了，摊前却冷了半边。',
+          },
+          {
+            id: 'quick-prize',
+            label: '猜中即发小礼，立刻催下一拨上前',
+            quality: 0.69,
+            feedback: '乔照夜说：热闹能起，可少了些记得住的情分。',
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'jn-longquan-sword-appraise',
@@ -379,6 +453,33 @@ export const ACTIVITY_CHALLENGES: ActivityChallengeDef[] = [
     title: '度量起稿',
     prompt: '洛桑画师先讲度量经，再许你调一笔矿彩。',
     choices: traceChoices,
+  },
+  {
+    id: 'gp-blue-painting-room-water',
+    activityId: 'gp-blue-painting-room',
+    miniGame: 'calligraphy_trace',
+    title: '青花分水',
+    prompt: '蓝釉生让你在坯面分出青料浓淡，问你先抢线还是先匀色。',
+    choices: [
+      {
+        id: 'outline-then-shade',
+        label: '先勾线骨，再逐层分水',
+        quality: 0.9,
+        feedback: '线骨立住，分水才有依傍，浓淡五色自然分明。',
+      },
+      {
+        id: 'flood-color-fast',
+        label: '趁湿快铺一遍青料',
+        quality: 0.5,
+        feedback: '色是上去了，浓淡却糊在一处，烧出来怕发闷。',
+      },
+      {
+        id: 'thin-wash-only',
+        label: '只敢薄薄罩一层淡青',
+        quality: 0.62,
+        feedback: '稳是稳了，可青花少了浓淡，纹样显得寡淡。',
+      },
+    ],
   },
   ...routeChallengeSpecs.map((spec) => challengeFromSpec(spec, routeChoices)),
   ...appraiseChallengeSpecs.map((spec) => challengeFromSpec(spec, appraiseChoices)),
