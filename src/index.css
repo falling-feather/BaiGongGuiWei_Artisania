@@ -598,6 +598,123 @@ body {
   margin: 4px 0;
 }
 
+.priority-audit {
+  padding: 10px;
+  border: 1px solid rgba(46, 74, 107, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 252, 242, 0.58);
+}
+
+.priority-audit__summary {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 8px;
+  color: var(--indigo-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.priority-audit__meter {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(43, 38, 32, 0.12);
+  margin-bottom: 10px;
+}
+
+.priority-audit__meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--bamboo), var(--gold));
+}
+
+.priority-audit__steps {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+
+.priority-audit-card {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 8px;
+  background: rgba(244, 236, 224, 0.66);
+}
+
+.priority-audit-card.is-active {
+  border-color: rgba(184, 137, 59, 0.6);
+  background: rgba(184, 137, 59, 0.13);
+}
+
+.priority-audit-card.is-done {
+  border-color: rgba(111, 139, 82, 0.48);
+  background: rgba(111, 139, 82, 0.11);
+}
+
+.priority-audit-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.priority-audit-card__head b {
+  font-size: 13px;
+}
+
+.priority-audit-card__head span {
+  color: var(--indigo-soft);
+  font-size: 11px;
+}
+
+.priority-audit__chips,
+.priority-audit__requirements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.priority-audit__chips span,
+.priority-audit__requirements span {
+  min-height: 20px;
+  border: 1px solid rgba(46, 74, 107, 0.18);
+  border-radius: 999px;
+  padding: 2px 7px;
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--indigo-soft);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.priority-audit__chips span.is-done,
+.priority-audit__requirements span.is-ready {
+  border-color: rgba(111, 139, 82, 0.4);
+  background: rgba(111, 139, 82, 0.12);
+  color: var(--bamboo);
+}
+
+.priority-audit__requirements span.is-gap {
+  border-color: rgba(181, 69, 47, 0.36);
+  background: rgba(181, 69, 47, 0.1);
+  color: var(--vermilion);
+}
+
+.priority-audit__requirements {
+  align-items: center;
+  margin-top: 7px;
+}
+
+.priority-audit__requirements b {
+  color: var(--indigo);
+  font-size: 12px;
+}
+
+.priority-audit__requirements--compact span {
+  padding-inline: 6px;
+}
+
 .modal--activity {
   max-width: 560px;
 }

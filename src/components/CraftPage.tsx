@@ -21,6 +21,11 @@ import {
 import { RESOURCE_INDEX } from '../data';
 import { getCraftPageTheme } from './craftPageThemes';
 
+const RESOURCE_NAME_FALLBACK: Record<string, string> = {
+  coin: '通货',
+  labor: '工时',
+};
+
 /**
  * 工艺独立页 —— 整页工坊（替代弹窗）。
  * 所有手艺均以此页呈现：左侧主题立绘/工坊story，右侧工坊台交互。
@@ -104,7 +109,7 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
         targetSubregionNames.length > 0 ? `「${targetSubregionNames.join('」或「')}」` : '对应小地区'
       }。`;
   const canCraft = playing && localCraftAvailable && !laborShort && !materialShort;
-  const resName = (id: string) => RESOURCE_INDEX[id]?.name ?? id;
+  const resName = (id: string) => RESOURCE_INDEX[id]?.name ?? RESOURCE_NAME_FALLBACK[id] ?? id;
 
   const outputId = def.outputResourceId;
   const stock = outputId ? (resources[outputId] ?? 0) : 0;

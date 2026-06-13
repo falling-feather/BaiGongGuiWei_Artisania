@@ -1,8 +1,9 @@
 import { useGameStore } from '../store/gameStore';
-import { RESOURCE_INDEX } from '../data';
+import { PRIORITY_JOURNEY_STEPS, PRIORITY_SCOPE_REQUIREMENTS, RESOURCE_INDEX } from '../data';
 import { craftsForSubregion, localIndustriesForSubregion } from '../data/subregionContent';
 import { emitBus } from '../game/EventBus';
 import {
+  buildPriorityScopeAudit,
   regionReputationLabel,
   regionReputationOf,
   routeCostWithIntel,
@@ -56,6 +57,10 @@ const WEATHER_NOTE: Record<GameWeather, string> = {
   rain: '雨天会润泽植物类露天采集，田圃可借雨水免工时浇灌。',
   snow: '雪天露天采集与田圃照料受阻，作物收成会偏紧。',
 };
+const RESOURCE_NAME_FALLBACK: Record<string, string> = {
+  coin: '通货',
+  labor: '工时',
+};
 
 function routeTouches(route: RouteSpec, regionId: string): boolean {
   return route.fromRegionId === regionId || route.toRegionId === regionId;
@@ -67,7 +72,7 @@ function otherRouteEnd(route: RouteSpec, regionId: string): string {
 
 /** 资源键 → 中文名（无定义则原样显示） */
 function resName(key: string): string {
-  return RESOURCE_INDEX[key]?.name ?? key;
+  return RESOURCE_INDEX[key]?.name ?? RESOURCE_NAME_FALLBACK[key] ?? key;
 }
 
 /** 把 input 资源池转成「铁矿×2 煤×1」式说明 */
@@ -128,6 +133,7 @@ function supplyRecordFollowUpCost(record: SupplyCrisisRecord) {
  */
 export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const content = useGameStore((s) => s.content);
+  const state = useGameStore((s) => s.state);
   const resources = useGameStore((s) => s.state.resources);
   const farmPlots = useGameStore((s) => s.state.farmPlots);
   const completedActivities = useGameStore((s) => s.state.completedActivities);
@@ -157,6 +163,18 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const routeSpecs = Array.from(
     new Map((content.regionContent?.flatMap((spec) => spec.routes) ?? []).map((route) => [route.id, route])).values(),
   );
+  const priorityAudit = buildPriorityScopeAudit(
+    state,
+    PRIORITY_JOURNEY_STEPS,
+    PRIORITY_SCOPE_REQUIREMENTS,
+    content,
+  );
+  const priorityProgress =
+    priorityAudit.totalMilestones > 0
+      ? Math.round((priorityAudit.completedMilestones / priorityAudit.totalMilestones) * 100)
+      : 0;
+  const anchorRequirements = priorityAudit.requirements.filter((row) => row.tier === 'anchor');
+  const skeletonRequirements = priorityAudit.requirements.filter((row) => row.tier === 'skeleton');
   const routeLookup = new Map(routeSpecs.map((route) => [route.id, route]));
   const currentRouteRows = routeSpecs
     .filter((route) => routeTouches(route, currentRegion))
@@ -184,6 +202,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
     .slice(0, 6);
 
   const localIndustries: IndustryDef[] = localIndustriesForSubregion(region, currentSubregion, industries);
+  const localCrafts = craftsForSubregion(region, currentSubregion);
   const currentActivities = (content.activities ?? []).filter(
     (activity) => activity.regionId === currentRegion && activity.subregionId === currentSubregion,
   );
@@ -260,6 +279,64 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
         <p className="panel-note">
           今日：第 {calendar.day} 日 · {SEASON_LABEL[calendar.season]} · {PHASE_LABEL[calendar.phase]} · {WEATHER_LABEL[calendar.weather]}。{WEATHER_NOTE[calendar.weather]}
         </p>
+
+        <section className="panel-block priority-audit">
+          <h4 className="panel-block__title">当前优先版收束巡检</h4>
+          <div className="priority-audit__summary">
+            <span>
+              主轴 {priorityAudit.completedSteps}/{priorityAudit.totalSteps} 区 · 里程碑{' '}
+              {priorityAudit.completedMilestones}/{priorityAudit.totalMilestones}
+            </span>
+            <span>
+              主轴资料 {priorityAudit.readyAnchorRegions}/{priorityAudit.totalAnchorRegions} · 骨架资料{' '}
+              {priorityAudit.readySkeletonRegions}/{priorityAudit.totalSkeletonRegions}
+            </span>
+          </div>
+          <div className="priority-audit__meter" aria-label={`当前优先版主轴进度 ${priorityProgress}%`}>
+            <i style={{ width: `${priorityProgress}%` }} />
+          </div>
+          <div className="priority-audit__steps">
+            {priorityAudit.journeySteps.map((step) => (
+              <div
+                className={`priority-audit-card ${step.complete ? 'is-done' : step.active ? 'is-active' : ''}`}
+                key={step.id}
+                title={step.summary}
+              >
+                <div className="priority-audit-card__head">
+                  <b>{step.title}</b>
+                  <span>
+                    {step.complete ? '完成' : step.active ? '当前' : '待跑'} · {step.completedMilestones}/
+                    {step.totalMilestones}
+                  </span>
+                </div>
+                <div className="priority-audit__chips">
+                  {step.milestones.map((milestone) => (
+                    <span className={milestone.complete ? 'is-done' : ''} key={milestone.id} title={milestone.hint}>
+                      {milestone.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="priority-audit__requirements">
+            <b>主轴五区</b>
+            {anchorRequirements.map((row) => (
+              <span className={row.ready ? 'is-ready' : 'is-gap'} key={row.regionId} title={row.missing.join(' / ')}>
+                {row.regionName} · 工坊{row.counts.crafts} 活动{row.counts.activities} 人物{row.counts.npcs}{' '}
+                {row.ready ? '齐备' : `缺 ${row.missing.length}`}
+              </span>
+            ))}
+          </div>
+          <div className="priority-audit__requirements priority-audit__requirements--compact">
+            <b>骨架六区</b>
+            {skeletonRequirements.map((row) => (
+              <span className={row.ready ? 'is-ready' : 'is-gap'} key={row.regionId} title={row.missing.join(' / ')}>
+                {row.regionName}{row.ready ? '齐' : `缺${row.missing.length}`}
+              </span>
+            ))}
+          </div>
+        </section>
 
         {region && (
           <section className="panel-block">
@@ -339,6 +416,45 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
                 </button>
               </li>
             ))}
+          </ul>
+        </section>
+
+        <section className="panel-block">
+          <h4 className="panel-block__title">本地工坊</h4>
+          {localCrafts.length === 0 && <p className="panel-empty">此小地区暂无开放工坊。</p>}
+          <ul className="ind-list">
+            {localCrafts.map((craft) => {
+              const materialNeed = craft.processChain.reduce<Record<string, number>>((next, step) => {
+                for (const [resourceId, amount] of Object.entries(step.resourceCost)) {
+                  next[resourceId] = (next[resourceId] ?? 0) + amount;
+                }
+                return next;
+              }, {});
+              const laborNeed = craft.processChain.reduce((sum, step) => sum + step.laborCost, 0);
+              const outputName = craft.outputResourceId ? resName(craft.outputResourceId) : '作品';
+              const materialText = describeInput(materialNeed);
+              return (
+                <li className="ind-item" key={craft.id}>
+                  <div className="ind-item__main">
+                    <span className="ind-item__name">{craft.name}</span>
+                    <span className="ind-item__io">
+                      {materialText} → {outputName}×1 · 工时{laborNeed}
+                    </span>
+                    <span className="ind-item__blurb">{craft.blurb}</span>
+                  </div>
+                  <button
+                    className="btn btn--sm btn--bamboo"
+                    disabled={!playing}
+                    onClick={() => {
+                      emitBus({ type: 'interact-craft', craftId: craft.id });
+                      onClose();
+                    }}
+                  >
+                    入坊
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </section>
 

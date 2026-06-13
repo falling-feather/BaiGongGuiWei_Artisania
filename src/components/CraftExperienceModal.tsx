@@ -15,6 +15,11 @@ import {
 } from '../engine';
 import { RESOURCE_INDEX } from '../data';
 
+const RESOURCE_NAME_FALLBACK: Record<string, string> = {
+  coin: '通货',
+  labor: '工时',
+};
+
 /** 手艺体验弹窗：玩家在街上进入某体验点后弹出，可勾选省略工序并开工。 */
 export function CraftExperienceModal({
   craftId,
@@ -96,7 +101,7 @@ export function CraftExperienceModal({
         targetSubregionNames.length > 0 ? `「${targetSubregionNames.join('」或「')}」` : '对应小地区'
       }。`;
   const canCraft = playing && localCraftAvailable && !laborShort && !materialShort;
-  const resName = (id: string) => RESOURCE_INDEX[id]?.name ?? id;
+  const resName = (id: string) => RESOURCE_INDEX[id]?.name ?? RESOURCE_NAME_FALLBACK[id] ?? id;
 
   // 订单交付闭环：必须有成品库存才能接单，售价随该手艺传承品质浮动
   const outputId = def.outputResourceId;
