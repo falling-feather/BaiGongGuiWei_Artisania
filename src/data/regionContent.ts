@@ -28,6 +28,22 @@ const REGIONAL_NPC_OVERRIDES: Record<string, NpcOverride> = {
   'bs-luo-qingmie': {
     functions: ['mentor', 'quest', 'order', 'collab', 'homeVisit'],
     personality: 'patient',
+    schedule: [
+      { phase: 'dawn', subregionId: 'bashu-bamboo-sea', note: '趁晨露伐青竹' },
+      { phase: 'morning', subregionId: 'bashu-bamboo-sea', note: '剖篾分丝、起底收口' },
+      { phase: 'any', weather: 'rain', subregionId: 'bashu-bamboo-sea', note: '雨天在竹棚下阴干篾丝' },
+      { phase: 'afternoon', subregionId: 'bashu-jinli', note: '去锦里送竹器样' },
+    ],
+    intel: [
+      {
+        id: 'intel-luo-bamboo-grain',
+        title: '竹丝顺纹才不伤',
+        body: '青竹要顺着竹纹分丝，逆纹一刀就断了筋骨。细不是把竹丝压薄，是让它细而能受力，远行的竹器尤其讲究这一手。',
+        unlockAffinity: 12,
+        topics: ['bamboo', 'split-thread', 'cross-region-bamboo'],
+        setFlags: ['luo-bamboo-grain-advice'],
+      },
+    ],
     preferences: [
       { label: '细直青竹或竹篾', resourceIds: ['bambooRaw', 'bambooSplit'], affinityBonus: 5 },
       { label: '可入外地订单的竹器', resourceIds: ['bambooWare', 'qingshenBamboo'], minQuality: 0.55, affinityBonus: 7 },
@@ -38,6 +54,23 @@ const REGIONAL_NPC_OVERRIDES: Record<string, NpcOverride> = {
   'bs-mabang-ayue': {
     functions: ['route', 'escort', 'quest', 'order'],
     personality: 'steady',
+    schedule: [
+      { phase: 'dawn', subregionId: 'bashu-tea-horse', note: '清点驮架、看天色定行程' },
+      { phase: 'morning', subregionId: 'bashu-tea-horse', note: '茶马驿换茶、议路资' },
+      { phase: 'any', weather: 'rain', subregionId: 'bashu-tea-horse', note: '雨天歇脚、修补驮鞍' },
+      { phase: 'any', weather: 'snow', subregionId: 'bashu-tea-horse', note: '雪天封路、囤补给等天晴' },
+    ],
+    intel: [
+      {
+        id: 'intel-ayue-snow-pass',
+        title: '雪口要听过来人',
+        body: '过雪山驿口不是路资够了就敢走。先听雪口消息、看牲口脚力，少带虚货多带敬畏，山路才肯放人过去。',
+        unlockAffinity: 12,
+        topics: ['route', 'snow-pass', 'route-risk'],
+        routeIds: ['route-bashu-qiandian-tea-horse', 'route-bashu-xueyu-snow-pass'],
+        setFlags: ['ayue-snow-pass-advice', 'heard-snow-pass'],
+      },
+    ],
     preferences: [
       { label: '轻便耐走的补给', resourceIds: ['tea', 'teaLeaf', 'bambooWare'], affinityBonus: 5 },
       { label: '走过远路的货样', originRegionIds: ['jiangnan', 'huizhou', 'qiandian'], minQuality: 0.6, affinityBonus: 5 },
@@ -48,6 +81,21 @@ const REGIONAL_NPC_OVERRIDES: Record<string, NpcOverride> = {
   'qd-yinniang-alan': {
     functions: ['mentor', 'quest', 'order', 'collab', 'appraisal'],
     personality: 'warm',
+    schedule: [
+      { phase: 'morning', subregionId: 'qiandian-miao-village', note: '苗寨银铺熔银拉丝' },
+      { phase: 'afternoon', subregionId: 'qiandian-miao-village', note: '錾花、讲纹样来历' },
+      { phase: 'dusk', subregionId: 'qiandian-miao-village', note: '为节庆赶制银饰' },
+    ],
+    intel: [
+      {
+        id: 'intel-alan-silver-ritual',
+        title: '银饰先是礼，再是器',
+        body: '苗银的每一道纹样都对应一桩礼俗，错了纹样比錾歪一锤更难看。备银定款要先问清这饰物送谁、为何事，焊痕才不会喧宾夺主。',
+        unlockAffinity: 14,
+        topics: ['silver', 'ornament', 'ritual'],
+        setFlags: ['alan-silver-ritual-advice'],
+      },
+    ],
     preferences: [
       { label: '银料或银饰', resourceIds: ['silverStock', 'silverOrnament', 'tibetanSilver'], affinityBonus: 7 },
       { label: '尊重纹样来历的作品', descriptorIncludes: ['纹', '细', '正'], minQuality: 0.65, affinityBonus: 5 },
@@ -103,6 +151,23 @@ const REGIONAL_NPC_OVERRIDES: Record<string, NpcOverride> = {
   'ln-wu-haichao': {
     functions: ['route', 'escort', 'quest', 'order', 'appraisal'],
     personality: 'calculating',
+    schedule: [
+      { phase: 'dawn', subregionId: 'lingnan-harbor', note: '看潮汐、定今日船期' },
+      { phase: 'morning', subregionId: 'lingnan-harbor', note: '珠江货栈验样、压舱' },
+      { phase: 'any', weather: 'rain', subregionId: 'lingnan-harbor', note: '雨天封舱、改期议价' },
+      { phase: 'afternoon', subregionId: 'lingnan-gambiered-yard', note: '去晒场催香云纱货样' },
+    ],
+    intel: [
+      {
+        id: 'intel-wu-ship-schedule',
+        title: '船期比利钱更要紧',
+        body: '海贸的利在货，更在船期。误了潮汐，再好的货也压成滞货。外销样货要耐压舱、耐验看，货名和商誉一旦砸了，下一程就没人肯替你担保。',
+        unlockAffinity: 12,
+        topics: ['trade', 'export-schedule', 'route-risk'],
+        routeIds: ['route-qiandian-lingnan-harbor'],
+        setFlags: ['wu-ship-schedule-advice'],
+      },
+    ],
     preferences: [
       { label: '适合压舱外销的成批样货', resourceIds: ['gambieredSilk', 'duanStone', 'indigoCloth', 'oilpaperUmbrella'], affinityBonus: 6 },
       { label: '带外地来路的高品相样货', originRegionIds: ['jiangnan', 'qiandian', 'jingchu'], minQuality: 0.62, affinityBonus: 6 },
@@ -175,6 +240,22 @@ const REGIONAL_NPC_OVERRIDES: Record<string, NpcOverride> = {
   'jc-xiong-zhuxi': {
     functions: ['mentor', 'quest', 'order', 'collab', 'appraisal', 'homeVisit'],
     personality: 'expressive',
+    schedule: [
+      { phase: 'morning', subregionId: 'jingchu-chu-lacquer', note: '楚漆坊制胎刮灰' },
+      { phase: 'afternoon', subregionId: 'jingchu-chu-lacquer', note: '调朱黑、绘云气纹' },
+      { phase: 'any', weather: 'rain', subregionId: 'jingchu-chu-lacquer', note: '雨天潮气足、正好阴干髹漆' },
+      { phase: 'night', subregionId: 'jingchu-chu-lacquer', note: '夜里在灯下看漆面起泡' },
+    ],
+    intel: [
+      {
+        id: 'intel-xiong-lacquer-humid',
+        title: '漆要潮气养',
+        body: '生漆阴干最怕燥，潮气足时漆面才不起泡。楚漆的朱黑云气不是描上去的图样，是水泽、木胎与礼器三者的关系，急一分就发闷。',
+        unlockAffinity: 14,
+        topics: ['lacquer', 'chu-pattern', 'weather-craft'],
+        setFlags: ['xiong-lacquer-humid-advice'],
+      },
+    ],
     preferences: [
       { label: '漆料与朱黑彩器', resourceIds: ['rawLacquer', 'lacquerRefined', 'chuLacquer', 'pingyaoLacquer'], affinityBonus: 6 },
       { label: '纹样有来处的作品', descriptorIncludes: ['纹', '正', '深'], minQuality: 0.64, affinityBonus: 5 },
@@ -247,6 +328,22 @@ const REGIONAL_NPC_OVERRIDES: Record<string, NpcOverride> = {
   'hz-wang-zhiniang': {
     functions: ['mentor', 'quest', 'order', 'collab', 'homeVisit'],
     personality: 'careful',
+    schedule: [
+      { phase: 'dawn', subregionId: 'huizhou-paper-valley', note: '趁水凉剥青檀、泡料' },
+      { phase: 'morning', subregionId: 'huizhou-paper-valley', note: '荡帘捞纸、看纸筋' },
+      { phase: 'any', weather: 'clear', subregionId: 'huizhou-paper-valley', note: '晴日上焙墙焙纸' },
+      { phase: 'afternoon', subregionId: 'huizhou-ink-alley', note: '去墨坊配纸墨、谈题跋' },
+    ],
+    intel: [
+      {
+        id: 'intel-wang-paper-water',
+        title: '好纸先看水与檀',
+        body: '宣纸的命在青檀皮和那一汪活水。荡帘要匀，纸筋才不乱；焙墙火候差一分，纸就脆。一张好纸要能撑住字、画和器物的名声，不是薄就算好。',
+        unlockAffinity: 12,
+        topics: ['paper', 'stationery-lineage', 'inscription-space'],
+        setFlags: ['wang-paper-water-advice'],
+      },
+    ],
     preferences: [
       { label: '纸料、好墨与可题跋器', resourceIds: ['qingtanBark', 'paperSheet', 'xuanPaper', 'inkStick', 'huiInk'], affinityBonus: 6 },
       { label: '心境清正的作品', descriptorIncludes: ['净', '雅', '正'], minQuality: 0.65, affinityBonus: 5 },
@@ -267,6 +364,22 @@ const REGIONAL_NPC_OVERRIDES: Record<string, NpcOverride> = {
   'sj-lei-zhanggui': {
     functions: ['route', 'escort', 'quest', 'order', 'appraisal'],
     personality: 'cautious',
+    schedule: [
+      { phase: 'morning', subregionId: 'sanjin-piaohao', note: '日升票号汇兑、查账' },
+      { phase: 'afternoon', subregionId: 'sanjin-piaohao', note: '审商誉、议押货信用' },
+      { phase: 'dusk', subregionId: 'sanjin-lacquer-yard', note: '去漆院看押货样、对票期' },
+    ],
+    intel: [
+      {
+        id: 'intel-lei-credit-ledger',
+        title: '信用是看不见的货',
+        body: '票号认的不是你这趟带多少货，是你过去守不守期。押货有押金、有信用分，违约一次，下回路费、利钱都会跟着涨。长距离订单尤其要先算清断供风险，再谈赏钱。',
+        unlockAffinity: 12,
+        topics: ['trade', 'credit', 'route-risk'],
+        routeIds: ['route-jingji-sanjin-official'],
+        setFlags: ['lei-credit-ledger-advice'],
+      },
+    ],
     preferences: [
       { label: '带凭据的押货样品', descriptorIncludes: ['名', '题', '款'], minQuality: 0.6, affinityBonus: 6 },
       { label: '北地可流通的重货', resourceIds: ['coal', 'ironIngot', 'pingyaoLacquer', 'agedVinegar'], affinityBonus: 5 },
@@ -277,6 +390,21 @@ const REGIONAL_NPC_OVERRIDES: Record<string, NpcOverride> = {
   'sj-pingyao-qipo': {
     functions: ['mentor', 'quest', 'order', 'collab', 'appraisal', 'homeVisit'],
     personality: 'stubborn',
+    schedule: [
+      { phase: 'morning', subregionId: 'sanjin-lacquer-yard', note: '推光漆院制胎刮灰' },
+      { phase: 'afternoon', subregionId: 'sanjin-lacquer-yard', note: '掌温推磨、描金' },
+      { phase: 'night', subregionId: 'sanjin-lacquer-yard', note: '夜里慢镜推光收浮亮' },
+    ],
+    intel: [
+      {
+        id: 'intel-pingyao-hand-warmth',
+        title: '掌温骗不了漆',
+        body: '推光漆不靠工具靠手掌，掌温太急漆面就发虚。慢不是多磨几遍，是每一遍都要等得住——浮亮没收住，描金就压不实。',
+        unlockAffinity: 14,
+        topics: ['lacquer-finish', 'slow-craft', 'polish-collab'],
+        setFlags: ['pingyao-hand-warmth-advice'],
+      },
+    ],
     preferences: [
       { label: '漆料与经得住掌温的器物', resourceIds: ['rawLacquer', 'lacquerRefined', 'pingyaoLacquer', 'chuLacquer'], affinityBonus: 6 },
       { label: '慢工细磨的作品', descriptorIncludes: ['厚', '稳', '光'], minQuality: 0.65, affinityBonus: 5 },
@@ -287,6 +415,22 @@ const REGIONAL_NPC_OVERRIDES: Record<string, NpcOverride> = {
   'xy-losang': {
     functions: ['mentor', 'quest', 'appraisal', 'collab', 'homeVisit'],
     personality: 'reverent',
+    schedule: [
+      { phase: 'dawn', subregionId: 'xueyu-thangka-court', note: '晨课后净手、绷布上胶' },
+      { phase: 'morning', subregionId: 'xueyu-thangka-court', note: '度量起稿、线描' },
+      { phase: 'afternoon', subregionId: 'xueyu-thangka-court', note: '研矿彩、层层设色' },
+      { phase: 'any', weather: 'snow', subregionId: 'xueyu-thangka-court', note: '雪天闭门勾金开脸' },
+    ],
+    intel: [
+      {
+        id: 'intel-losang-measure',
+        title: '度量先于矿彩',
+        body: '唐卡的庄严先在度量经里。题材分寸若先乱了，矿彩再厚也压不住。颜色可以等，敬意不能省——它不是稀有商品，是要供起来的画。',
+        unlockAffinity: 16,
+        topics: ['reverent-craft', 'mineral-layer', 'measure-line-retouch'],
+        setFlags: ['losang-measure-advice'],
+      },
+    ],
     preferences: [
       { label: '矿彩、好纸与心境清明的作品', resourceIds: ['mineralPigment', 'pigmentRefined', 'paperSheet', 'xuanPaper', 'thangka'], affinityBonus: 6 },
       { label: '不轻慢题材的作品', descriptorIncludes: ['正', '净', '定'], minQuality: 0.68, affinityBonus: 5 },
@@ -327,6 +471,21 @@ const REGIONAL_NPC_OVERRIDES: Record<string, NpcOverride> = {
   'xu-a-yue': {
     functions: ['mentor', 'quest', 'order', 'appraisal', 'collab', 'homeVisit'],
     personality: 'direct',
+    schedule: [
+      { phase: 'morning', subregionId: 'xiyu-jade-yard', note: '昆仑玉场相玉、看绺裂' },
+      { phase: 'afternoon', subregionId: 'xiyu-jade-yard', note: '开窗、顺势粗琢' },
+      { phase: 'dusk', subregionId: 'xiyu-bazaar', note: '去巴扎挑玉料、估材' },
+    ],
+    intel: [
+      {
+        id: 'intel-ayue-follow-vein',
+        title: '因材施艺，先看绺裂',
+        body: '好玉料先别下刀，顺着绺裂和水线看半日，让玉料自己定形。硬把玉雕成流行样式是暴殄天物——水线能开成窗，绺裂能成景，关键是肯不肯顺它。',
+        unlockAffinity: 14,
+        topics: ['jade', 'follow-vein', 'material-ethics'],
+        setFlags: ['ayue-follow-vein-advice'],
+      },
+    ],
     preferences: [
       { label: '顺势而作的玉料玉器', resourceIds: ['jadeRough', 'jadeCarving'], affinityBonus: 7 },
       { label: '不暴殄材料的细作', descriptorIncludes: ['润', '正', '活'], minQuality: 0.66, affinityBonus: 5 },
