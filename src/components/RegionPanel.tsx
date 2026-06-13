@@ -228,6 +228,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   };
 
   const canPerformActivity = (activity: (typeof currentActivities)[number]): boolean => {
+    if (state.pendingActivityStallClosing) return false;
     if (labor < activity.laborCost) return false;
     if (activity.once && completedActivities.includes(activity.id)) return false;
     if (activity.availablePhases && !activity.availablePhases.includes(calendar.phase)) return false;

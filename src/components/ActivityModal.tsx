@@ -123,6 +123,7 @@ export function ActivityModal({
   const stallStrategies = activity.reward.stall?.strategies ?? [];
   const selectedStallStrategy = stallStrategies.find((strategy) => strategy.id === selectedStallStrategyId) ?? null;
   const completed = state.completedActivities.includes(activity.id);
+  const pendingStallClosing = Boolean(state.pendingActivityStallClosing);
   const laborShort = (state.resources.labor ?? 0) < activity.laborCost;
   const phaseBlocked = Boolean(
     activity.availablePhases && !activity.availablePhases.includes(state.calendar.phase),
@@ -138,6 +139,7 @@ export function ActivityModal({
     .join('、');
   const canPerform =
     state.status === 'playing' &&
+    !pendingStallClosing &&
     !laborShort &&
     !phaseBlocked &&
     !materialShort &&
@@ -262,6 +264,7 @@ export function ActivityModal({
         </div>
 
         {activity.once && completed && <p className="craft-supply__warn">这项活动已经完成过。</p>}
+        {pendingStallClosing && <p className="craft-supply__warn">先处理当前摊位收束，再安排新的地区活动。</p>}
         {(laborShort || materialShort || phaseBlocked) && state.status === 'playing' && (
           <p className="craft-supply__warn">
             {laborShort
