@@ -2569,6 +2569,73 @@ describe('gameReducer', () => {
     expect(advanced.log[0]).toContain('收灯夜选择');
   });
 
+  it('绿洲巴扎是节令摊位，可售货并推进开市/旺市/散市并接收灯货约', () => {
+    let s = freshState();
+    const jade: ItemInstance = {
+      id: 'test-bazaar-jade',
+      resourceId: 'jadeCarving',
+      originRegionId: 'xiyu',
+      originSubregionId: 'xiyu-bazaar',
+      createdTurn: s.turn,
+      quality: 0.84,
+      descriptors: ['温润', '因材'],
+      appraisal: '一件顺玉成形的小玉作，适合巴扎换货。',
+      displayName: '顺玉护件',
+      status: 'held',
+    };
+    s = {
+      ...s,
+      currentRegion: 'xiyu',
+      currentSubregion: 'xiyu-bazaar',
+      unlockedRegions: [...new Set([...s.unlockedRegions, 'xueyu', 'xiyu'])],
+      calendar: { ...s.calendar, day: 1, phase: 'dusk' },
+      resources: { ...s.resources, jadeCarving: 1, tibetanSilver: 1, labor: 8 },
+      itemInstances: [jade, ...s.itemInstances],
+    };
+    const beforeCoin = s.resources.coin ?? 0;
+    const beforeReputation = s.regionReputation.xiyu ?? 0;
+
+    // 开市晨：售出一件玉作，命中玉佩护件组合与识玉行客
+    s = gameReducer(
+      s,
+      { type: 'PERFORM_ACTIVITY', activityId: 'xiyu-bazaar-trade', quality: 0.9, stallStrategyId: 'connoisseur-rare-table' },
+      content,
+    );
+    expect(s.resources.jadeCarving).toBe(0);
+    expect(s.resources.coin).toBeGreaterThan(beforeCoin);
+    expect(s.itemInstances.some((it) => it.id === jade.id)).toBe(false);
+    expect(s.flags).toContain('festival-stall:xiyu-bazaar-trade');
+    expect(s.flags).toContain('stall-stage:xiyu-bazaar-trade:open');
+    expect(s.flags).toContain('stall-strategy:xiyu-bazaar-trade:connoisseur-rare-table');
+    expect(s.regionReputation.xiyu).toBeGreaterThan(beforeReputation);
+    expect(s.nightMarketStallRecords[0]).toMatchObject({
+      activityId: 'xiyu-bazaar-trade',
+      title: '绿洲巴扎摊',
+      itemResourceId: 'jadeCarving',
+      stageId: 'open',
+      cycleLabel: '巴扎赶集期',
+    });
+
+    // 旺市晌、散市暮
+    s = { ...s, calendar: { ...s.calendar, day: 2, phase: 'dusk' }, resources: { ...s.resources, jadeCarving: 1, tibetanSilver: 1, labor: 8 } };
+    s = gameReducer(s, { type: 'PERFORM_ACTIVITY', activityId: 'xiyu-bazaar-trade', quality: 0.8 }, content);
+    expect(s.flags).toContain('stall-stage:xiyu-bazaar-trade:busy');
+
+    s = { ...s, calendar: { ...s.calendar, day: 3, phase: 'dusk' }, resources: { ...s.resources, carpet: 1, copperware: 1, tea: 1, labor: 8 } };
+    s = gameReducer(s, { type: 'PERFORM_ACTIVITY', activityId: 'xiyu-bazaar-trade', quality: 0.8 }, content);
+    expect(s.flags).toContain('stall-stage:xiyu-bazaar-trade:closing');
+    expect(s.pendingActivityStallClosing?.activityId).toBe('xiyu-bazaar-trade');
+
+    // 散市选择：立巴扎货约，生成来季货约预约后续单
+    s = gameReducer(s, { type: 'RESOLVE_ACTIVITY_STALL_CLOSING', choiceId: 'seal-barter-contract' }, content);
+    expect(s.pendingActivityStallClosing).toBeNull();
+    expect(s.flags).toContain('bazaar-closing-barter-contract');
+    const followUp = s.activeOrders.find((o) => o.title === '来季巴扎货约预约');
+    expect(followUp?.title).toBe('来季巴扎货约预约');
+    expect(followUp?.resourceId).toBe('jadeCarving');
+    expect(s.npcStates['xu-sali']?.knownTopics).toContain('bazaar-contract');
+  });
+
   it('地图规格会带出当前小地区活动点和占位 NPC 锚点', () => {
     const s = gameReducer(
       freshState(),
