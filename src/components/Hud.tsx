@@ -2,13 +2,14 @@ import { useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
 import {
   buildLoreTravelGuide,
+  buildPriorityJourneyGuide,
   METRIC_KEYS,
   METRIC_LABELS,
   uniqueRoutesFromRegions,
   zoneOf,
   type Metrics,
 } from '../engine';
-import { REGION_INDEX } from '../data';
+import { PRIORITY_JOURNEY_STEPS, REGION_INDEX } from '../data';
 
 const UI_ROOT = '/assets/game/ui';
 
@@ -75,6 +76,17 @@ export function Hud({
   const travelGuide = useMemo(
     () => buildLoreTravelGuide(state, trackedEntry, content.regions ?? [], routeSpecs),
     [content.regions, routeSpecs, state, trackedEntry],
+  );
+  const priorityJourneyGuide = useMemo(
+    () =>
+      buildPriorityJourneyGuide(
+        state,
+        PRIORITY_JOURNEY_STEPS,
+        content.loreEntries ?? [],
+        content.regions ?? [],
+        routeSpecs,
+      ),
+    [content.loreEntries, content.regions, routeSpecs, state],
   );
 
   const tools = [
@@ -195,6 +207,19 @@ export function Hud({
           >
             ×
           </button>
+        </div>
+      )}
+
+      {playing && priorityJourneyGuide && (
+        <div className="hud hud--priority-guide" title={priorityJourneyGuide.detail}>
+          <img className="hud__panel-frame" src={`${UI_ROOT}/hud_panel.png`} alt="" draggable={false} />
+          <div className="hud__travel-copy">
+            <b>
+              主轴目标 {Math.min(priorityJourneyGuide.stepIndex + 1, priorityJourneyGuide.totalSteps)}/
+              {priorityJourneyGuide.totalSteps}
+            </b>
+            <span>{priorityJourneyGuide.instruction}</span>
+          </div>
         </div>
       )}
 

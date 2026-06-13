@@ -8,6 +8,7 @@ import {
   LORE_ENTRIES,
   PRIORITY_ANCHOR_REGION_IDS,
   PRIORITY_ART_ASSET_MANIFEST,
+  PRIORITY_JOURNEY_STEPS,
   PRIORITY_SCOPE_REGION_IDS,
   PRIORITY_SCOPE_REQUIREMENTS,
   PRIORITY_SKELETON_REGION_IDS,
@@ -186,6 +187,50 @@ describe('current priority scope guard', () => {
           errors.push(`${activityId}: needs a closing follow-up order`);
         }
         if (!activity.reward.generatedOrder) errors.push(`${activityId}: needs an immediate generated order`);
+      }
+    }
+
+    expect(errors).toEqual([]);
+  });
+
+  it('keeps priority journey milestones backed by scoped content ids', () => {
+    const errors: string[] = [];
+    const anchorRegions = new Set(PRIORITY_ANCHOR_REGION_IDS);
+
+    expect(PRIORITY_JOURNEY_STEPS.map((step) => step.regionId)).toEqual(PRIORITY_ANCHOR_REGION_IDS);
+
+    for (const step of PRIORITY_JOURNEY_STEPS) {
+      if (!anchorRegions.has(step.regionId)) errors.push(`${step.id}: region is not an anchor`);
+      if (step.milestones.length < 2) errors.push(`${step.id}: needs at least two milestones`);
+
+      for (const milestone of step.milestones) {
+        if (!loreIds.has(milestone.targetLoreEntryId)) {
+          errors.push(`${milestone.id}: missing target lore ${milestone.targetLoreEntryId}`);
+        }
+
+        if (milestone.kind === 'anyCraftProduced' || milestone.kind === 'allCraftProduced') {
+          for (const craftId of milestone.ids) {
+            if (!craftIds.has(craftId)) errors.push(`${milestone.id}: missing craft ${craftId}`);
+          }
+        }
+
+        if (milestone.kind === 'completedActivities') {
+          for (const activityId of milestone.ids) {
+            if (!activityIds.has(activityId)) errors.push(`${milestone.id}: missing activity ${activityId}`);
+          }
+        }
+
+        if (milestone.kind === 'flags') {
+          if (!milestone.activityId) errors.push(`${milestone.id}: flag milestone needs activityId`);
+          if (milestone.activityId && !activityIds.has(milestone.activityId)) {
+            errors.push(`${milestone.id}: missing activity ${milestone.activityId}`);
+          }
+          for (const flag of milestone.ids) {
+            if (!flag.startsWith('stall-chain-completed:')) {
+              errors.push(`${milestone.id}: non-stall completion flag ${flag}`);
+            }
+          }
+        }
       }
     }
 

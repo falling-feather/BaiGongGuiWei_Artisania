@@ -1440,6 +1440,23 @@ body {
   text-shadow: 0 1px rgba(244, 236, 224, 0.55);
 }
 
+.hud--priority-guide {
+  bottom: 158px;
+  left: 50%;
+  z-index: 6;
+  transform: translateX(-50%);
+  overflow: hidden;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(620px, calc(100vw - 32px));
+  padding: 9px 18px 9px 20px;
+  background: transparent;
+  color: #322518;
+  text-shadow: 0 1px rgba(244, 236, 224, 0.6);
+}
+
 .hud__travel-copy {
   position: relative;
   z-index: 1;
@@ -1630,6 +1647,17 @@ body {
     max-width: none;
     min-width: 0;
     padding: 8px 10px 8px 14px;
+  }
+
+  .hud--priority-guide {
+    bottom: 144px;
+    left: 12px;
+    right: 12px;
+    transform: none;
+    width: auto;
+    max-width: none;
+    min-width: 0;
+    padding: 8px 12px 8px 14px;
   }
 
   .hud__travel-copy span {

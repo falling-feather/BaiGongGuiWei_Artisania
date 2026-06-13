@@ -31,6 +31,7 @@ export { WORKSHOP_UPGRADE_INDEX, WORKSHOP_UPGRADES } from './workshopUpgrades';
 export { ITEM_DESCRIPTOR_INDEX, ITEM_DESCRIPTOR_RULES } from './itemDescriptors';
 export { LORE_ENTRIES, LORE_ENTRY_INDEX } from './loreEntries';
 export { PRIORITY_ART_ASSET_INDEX, PRIORITY_ART_ASSET_MANIFEST } from './assetManifest';
+export { PRIORITY_JOURNEY_STEPS } from './priorityJourney';
 export {
   PRIORITY_ANCHOR_REGION_IDS,
   PRIORITY_SCOPE_REGION_IDS,
