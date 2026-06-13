@@ -33,6 +33,7 @@ export function IndustryPage({
   const Mechanic = MINIGAME_REGISTRY[industry.miniGame];
   const inputEntries = Object.entries(industry.input);
   const materialShort = inputEntries.some(([k, v]) => (resources[k] ?? 0) < v);
+  const laborShort = (resources.labor ?? 0) < industry.laborCost;
   const grade = quality === null ? '' : quality >= 0.85 ? '上品' : quality >= 0.5 ? '良品' : '次品';
   const produced =
     quality === null ? 0 : Math.max(1, Math.round(industry.yield * (1 + quality)));
@@ -103,6 +104,9 @@ export function IndustryPage({
                   );
                 })
               )}
+              <span className={`craft-supply__chip${laborShort ? ' craft-supply__chip--short' : ''}`}>
+                工时 {resources.labor ?? 0}/{industry.laborCost}
+              </span>
             </div>
             <div className="craft-supply__row">
               <span className="craft-supply__label">产出</span>
@@ -113,11 +117,14 @@ export function IndustryPage({
             {materialShort && playing && (
               <p className="craft-supply__warn">物料不足，先去采料／精炼补足上游材料。</p>
             )}
+            {laborShort && playing && (
+              <p className="craft-supply__warn">人力不足，结束本季或处理待办后再开工。</p>
+            )}
           </div>
 
           {!playing ? (
             <p className="craft-supply__warn">游戏结束，无法操作。</p>
-          ) : materialShort ? (
+          ) : materialShort || laborShort ? (
             <div className="btn-row">
               <button className="btn btn--ghost" onClick={close}>
                 离开

@@ -1,0 +1,250 @@
+import { describe, expect, it } from 'vitest';
+import { CRAFTS, REGIONS, RUNTIME_MAP_LAYOUTS, STARTING_APPRENTICES } from '../../data';
+import { createInitialState } from '../../engine';
+import { buildRegionSpec } from '../regionSpec';
+
+function longquanWorkshopState() {
+  const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+  return {
+    ...base,
+    currentRegion: 'jiangnan',
+    currentSubregion: 'jiangnan-longquan',
+    resources: { ...base.resources, coin: 100, labor: 20, ironIngot: 4, coal: 4, treasureSword: 1 },
+    crafts: base.crafts.map((craft) =>
+      craft.craftId === 'longquan-sword' ? { ...craft, produced: 3 } : craft,
+    ),
+    regionReputation: { ...base.regionReputation, jiangnan: 12 },
+    profile: {
+      ...base.profile,
+      attributes: { ...base.profile.attributes, craft: 3 },
+    },
+    workshopUpgrades: [
+      {
+        id: 'upgrade-longquan-quench-trough',
+        craftId: 'longquan-sword',
+        title: '温槽校火',
+        kind: 'tool' as const,
+        tier: 1,
+        day: base.calendar.day,
+        phase: base.calendar.phase,
+        maintenancePaid: 0,
+        maintenanceMissed: 0,
+      },
+    ],
+  };
+}
+
+describe('regionSpec workshop summaries', () => {
+  it('marks craft points with workshop capacity and expansion readiness', () => {
+    const spec = buildRegionSpec('jiangnan', longquanWorkshopState());
+    const sword = spec?.crafts.find((craft) => craft.id === 'longquan-sword');
+
+    expect(sword?.workshop).toMatchObject({
+      usedSpace: 1,
+      capacity: 1,
+      installedUpgrades: 1,
+      totalUpgrades: 2,
+      availableUpgrades: 0,
+      needsExpansion: true,
+      canExpand: true,
+    });
+  });
+
+  it('marks tier-two workshop upgrades as available after local space expansion', () => {
+    const state = longquanWorkshopState();
+    const spec = buildRegionSpec('jiangnan', {
+      ...state,
+      workshopSpaces: [
+        {
+          craftId: 'longquan-sword',
+          capacity: 2,
+          expansions: 1,
+          day: state.calendar.day,
+          phase: state.calendar.phase,
+        },
+      ],
+    });
+    const sword = spec?.crafts.find((craft) => craft.id === 'longquan-sword');
+
+    expect(sword?.workshop).toMatchObject({
+      usedSpace: 1,
+      capacity: 2,
+      installedUpgrades: 1,
+      totalUpgrades: 2,
+      availableUpgrades: 1,
+      needsExpansion: false,
+      canExpand: true,
+    });
+  });
+});
+
+describe('runtime map layouts', () => {
+  it('attaches manual editor-compatible layout to street specs', () => {
+    const state = longquanWorkshopState();
+    const spec = buildRegionSpec('jiangnan', state);
+
+    expect(spec?.layout).toMatchObject({
+      schema: 'artisania-map-editor/v2',
+      regionId: 'jiangnan',
+      subregionId: 'jiangnan-longquan',
+      size: { w: 58, h: 28 },
+    });
+    expect(spec?.layout?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'craft', targetId: 'longquan-sword', x: 16, y: 16 }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'celadon', x: 35, y: 16 }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'jiangnan-suhang' }),
+      ]),
+    );
+    expect(spec?.npcs.find((npc) => npc.id === 'jn-ye-qingzhan')).toMatchObject({
+      tileX: 38,
+      tileY: 20,
+    });
+  });
+
+  it('only references live street targets from manual layouts', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const errors: string[] = [];
+
+    for (const layout of RUNTIME_MAP_LAYOUTS) {
+      const spec = buildRegionSpec(layout.regionId, {
+        ...base,
+        currentRegion: layout.regionId,
+        currentSubregion: layout.subregionId,
+      });
+      if (!spec) {
+        errors.push(`${layout.regionId}/${layout.subregionId}: no region spec`);
+        continue;
+      }
+      const targets = {
+        industry: new Set(spec.industries.map((item) => item.id)),
+        craft: new Set(spec.crafts.map((item) => item.id)),
+        activity: new Set(spec.activities.map((item) => item.id)),
+        gate: new Set(spec.gates.map((item) => item.regionId)),
+        subregionGate: new Set(spec.subregionGates.map((item) => item.subregionId)),
+        npc: new Set(spec.npcs.map((item) => item.id)),
+      };
+      for (const object of layout.objects) {
+        if (object.interaction === 'decoration') continue;
+        if (object.interaction === 'npc') {
+          if (!object.npcId || !targets.npc.has(object.npcId)) {
+            errors.push(`${layout.subregionId}: npc object ${object.name ?? object.itemId} -> ${object.npcId ?? 'missing'}`);
+          }
+          continue;
+        }
+        if (!object.targetId || !targets[object.interaction].has(object.targetId)) {
+          errors.push(
+            `${layout.subregionId}: ${object.interaction} object ${object.name ?? object.itemId} -> ${object.targetId ?? 'missing'}`,
+          );
+        }
+      }
+    }
+
+    expect(errors).toEqual([]);
+  });
+});
+
+describe('lore travel target hints', () => {
+  it('points tracked same-region lore at the matching subregion gate', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const spec = buildRegionSpec('jiangnan', {
+      ...base,
+      currentRegion: 'jiangnan',
+      currentSubregion: 'jiangnan-longquan',
+      trackedLoreEntryId: 'subregion-jiangnan-suhang',
+    });
+
+    expect(spec?.navigationTarget).toMatchObject({
+      kind: 'subregionGate',
+      payload: 'jiangnan-suhang',
+      label: '苏杭水市',
+    });
+  });
+
+  it('points tracked cross-region lore at the next street gate without travelling', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const spec = buildRegionSpec('ganpo', {
+      ...base,
+      currentRegion: 'ganpo',
+      currentSubregion: 'ganpo-kiln-town',
+      unlockedRegions: [...new Set([...base.unlockedRegions, 'ganpo'])],
+      trackedLoreEntryId: 'subregion-jiangnan-suhang',
+    });
+
+    expect(spec?.navigationTarget).toMatchObject({
+      kind: 'gate',
+      payload: 'jiangnan',
+      label: '江南窑柴河路',
+    });
+  });
+});
+
+describe('subregion street coverage', () => {
+  it('exposes the Bashu tea-horse fair as an in-street activity point', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const spec = buildRegionSpec('bashu', {
+      ...base,
+      currentRegion: 'bashu',
+      currentSubregion: 'bashu-tea-horse',
+      unlockedRegions: [...new Set([...base.unlockedRegions, 'bashu'])],
+    });
+
+    expect(spec?.activities).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'bs-tea-horse-post',
+          kind: 'festival',
+          name: '茶马驿',
+        }),
+      ]),
+    );
+  });
+
+  it('exposes the Lingnan qilou night market as an in-street activity point', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const spec = buildRegionSpec('lingnan', {
+      ...base,
+      currentRegion: 'lingnan',
+      currentSubregion: 'lingnan-harbor',
+      unlockedRegions: [...new Set([...base.unlockedRegions, 'lingnan'])],
+    });
+
+    expect(spec?.activities).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'ln-qilou-night-market',
+          kind: 'festival',
+          name: '骑楼夜市',
+        }),
+      ]),
+    );
+  });
+
+  it('builds a playable street spec for every defined subregion', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const emptySubregions: string[] = [];
+
+    for (const region of REGIONS) {
+      for (const subregion of region.subregions) {
+        const spec = buildRegionSpec(region.id, {
+          ...base,
+          currentRegion: region.id,
+          currentSubregion: subregion.id,
+          unlockedRegions: REGIONS.map((item) => item.id),
+        });
+        if (!spec) {
+          emptySubregions.push(`${region.id}/${subregion.id}: missing spec`);
+          continue;
+        }
+        const localEntryCount =
+          spec.industries.length +
+          spec.crafts.length +
+          spec.activities.length +
+          spec.npcs.length;
+        if (localEntryCount === 0) emptySubregions.push(`${region.id}/${subregion.id}: no local content`);
+      }
+    }
+
+    expect(emptySubregions).toEqual([]);
+  });
+});

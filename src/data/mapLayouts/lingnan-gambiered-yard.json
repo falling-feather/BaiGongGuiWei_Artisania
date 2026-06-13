@@ -1,0 +1,29 @@
+{
+  "schema": "artisania-map-editor/v2",
+  "regionId": "lingnan",
+  "subregionId": "lingnan-gambiered-yard",
+  "tileSize": 32,
+  "size": { "w": 56, "h": 30 },
+  "roads": [
+    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
+    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
+    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
+    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
+    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
+    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+  ],
+  "objects": [
+    { "itemId": "player_spawn", "x": 28, "y": 15 },
+    { "itemId": "industry_silk", "name": "mulberry cocoon baskets", "interaction": "industry", "targetId": "harvest-cocoon", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_silk", "name": "silk reeling frame", "interaction": "industry", "targetId": "sericulture", "x": 15, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_textile", "name": "gambiered silk dye shed", "interaction": "craft", "targetId": "gambiered-silk", "x": 24, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_sun_yard", "name": "sun curing yard", "interaction": "activity", "targetId": "ln-gambiered-yard", "x": 36, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Pearl River harbor", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "lingnan-harbor", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Foshan forge", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "lingnan-forge", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Duan stone pit", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "lingnan-duan-stone", "x": 32, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Qiandian trade road", "interaction": "gate", "targetId": "qiandian", "x": 49, "y": 12, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "npc-ln-he-yunsha", "name": "He Yunsha", "interaction": "npc", "npcId": "ln-he-yunsha", "x": 31, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "drying-rack-a", "name": "black silk drying rack", "interaction": "decoration", "x": 18, "y": 18, "tileW": 3, "tileH": 2, "solid": true },
+    { "itemId": "river-mud-pit-a", "name": "river mud pit", "interaction": "decoration", "x": 40, "y": 4, "tileW": 4, "tileH": 2, "solid": true }
+  ]
+}

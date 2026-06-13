@@ -1,0 +1,748 @@
+{
+  "date": "2026-06-13",
+  "pipeline": "image_gen source sheets -> chroma key -> transparent cutouts -> runtime PNG -> map editor manifest",
+  "regions": [
+    {
+      "id": "jiangnan",
+      "name": "江南"
+    },
+    {
+      "id": "bashu",
+      "name": "巴蜀"
+    },
+    {
+      "id": "lingnan",
+      "name": "岭南"
+    },
+    {
+      "id": "qiandian",
+      "name": "黔滇"
+    },
+    {
+      "id": "jingchu",
+      "name": "荆楚"
+    },
+    {
+      "id": "ganpo",
+      "name": "赣鄱"
+    },
+    {
+      "id": "huizhou",
+      "name": "徽州"
+    },
+    {
+      "id": "jingji",
+      "name": "京畿"
+    },
+    {
+      "id": "sanjin",
+      "name": "三晋"
+    },
+    {
+      "id": "xueyu",
+      "name": "雪域"
+    },
+    {
+      "id": "xiyu",
+      "name": "西域"
+    }
+  ],
+  "sourceDir": "public/assets/art_sources/art_team/2026-06-13/01_generated_sources/all_regions",
+  "buildings": [
+    {
+      "regionId": "jiangnan",
+      "id": "at_jiangnan_building_signature_water_workshop",
+      "name": "江南·水乡工坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_jiangnan_building_signature_water_workshop.png",
+      "interaction": "craft"
+    },
+    {
+      "regionId": "bashu",
+      "id": "at_bashu_building_signature_bamboo_mountain_workshop",
+      "name": "巴蜀·竹雾山坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_bashu_building_signature_bamboo_mountain_workshop.png",
+      "interaction": "craft"
+    },
+    {
+      "regionId": "lingnan",
+      "id": "at_lingnan_building_signature_harbor_qilou",
+      "name": "岭南·骑楼货栈",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_lingnan_building_signature_harbor_qilou.png",
+      "interaction": "trading"
+    },
+    {
+      "regionId": "qiandian",
+      "id": "at_qiandian_building_signature_stilt_silver_dye_house",
+      "name": "黔滇·银染吊脚楼",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_qiandian_building_signature_stilt_silver_dye_house.png",
+      "interaction": "craft"
+    },
+    {
+      "regionId": "jingchu",
+      "id": "at_jingchu_building_signature_ferry_lacquer_house",
+      "name": "荆楚·渡市漆坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_jingchu_building_signature_ferry_lacquer_house.png",
+      "interaction": "craft"
+    },
+    {
+      "regionId": "ganpo",
+      "id": "at_ganpo_building_signature_porcelain_kiln_house",
+      "name": "赣鄱·瓷镇窑坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_ganpo_building_signature_porcelain_kiln_house.png",
+      "interaction": "industry"
+    },
+    {
+      "regionId": "huizhou",
+      "id": "at_huizhou_building_signature_horsehead_paper_ink_house",
+      "name": "徽州·马头墙文房",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_huizhou_building_signature_horsehead_paper_ink_house.png",
+      "interaction": "craft"
+    },
+    {
+      "regionId": "jingji",
+      "id": "at_jingji_building_signature_imperial_craft_courtyard",
+      "name": "京畿·宫造工院",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_jingji_building_signature_imperial_craft_courtyard.png",
+      "interaction": "study"
+    },
+    {
+      "regionId": "sanjin",
+      "id": "at_sanjin_building_signature_loess_ticket_lacquer_yard",
+      "name": "三晋·黄土票号漆院",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_sanjin_building_signature_loess_ticket_lacquer_yard.png",
+      "interaction": "trading"
+    },
+    {
+      "regionId": "xueyu",
+      "id": "at_xueyu_building_signature_snow_thangka_studio",
+      "name": "雪域·雪口画院",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_xueyu_building_signature_snow_thangka_studio.png",
+      "interaction": "craft"
+    },
+    {
+      "regionId": "xiyu",
+      "id": "at_xiyu_building_signature_oasis_jade_bazaar",
+      "name": "西域·绿洲玉作巴扎",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_xiyu_building_signature_oasis_jade_bazaar.png",
+      "interaction": "trading"
+    },
+    {
+      "regionId": "jiangnan",
+      "id": "at_jiangnan_building_expansion_canal_dye_pavilion",
+      "name": "江南·水巷染茶亭",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_jiangnan_building_expansion_canal_dye_pavilion.png",
+      "interaction": "craft"
+    },
+    {
+      "regionId": "bashu",
+      "id": "at_bashu_building_expansion_bamboo_drying_house",
+      "name": "巴蜀·竹篾晒坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_bashu_building_expansion_bamboo_drying_house.png",
+      "interaction": "craft"
+    },
+    {
+      "regionId": "lingnan",
+      "id": "at_lingnan_building_expansion_qilou_cargo_office",
+      "name": "岭南·骑楼账房",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_lingnan_building_expansion_qilou_cargo_office.png",
+      "interaction": "trading"
+    },
+    {
+      "regionId": "qiandian",
+      "id": "at_qiandian_building_expansion_silver_stilt_booth",
+      "name": "黔滇·银饰吊脚铺",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_qiandian_building_expansion_silver_stilt_booth.png",
+      "interaction": "craft"
+    },
+    {
+      "regionId": "jingchu",
+      "id": "at_jingchu_building_expansion_riverside_lacquer_stall",
+      "name": "荆楚·江岸漆摊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_jingchu_building_expansion_riverside_lacquer_stall.png",
+      "interaction": "craft"
+    },
+    {
+      "regionId": "ganpo",
+      "id": "at_ganpo_building_expansion_porcelain_kiln_storehouse",
+      "name": "赣鄱·瓷坯窑仓",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_ganpo_building_expansion_porcelain_kiln_storehouse.png",
+      "interaction": "industry"
+    },
+    {
+      "regionId": "huizhou",
+      "id": "at_huizhou_building_expansion_paper_ink_drying_hall",
+      "name": "徽州·纸墨晒厅",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_huizhou_building_expansion_paper_ink_drying_hall.png",
+      "interaction": "craft"
+    },
+    {
+      "regionId": "jingji",
+      "id": "at_jingji_building_expansion_enamel_bureau_hall",
+      "name": "京畿·景泰蓝作厅",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_jingji_building_expansion_enamel_bureau_hall.png",
+      "interaction": "craft"
+    },
+    {
+      "regionId": "sanjin",
+      "id": "at_sanjin_building_expansion_ticket_lacquer_storehouse",
+      "name": "三晋·票号漆仓",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_sanjin_building_expansion_ticket_lacquer_storehouse.png",
+      "interaction": "trading"
+    },
+    {
+      "regionId": "xueyu",
+      "id": "at_xueyu_building_expansion_thangka_pigment_atelier",
+      "name": "雪域·矿彩画坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_xueyu_building_expansion_thangka_pigment_atelier.png",
+      "interaction": "craft"
+    },
+    {
+      "regionId": "xiyu",
+      "id": "at_xiyu_building_expansion_jade_polishing_bazaar",
+      "name": "西域·玉作磨坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_xiyu_building_expansion_jade_polishing_bazaar.png",
+      "interaction": "craft"
+    },
+    {
+      "regionId": "jiangnan",
+      "id": "at_jiangnan_building_regional_gate",
+      "name": "江南·地区牌坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_jiangnan_building_regional_gate.png",
+      "interaction": "gate"
+    },
+    {
+      "regionId": "bashu",
+      "id": "at_bashu_building_regional_gate",
+      "name": "巴蜀·地区牌坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_bashu_building_regional_gate.png",
+      "interaction": "gate"
+    },
+    {
+      "regionId": "lingnan",
+      "id": "at_lingnan_building_regional_gate",
+      "name": "岭南·地区牌坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_lingnan_building_regional_gate.png",
+      "interaction": "gate"
+    },
+    {
+      "regionId": "qiandian",
+      "id": "at_qiandian_building_regional_gate",
+      "name": "黔滇·地区牌坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_qiandian_building_regional_gate.png",
+      "interaction": "gate"
+    },
+    {
+      "regionId": "jingchu",
+      "id": "at_jingchu_building_regional_gate",
+      "name": "荆楚·地区牌坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_jingchu_building_regional_gate.png",
+      "interaction": "gate"
+    },
+    {
+      "regionId": "ganpo",
+      "id": "at_ganpo_building_regional_gate",
+      "name": "赣鄱·地区牌坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_ganpo_building_regional_gate.png",
+      "interaction": "gate"
+    },
+    {
+      "regionId": "huizhou",
+      "id": "at_huizhou_building_regional_gate",
+      "name": "徽州·地区牌坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_huizhou_building_regional_gate.png",
+      "interaction": "gate"
+    },
+    {
+      "regionId": "jingji",
+      "id": "at_jingji_building_regional_gate",
+      "name": "京畿·地区牌坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_jingji_building_regional_gate.png",
+      "interaction": "gate"
+    },
+    {
+      "regionId": "sanjin",
+      "id": "at_sanjin_building_regional_gate",
+      "name": "三晋·地区牌坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_sanjin_building_regional_gate.png",
+      "interaction": "gate"
+    },
+    {
+      "regionId": "xueyu",
+      "id": "at_xueyu_building_regional_gate",
+      "name": "雪域·地区牌坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_xueyu_building_regional_gate.png",
+      "interaction": "gate"
+    },
+    {
+      "regionId": "xiyu",
+      "id": "at_xiyu_building_regional_gate",
+      "name": "西域·地区牌坊",
+      "asset": "/assets/game/buildings/art_team/all_regions/at_xiyu_building_regional_gate.png",
+      "interaction": "gate"
+    }
+  ],
+  "props": [
+    {
+      "regionId": "jiangnan",
+      "id": "at_jiangnan_prop_black_awning_boat_market",
+      "name": "江南·乌篷船货摊",
+      "asset": "/assets/game/props/art_team/all_regions/at_jiangnan_prop_black_awning_boat_market.png",
+      "interaction": "travel",
+      "tileW": 4,
+      "tileH": 2,
+      "solid": false
+    },
+    {
+      "regionId": "jiangnan",
+      "id": "at_jiangnan_prop_willow_wet_bank",
+      "name": "江南·水岸柳石",
+      "asset": "/assets/game/props/art_team/all_regions/at_jiangnan_prop_willow_wet_bank.png",
+      "interaction": "decoration",
+      "tileW": 2,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "regionId": "bashu",
+      "id": "at_bashu_prop_split_bamboo_rack",
+      "name": "巴蜀·竹篾晾架",
+      "asset": "/assets/game/props/art_team/all_regions/at_bashu_prop_split_bamboo_rack.png",
+      "interaction": "craft",
+      "tileW": 3,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "bashu",
+      "id": "at_bashu_prop_salt_fire_pan",
+      "name": "巴蜀·井盐火锅",
+      "asset": "/assets/game/props/art_team/all_regions/at_bashu_prop_salt_fire_pan.png",
+      "interaction": "industry",
+      "tileW": 2,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "lingnan",
+      "id": "at_lingnan_prop_harbor_cargo_citrus",
+      "name": "岭南·港口货箱",
+      "asset": "/assets/game/props/art_team/all_regions/at_lingnan_prop_harbor_cargo_citrus.png",
+      "interaction": "trading",
+      "tileW": 3,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "lingnan",
+      "id": "at_lingnan_prop_gambiered_silk_drying_rack",
+      "name": "岭南·香云纱晒架",
+      "asset": "/assets/game/props/art_team/all_regions/at_lingnan_prop_gambiered_silk_drying_rack.png",
+      "interaction": "craft",
+      "tileW": 3,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "qiandian",
+      "id": "at_qiandian_prop_silver_hammer_table",
+      "name": "黔滇·锤银工具台",
+      "asset": "/assets/game/props/art_team/all_regions/at_qiandian_prop_silver_hammer_table.png",
+      "interaction": "craft",
+      "tileW": 2,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "qiandian",
+      "id": "at_qiandian_prop_indigo_vats_cloth_line",
+      "name": "黔滇·靛染缸布架",
+      "asset": "/assets/game/props/art_team/all_regions/at_qiandian_prop_indigo_vats_cloth_line.png",
+      "interaction": "craft",
+      "tileW": 3,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "jingchu",
+      "id": "at_jingchu_prop_reed_ferry_boat",
+      "name": "荆楚·芦岸渡船",
+      "asset": "/assets/game/props/art_team/all_regions/at_jingchu_prop_reed_ferry_boat.png",
+      "interaction": "travel",
+      "tileW": 4,
+      "tileH": 2,
+      "solid": false
+    },
+    {
+      "regionId": "jingchu",
+      "id": "at_jingchu_prop_lacquer_brush_vessels",
+      "name": "荆楚·朱黑漆器台",
+      "asset": "/assets/game/props/art_team/all_regions/at_jingchu_prop_lacquer_brush_vessels.png",
+      "interaction": "craft",
+      "tileW": 2,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "ganpo",
+      "id": "at_ganpo_prop_porcelain_blanks_shelf",
+      "name": "赣鄱·瓷坯样架",
+      "asset": "/assets/game/props/art_team/all_regions/at_ganpo_prop_porcelain_blanks_shelf.png",
+      "interaction": "craft",
+      "tileW": 2,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "ganpo",
+      "id": "at_ganpo_prop_kiln_firewood_kaolin",
+      "name": "赣鄱·窑柴白土堆",
+      "asset": "/assets/game/props/art_team/all_regions/at_ganpo_prop_kiln_firewood_kaolin.png",
+      "interaction": "industry",
+      "tileW": 3,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "huizhou",
+      "id": "at_huizhou_prop_paper_trough_drying_wall",
+      "name": "徽州·纸槽晒墙",
+      "asset": "/assets/game/props/art_team/all_regions/at_huizhou_prop_paper_trough_drying_wall.png",
+      "interaction": "craft",
+      "tileW": 3,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "jingji",
+      "id": "at_jingji_prop_cloisonne_sample_table",
+      "name": "京畿·景泰蓝样台",
+      "asset": "/assets/game/props/art_team/all_regions/at_jingji_prop_cloisonne_sample_table.png",
+      "interaction": "craft",
+      "tileW": 2,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "xiyu",
+      "id": "at_xiyu_prop_camel_pack_goods",
+      "name": "西域·驼包货组",
+      "asset": "/assets/game/props/art_team/all_regions/at_xiyu_prop_camel_pack_goods.png",
+      "interaction": "travel",
+      "tileW": 3,
+      "tileH": 2,
+      "solid": false
+    },
+    {
+      "regionId": "xueyu",
+      "id": "at_xueyu_prop_pigment_grinding_table",
+      "name": "雪域·矿彩研磨台",
+      "asset": "/assets/game/props/art_team/all_regions/at_xueyu_prop_pigment_grinding_table.png",
+      "interaction": "craft",
+      "tileW": 3,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "jiangnan",
+      "id": "at_jiangnan_prop_indigo_dye_table",
+      "name": "江南·靛染布案",
+      "asset": "/assets/game/props/art_team/all_regions/at_jiangnan_prop_indigo_dye_table.png",
+      "interaction": "craft",
+      "tileW": 2,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "bashu",
+      "id": "at_bashu_prop_bamboo_basket_pile",
+      "name": "巴蜀·竹篾筐组",
+      "asset": "/assets/game/props/art_team/all_regions/at_bashu_prop_bamboo_basket_pile.png",
+      "interaction": "craft",
+      "tileW": 2,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "lingnan",
+      "id": "at_lingnan_prop_cargo_scale_crates",
+      "name": "岭南·港货秤箱",
+      "asset": "/assets/game/props/art_team/all_regions/at_lingnan_prop_cargo_scale_crates.png",
+      "interaction": "trading",
+      "tileW": 3,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "qiandian",
+      "id": "at_qiandian_prop_silver_ornament_stand",
+      "name": "黔滇·银饰陈列架",
+      "asset": "/assets/game/props/art_team/all_regions/at_qiandian_prop_silver_ornament_stand.png",
+      "interaction": "craft",
+      "tileW": 2,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "jingchu",
+      "id": "at_jingchu_prop_lacquer_drying_rack",
+      "name": "荆楚·漆器晾架",
+      "asset": "/assets/game/props/art_team/all_regions/at_jingchu_prop_lacquer_drying_rack.png",
+      "interaction": "craft",
+      "tileW": 3,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "ganpo",
+      "id": "at_ganpo_prop_kiln_handcart",
+      "name": "赣鄱·窑车陶罐",
+      "asset": "/assets/game/props/art_team/all_regions/at_ganpo_prop_kiln_handcart.png",
+      "interaction": "industry",
+      "tileW": 3,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "huizhou",
+      "id": "at_huizhou_prop_inkstone_paper_rack",
+      "name": "徽州·纸墨案架",
+      "asset": "/assets/game/props/art_team/all_regions/at_huizhou_prop_inkstone_paper_rack.png",
+      "interaction": "craft",
+      "tileW": 3,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "jingji",
+      "id": "at_jingji_prop_enamel_sample_cabinet",
+      "name": "京畿·珐琅样柜",
+      "asset": "/assets/game/props/art_team/all_regions/at_jingji_prop_enamel_sample_cabinet.png",
+      "interaction": "craft",
+      "tileW": 2,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "sanjin",
+      "id": "at_sanjin_prop_abacus_ticket_chest",
+      "name": "三晋·算盘票柜",
+      "asset": "/assets/game/props/art_team/all_regions/at_sanjin_prop_abacus_ticket_chest.png",
+      "interaction": "trading",
+      "tileW": 2,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "xueyu",
+      "id": "at_xueyu_prop_thangka_pigment_stand",
+      "name": "雪域·唐卡矿彩架",
+      "asset": "/assets/game/props/art_team/all_regions/at_xueyu_prop_thangka_pigment_stand.png",
+      "interaction": "craft",
+      "tileW": 3,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "xiyu",
+      "id": "at_xiyu_prop_jade_polishing_table",
+      "name": "西域·玉料磨案",
+      "asset": "/assets/game/props/art_team/all_regions/at_xiyu_prop_jade_polishing_table.png",
+      "interaction": "craft",
+      "tileW": 3,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "jiangnan",
+      "id": "at_jiangnan_prop_canal_stone_lantern",
+      "name": "江南·水岸石灯",
+      "asset": "/assets/game/props/art_team/all_regions/at_jiangnan_prop_canal_stone_lantern.png",
+      "interaction": "decoration",
+      "tileW": 2,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "bashu",
+      "id": "at_bashu_prop_salt_well_tool_rack",
+      "name": "巴蜀·井盐器架",
+      "asset": "/assets/game/props/art_team/all_regions/at_bashu_prop_salt_well_tool_rack.png",
+      "interaction": "industry",
+      "tileW": 2,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "lingnan",
+      "id": "at_lingnan_prop_silk_fan_drying_stand",
+      "name": "岭南·纱扇晒架",
+      "asset": "/assets/game/props/art_team/all_regions/at_lingnan_prop_silk_fan_drying_stand.png",
+      "interaction": "craft",
+      "tileW": 3,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "qiandian",
+      "id": "at_qiandian_prop_indigo_silver_bench",
+      "name": "黔滇·银染布凳",
+      "asset": "/assets/game/props/art_team/all_regions/at_qiandian_prop_indigo_silver_bench.png",
+      "interaction": "craft",
+      "tileW": 3,
+      "tileH": 2,
+      "solid": true
+    },
+    {
+      "regionId": "xiyu",
+      "id": "at_xiyu_prop_desert_textile_rolls",
+      "name": "西域·西域毯卷",
+      "asset": "/assets/game/props/art_team/all_regions/at_xiyu_prop_desert_textile_rolls.png",
+      "interaction": "trading",
+      "tileW": 3,
+      "tileH": 2,
+      "solid": true
+    }
+  ],
+  "npcReferences": [
+    {
+      "id": "at_jiangnan_npc_reference",
+      "role": "jiangnan",
+      "source": "public/assets/art_sources/art_team/2026-06-13/02_cutouts/npc_reference/at_jiangnan_npc_reference.png",
+      "note": "NPC 立绘/服饰/职业道具参考，未直接登记为 4x4 运行行走表。"
+    },
+    {
+      "id": "at_bashu_npc_reference",
+      "role": "bashu",
+      "source": "public/assets/art_sources/art_team/2026-06-13/02_cutouts/npc_reference/at_bashu_npc_reference.png",
+      "note": "NPC 立绘/服饰/职业道具参考，未直接登记为 4x4 运行行走表。"
+    },
+    {
+      "id": "at_lingnan_npc_reference",
+      "role": "lingnan",
+      "source": "public/assets/art_sources/art_team/2026-06-13/02_cutouts/npc_reference/at_lingnan_npc_reference.png",
+      "note": "NPC 立绘/服饰/职业道具参考，未直接登记为 4x4 运行行走表。"
+    },
+    {
+      "id": "at_qiandian_npc_reference",
+      "role": "qiandian",
+      "source": "public/assets/art_sources/art_team/2026-06-13/02_cutouts/npc_reference/at_qiandian_npc_reference.png",
+      "note": "NPC 立绘/服饰/职业道具参考，未直接登记为 4x4 运行行走表。"
+    },
+    {
+      "id": "at_jingchu_npc_reference",
+      "role": "jingchu",
+      "source": "public/assets/art_sources/art_team/2026-06-13/02_cutouts/npc_reference/at_jingchu_npc_reference.png",
+      "note": "NPC 立绘/服饰/职业道具参考，未直接登记为 4x4 运行行走表。"
+    },
+    {
+      "id": "at_ganpo_npc_reference",
+      "role": "ganpo",
+      "source": "public/assets/art_sources/art_team/2026-06-13/02_cutouts/npc_reference/at_ganpo_npc_reference.png",
+      "note": "NPC 立绘/服饰/职业道具参考，未直接登记为 4x4 运行行走表。"
+    },
+    {
+      "id": "at_huizhou_npc_reference",
+      "role": "huizhou",
+      "source": "public/assets/art_sources/art_team/2026-06-13/02_cutouts/npc_reference/at_huizhou_npc_reference.png",
+      "note": "NPC 立绘/服饰/职业道具参考，未直接登记为 4x4 运行行走表。"
+    },
+    {
+      "id": "at_jingji_npc_reference",
+      "role": "jingji",
+      "source": "public/assets/art_sources/art_team/2026-06-13/02_cutouts/npc_reference/at_jingji_npc_reference.png",
+      "note": "NPC 立绘/服饰/职业道具参考，未直接登记为 4x4 运行行走表。"
+    },
+    {
+      "id": "at_sanjin_npc_reference",
+      "role": "sanjin",
+      "source": "public/assets/art_sources/art_team/2026-06-13/02_cutouts/npc_reference/at_sanjin_npc_reference.png",
+      "note": "NPC 立绘/服饰/职业道具参考，未直接登记为 4x4 运行行走表。"
+    },
+    {
+      "id": "at_xueyu_npc_reference",
+      "role": "xueyu",
+      "source": "public/assets/art_sources/art_team/2026-06-13/02_cutouts/npc_reference/at_xueyu_npc_reference.png",
+      "note": "NPC 立绘/服饰/职业道具参考，未直接登记为 4x4 运行行走表。"
+    },
+    {
+      "id": "at_xiyu_npc_reference",
+      "role": "xiyu",
+      "source": "public/assets/art_sources/art_team/2026-06-13/02_cutouts/npc_reference/at_xiyu_npc_reference.png",
+      "note": "NPC 立绘/服饰/职业道具参考，未直接登记为 4x4 运行行走表。"
+    },
+    {
+      "id": "at_player_npc_reference",
+      "role": "player",
+      "source": "public/assets/art_sources/art_team/2026-06-13/02_cutouts/npc_reference/at_player_npc_reference.png",
+      "note": "NPC 立绘/服饰/职业道具参考，未直接登记为 4x4 运行行走表。"
+    }
+  ],
+  "characters": [
+    {
+      "regionId": "jiangnan",
+      "id": "at_jiangnan_npc_guide_water_dyer",
+      "name": "江南·水乡染工向导",
+      "asset": "/assets/game/characters/art_team/all_regions/at_jiangnan_npc_guide_water_dyer_walk.png"
+    },
+    {
+      "regionId": "bashu",
+      "id": "at_bashu_npc_guide_bamboo_worker",
+      "name": "巴蜀·竹山匠师向导",
+      "asset": "/assets/game/characters/art_team/all_regions/at_bashu_npc_guide_bamboo_worker_walk.png"
+    },
+    {
+      "regionId": "lingnan",
+      "id": "at_lingnan_npc_guide_harbor_trader",
+      "name": "岭南·海市货栈向导",
+      "asset": "/assets/game/characters/art_team/all_regions/at_lingnan_npc_guide_harbor_trader_walk.png"
+    },
+    {
+      "regionId": "qiandian",
+      "id": "at_qiandian_npc_guide_silver_dyer",
+      "name": "黔滇·银染匠人向导",
+      "asset": "/assets/game/characters/art_team/all_regions/at_qiandian_npc_guide_silver_dyer_walk.png"
+    },
+    {
+      "regionId": "jingchu",
+      "id": "at_jingchu_npc_guide_lacquer_ferry",
+      "name": "荆楚·漆渡行商向导",
+      "asset": "/assets/game/characters/art_team/all_regions/at_jingchu_npc_guide_lacquer_ferry_walk.png"
+    },
+    {
+      "regionId": "ganpo",
+      "id": "at_ganpo_npc_guide_porcelain_kiln",
+      "name": "赣鄱·瓷窑匠师向导",
+      "asset": "/assets/game/characters/art_team/all_regions/at_ganpo_npc_guide_porcelain_kiln_walk.png"
+    },
+    {
+      "regionId": "huizhou",
+      "id": "at_huizhou_npc_guide_paper_ink",
+      "name": "徽州·纸墨书坊向导",
+      "asset": "/assets/game/characters/art_team/all_regions/at_huizhou_npc_guide_paper_ink_walk.png"
+    },
+    {
+      "regionId": "jingji",
+      "id": "at_jingji_npc_guide_imperial_craft",
+      "name": "京畿·宫造工官向导",
+      "asset": "/assets/game/characters/art_team/all_regions/at_jingji_npc_guide_imperial_craft_walk.png"
+    },
+    {
+      "regionId": "sanjin",
+      "id": "at_sanjin_npc_guide_ticket_lacquer",
+      "name": "三晋·票号漆匠向导",
+      "asset": "/assets/game/characters/art_team/all_regions/at_sanjin_npc_guide_ticket_lacquer_walk.png"
+    },
+    {
+      "regionId": "xueyu",
+      "id": "at_xueyu_npc_guide_thangka_pigment",
+      "name": "雪域·矿彩画师向导",
+      "asset": "/assets/game/characters/art_team/all_regions/at_xueyu_npc_guide_thangka_pigment_walk.png"
+    },
+    {
+      "regionId": "xiyu",
+      "id": "at_xiyu_npc_guide_oasis_jade",
+      "name": "西域·绿洲玉作向导",
+      "asset": "/assets/game/characters/art_team/all_regions/at_xiyu_npc_guide_oasis_jade_walk.png"
+    }
+  ]
+}

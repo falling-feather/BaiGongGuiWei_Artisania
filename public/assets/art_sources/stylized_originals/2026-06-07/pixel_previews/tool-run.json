@@ -1,0 +1,26 @@
+{
+  "generatedAt": "2026-06-07T14:14:24.531Z",
+  "tool": "game-ui-asset-forge CLI source via tsx",
+  "forgeRoot": "D:/代码玩具测试/codex专用学术垃圾区/game_UI/game-ui-asset-forge",
+  "outputs": [
+    {
+      "id": "jiangnan.full_map.pixel_preview.v01",
+      "source": "maps/jiangnan_full_map_concept_v01.png",
+      "recipe": "jiangnan_full_map_pixel_preview.recipe.json",
+      "output": "pixel_previews/jiangnan_full_map_pixel_preview_v01.png"
+    },
+    {
+      "id": "jiangnan.building.pixel_preview.v01",
+      "source": "buildings/jiangnan_building_reference_v01.png",
+      "recipe": "jiangnan_building_pixel_preview.recipe.json",
+      "output": "pixel_previews/jiangnan_building_pixel_preview_v01.png"
+    },
+    {
+      "id": "jiangnan.core_character_lineup.pixel_preview.v01",
+      "source": "characters/core_character_lineup_v01.png",
+      "recipe": "core_character_lineup_pixel_preview.recipe.json",
+      "output": "pixel_previews/core_character_lineup_pixel_preview_v01.png"
+    }
+  ],
+  "note": "Uses the external local toolchain without modifying it. Source art remains untouched."
+}

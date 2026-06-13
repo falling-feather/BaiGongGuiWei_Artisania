@@ -51,11 +51,13 @@ export function Minimap({
         {points.map((p, i) => (
           <span
             key={i}
-            className="minimap__dot"
+            className={`minimap__dot${p.goal ? ' minimap__dot--goal' : ''}`}
+            title={p.goal ? `行脚目标：${p.label ?? ''}` : p.label}
+            aria-label={p.goal ? `行脚目标：${p.label ?? ''}` : p.label}
             style={{
               left: pct(p.tx, mapW),
               top: pct(p.ty, mapH),
-              background: KIND_COLOR[p.kind],
+              background: p.goal ? '#f5c860' : KIND_COLOR[p.kind],
             }}
           />
         ))}

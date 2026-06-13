@@ -88,13 +88,6 @@ const traceChoices = [
 
 const routeChallengeSpecs: ChallengeSpec[] = [
   {
-    id: 'bs-tea-horse-post-route',
-    activityId: 'bs-tea-horse-post',
-    miniGame: 'route_plan',
-    title: '茶马开路',
-    prompt: '马帮阿越把山路摊开，问你货轻还是路稳更要紧。',
-  },
-  {
     id: 'ln-pearl-river-harbor-route',
     activityId: 'ln-pearl-river-harbor',
     miniGame: 'route_plan',
@@ -331,6 +324,170 @@ export const ACTIVITY_CHALLENGES: ActivityChallengeDef[] = [
     ],
   },
   {
+    id: 'bs-tea-horse-post-route',
+    activityId: 'bs-tea-horse-post',
+    miniGame: 'route_plan',
+    title: '茶马会路书',
+    prompt: '马帮阿越把货重、脚力和雪口消息摊开，问你这一轮茶马会该先稳哪条路。',
+    choices: routeChoices,
+    rounds: [
+      {
+        id: 'load-weight',
+        prompt: '开驿验货时，脚夫先看茶篓和竹器怎么分担。你怎样安排第一担？',
+        choices: [
+          {
+            id: 'balanced-load',
+            label: '茶篓、竹器和人手按坡度重排',
+            quality: 0.9,
+            feedback: '阿越点头：这担货轻重分得明白，脚夫愿意听你调度。',
+          },
+          {
+            id: 'tea-only',
+            label: '只把茶样摆在最前，别让杂货抢眼',
+            quality: 0.56,
+            feedback: '茶样好看，可山路不是货架，竹器和脚力账也得有人管。',
+          },
+          {
+            id: 'fast-pack',
+            label: '催脚夫快装快走，赶在午前出山',
+            quality: 0.42,
+            feedback: '脚程压快了，货倒先乱了，阿越把路书又按回桌上。',
+          },
+        ],
+      },
+      {
+        id: 'barter-route',
+        prompt: '换货议路时，边茶客商和雪口向导同时问价。你先接哪边？',
+        choices: [
+          {
+            id: 'ledger-before-price',
+            label: '先给茶商看货样簿，再请向导补雪口规矩',
+            quality: 0.88,
+            feedback: '价钱和规矩都落到账上，茶商敢订，向导也愿意多说一段路。',
+          },
+          {
+            id: 'highest-bid',
+            label: '谁出价高就先把货给谁',
+            quality: 0.5,
+            feedback: '钱声响亮，却让向导觉得你还没把山路当回事。',
+          },
+          {
+            id: 'guide-only',
+            label: '只围着雪口向导问路，茶商先晾着',
+            quality: 0.64,
+            feedback: '路问出来了，货约却冷了半截。',
+          },
+        ],
+      },
+      {
+        id: 'closing-ledger',
+        prompt: '封账认路前，阿越让你把这一轮茶马会留成可追记忆。你怎么收尾？',
+        choices: [
+          {
+            id: 'route-and-load-ledger',
+            label: '货重、脚力、雪口和来季茶约一并入簿',
+            quality: 0.94,
+            feedback: '这本茶马簿既能分担货，也能让下一程知道该听谁的路。',
+          },
+          {
+            id: 'sales-ledger-only',
+            label: '只记卖了多少茶，路上的事下次再说',
+            quality: 0.58,
+            feedback: '账面有钱，山路却没有记忆。',
+          },
+          {
+            id: 'verbal-road',
+            label: '让脚夫口头记住，不必写得太细',
+            quality: 0.36,
+            feedback: '阿越摇头：山路最会忘人，凭据少一笔，风险多一分。',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'ln-qilou-night-market-route',
+    activityId: 'ln-qilou-night-market',
+    miniGame: 'route_plan',
+    title: '骑楼船期夜账',
+    prompt: '伍海潮把骑楼灯、船期、雨棚和外销样货排成一张夜账，等你定下今晚先稳哪一头。',
+    choices: routeChoices,
+    rounds: [
+      {
+        id: 'awning-opening',
+        prompt: '开市前，雨棚下挤着外销客、街坊和文房买主。你先怎么摆第一张案？',
+        choices: [
+          {
+            id: 'ship-date-first',
+            label: '先把船期、样货和交付时限写清',
+            quality: 0.9,
+            feedback: '伍海潮点头：灯可以热闹，船期不能含糊。',
+          },
+          {
+            id: 'lantern-bright-first',
+            label: '先把最鲜亮的货挂到街口招人',
+            quality: 0.58,
+            feedback: '人是围过来了，可谁赶船、谁只看热闹还分不清。',
+          },
+          {
+            id: 'cheap-supper-first',
+            label: '先用低价茶点把人流圈住',
+            quality: 0.48,
+            feedback: '街坊有了，外销客却嫌你还没拿出能上船的凭据。',
+          },
+        ],
+      },
+      {
+        id: 'night-bargain',
+        prompt: '夜市正旺，晒场货样、石湾陶和端砚买主同时问价。你怎么接话？',
+        choices: [
+          {
+            id: 'proof-before-price',
+            label: '先报货样来路，再按船期分批议价',
+            quality: 0.88,
+            feedback: '价钱落在凭据后面，客人知道这不是随口叫卖。',
+          },
+          {
+            id: 'highest-bid-only',
+            label: '谁肯加价就先给谁',
+            quality: 0.5,
+            feedback: '钱声响亮，伍海潮却皱眉：船期一乱，后账更贵。',
+          },
+          {
+            id: 'friend-chat-only',
+            label: '多留街坊聊天，外销客先等等',
+            quality: 0.62,
+            feedback: '人情暖了，但货栈那边已经开始算误期。',
+          },
+        ],
+      },
+      {
+        id: 'closing-shipping-ledger',
+        prompt: '收摊前，伍海潮要你把骑楼夜市留成下次可复查的凭据。你封哪本账？',
+        choices: [
+          {
+            id: 'ship-date-ledger',
+            label: '把样货、雨棚人流、船期和复样约一并归档',
+            quality: 0.94,
+            feedback: '这本账能让下一船知道货从哪来，也知道人情从哪接。',
+          },
+          {
+            id: 'sales-only-ledger',
+            label: '只记今晚卖了多少，余下口头说明',
+            quality: 0.55,
+            feedback: '账面看着清，等船回来复样时却少了许多凭据。',
+          },
+          {
+            id: 'supper-goodwill-ledger',
+            label: '只记街坊茶席人情，外销样货另说',
+            quality: 0.66,
+            feedback: '骑楼烟火留下了，可伍海潮提醒你：外销线也要有回头路。',
+          },
+        ],
+      },
+    ],
+  },
+  {
     id: 'jn-longquan-sword-appraise',
     activityId: 'jn-longquan-sword-forge',
     miniGame: 'appraise_select',
@@ -478,6 +635,107 @@ export const ACTIVITY_CHALLENGES: ActivityChallengeDef[] = [
         label: '只敢薄薄罩一层淡青',
         quality: 0.62,
         feedback: '稳是稳了，可青花少了浓淡，纹样显得寡淡。',
+      },
+    ],
+  },
+  {
+    id: 'gp-kiln-opening-fair-fire',
+    activityId: 'gp-kiln-opening-fair',
+    miniGame: 'timing_hold',
+    title: '瓷镇开窑',
+    prompt: '窑头老温让你先看试片火色，再决定这批瓷样如何分级、留样和开单。',
+    choices: [
+      {
+        id: 'open-by-flame',
+        label: '先看火舌余温，再开试片',
+        quality: 0.9,
+        feedback: '老温点头：火气未散，先看余温，开窑才不被表面光骗了。',
+      },
+      {
+        id: 'open-by-clock',
+        label: '按预定时辰立刻开窑',
+        quality: 0.48,
+        feedback: '老温皱眉：钟点只记人心，火色才记窑性。',
+      },
+      {
+        id: 'sell-before-check',
+        label: '先把亮面瓷样摆出去',
+        quality: 0.42,
+        feedback: '瓷行客看得快，追问也快；没验窑位，亮面反倒露怯。',
+      },
+    ],
+    rounds: [
+      {
+        id: 'test-shard-fire',
+        prompt: '试片刚出窑，你先看哪一处来判断火候是否到位？',
+        choices: [
+          {
+            id: 'flame-and-ring',
+            label: '看火舌余温、听瓷声，再记窑位',
+            quality: 0.92,
+            feedback: '火、声、位三处对上，这批瓷样才有分级的底气。',
+          },
+          {
+            id: 'gloss-only',
+            label: '只挑釉面最亮的一片',
+            quality: 0.46,
+            feedback: '亮光有时是浮的，不记窑位，复烧就无从对样。',
+          },
+          {
+            id: 'delay-all',
+            label: '全都先封回去，明日再看',
+            quality: 0.58,
+            feedback: '谨慎是好事，可开窑会的人气和火色都等不得太久。',
+          },
+        ],
+      },
+      {
+        id: 'market-grading',
+        prompt: '瓷行客围上来问价，你怎样把这一窑分成可卖、可留样和需返修三类？',
+        choices: [
+          {
+            id: 'grade-by-position',
+            label: '按窑位、釉厚和题材逐件验级',
+            quality: 0.9,
+            feedback: '老温说：分级不是压价，是给下一窑留一把尺。',
+          },
+          {
+            id: 'all-premium',
+            label: '统称上品，先把价抬起来',
+            quality: 0.4,
+            feedback: '瓷行客听着热闹，却更不敢开复烧单。',
+          },
+          {
+            id: 'cheap-bundle',
+            label: '把好坏瓷样混成一包走量',
+            quality: 0.52,
+            feedback: '账面快了，火色名声却被一包带混。',
+          },
+        ],
+      },
+      {
+        id: 'river-ledger',
+        prompt: '封窑归档前，柴牙子提醒船期和柴口也要写进账。你怎么收尾？',
+        choices: [
+          {
+            id: 'fire-and-route-ledger',
+            label: '火色、窑位、柴口、船期一并入簿',
+            quality: 0.94,
+            feedback: '这张簿能让瓷商对样，也能让柴船知道下一窑何时该到。',
+          },
+          {
+            id: 'porcelain-only-ledger',
+            label: '只记瓷样，不管柴路',
+            quality: 0.62,
+            feedback: '瓷样留住了，下一窑的火却还悬在船期上。',
+          },
+          {
+            id: 'verbal-promise',
+            label: '让客人先口头记下，省得写账',
+            quality: 0.38,
+            feedback: '老温摇头：口头能热一阵，复烧要靠凭据。',
+          },
+        ],
       },
     ],
   },

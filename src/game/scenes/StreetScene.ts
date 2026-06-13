@@ -20,13 +20,19 @@ import {
   emitBus,
   onCommand,
   type RegionMapSpec,
+  type RegionNavigationTarget,
   type IndustryTier,
   type TerrainKind,
   type NpcRole,
   type WeatherKind,
   type WeatherSeason,
 } from '../EventBus';
-import { shouldReplaceNearbyCandidate } from '../nearbyPriority';
+import {
+  interactionRectDistance,
+  nearestPointOnInteractionRect,
+  shouldReplaceNearbyCandidate,
+  type InteractionRect,
+} from '../nearbyPriority';
 
 // Phaser 场景类无法被有意义地热替换：StreetScene.ts 的局部 HMR 会被上层
 // PhaserGame.tsx 的 React Fast Refresh 边界吸收，导致运行中的 Phaser.Game 仍持有
@@ -48,7 +54,9 @@ interface MapPoint {
   /** industry: industryId | craft: craftId | activity: activityId | gate: regionId | subregionGate: subregionId */
   payload: string;
   unlocked?: boolean;
+  goal?: boolean;
   sprite: Phaser.GameObjects.Image;
+  location: PointLocation;
 }
 
 /** 地图上的 NPC 实体（游客随机游走 / 关联人物驻守） */
@@ -105,6 +113,8 @@ const BUILDING_TILE_H = 3;
 const PLAYER_SPEED = 160;
 const NPC_SPEED = 46;
 const CHARACTER_SCALE = 0.72;
+const PLAYER_BODY_WIDTH = 18;
+const PLAYER_BODY_HEIGHT = 14;
 const INTERACT_RANGE = TILE * 1.8;
 const FOREGROUND_COVER_DEPTH = 85000;
 const ZOOM_MIN = 1;
@@ -192,6 +202,20 @@ interface PointSpec {
   payload: string;
   unlocked?: boolean;
   tex: string;
+  tileW?: number;
+  tileH?: number;
+}
+
+function craftWorkshopHint(craft: RegionMapSpec['crafts'][number]) {
+  const base = `按 E 进入「${craft.name}」工坊`;
+  const workshop = craft.workshop;
+  if (!workshop) return base;
+  const markers = [`空间 ${workshop.usedSpace}/${workshop.capacity}`, `整备 ${workshop.installedUpgrades}/${workshop.totalUpgrades}`];
+  if (workshop.availableUpgrades > 0) markers.push('可安置整备');
+  else if (workshop.needsExpansion && workshop.canExpand) markers.push('空间已满，可扩建');
+  else if (workshop.needsExpansion) markers.push('空间已满');
+  else if (workshop.canExpand && workshop.installedUpgrades > 0) markers.push('可扩建');
+  return `${base} · ${markers.join(' · ')}`;
 }
 
 export class StreetScene extends Phaser.Scene {
@@ -229,6 +253,8 @@ export class StreetScene extends Phaser.Scene {
   private path: { tx: number; ty: number }[] = [];
   /** 寻路目标光环 */
   private moveTarget!: Phaser.GameObjects.Image;
+  /** 当前行脚目标入口提示光标，仅用于视觉引导 */
+  private goalMarker?: Phaser.GameObjects.Image;
   /** 当前地区的实际地图宽度（格），随交互点数量动态扩展 */
   private mapWTiles = MAP_W;
   /** 当前相机缩放倍率 */
@@ -276,9 +302,13 @@ export class StreetScene extends Phaser.Scene {
 
     const off = onCommand((cmd) => {
       if (cmd.type === 'enter-region') this.buildRegion(cmd.spec);
+      else if (cmd.type === 'set-navigation-target') this.setNavigationTarget(cmd.target);
       else if (cmd.type === 'zoom') {
         if (typeof cmd.absolute === 'number') this.applyZoom(cmd.absolute, true);
         else this.applyZoom(this.zoom + (cmd.delta ?? 0));
+      } else if (cmd.type === 'interact-nearby') {
+        this.updateNearby();
+        this.interactNearby();
       }
     });
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, off);
@@ -354,6 +384,7 @@ export class StreetScene extends Phaser.Scene {
     this.walkers = [];
     this.path = [];
     this.moveTarget.setVisible(false);
+    this.clearNavigationTarget();
     this.nearby = null;
 
     const titleName = spec.subregionName ? `${spec.name} · ${spec.subregionName}` : spec.name;
@@ -372,7 +403,7 @@ export class StreetScene extends Phaser.Scene {
       ...spec.crafts.map((c) => ({
         kind: 'craft' as const,
         label: c.name,
-        hint: `按 E 进入「${c.name}」`,
+        hint: craftWorkshopHint(c),
         payload: c.id,
         tex: textureForCraft(c.id),
       })),
@@ -406,14 +437,14 @@ export class StreetScene extends Phaser.Scene {
     // 避免点位 slot 复用导致互相重叠、被覆盖的交互点无法靠近触发。列间距/左边距为模块级常量。
     this.pointLocations.clear();
     this.roadTiles.clear();
-    this.mapWTiles = Math.max(MAP_W, 52 + Math.ceil(all.length / 6) * 7);
+    this.mapWTiles = Math.max(MAP_W, spec.layout?.size.w ?? 0, 52 + Math.ceil(all.length / 6) * 7);
 
     this.physics.world.setBounds(0, 0, this.mapWTiles * TILE, MAP_H * TILE);
     this.cameras.main.setBounds(0, 0, this.mapWTiles * TILE, MAP_H * TILE);
 
     // 初始化可行走网格（全部可走，随后由地形/建筑标记阻挡）
     this.blocked = Array.from({ length: MAP_H }, () => new Array<boolean>(this.mapWTiles).fill(false));
-    this.buildStreetNetwork();
+    this.buildStreetNetwork(spec.layout);
 
     for (let y = 0; y < MAP_H; y++) {
       for (let x = 0; x < this.mapWTiles; x++) {
@@ -427,14 +458,17 @@ export class StreetScene extends Phaser.Scene {
     // 地形地貌：按地区类型铺设河流/海岸/山石/街巷（替代单一横向街道）
     this.buildTerrain(spec.terrain);
     this.decorateStreetProps(spec.terrain);
+    this.applyLayoutDecor(spec.layout);
 
-    const slots = this.buildPointSlots(all.length);
+    const slots = this.buildPointSlots(all.length, spec.layout);
     let idx = 0;
     for (const item of all) {
-      const slot = slots[idx] ?? this.fallbackPointSlot(idx);
+      const layoutSlot = this.layoutSlotForPoint(spec.layout, item);
+      const slot: { tileX: number; tileY: number; tileW?: number; tileH?: number } =
+        layoutSlot ?? slots[idx] ?? this.fallbackPointSlot(idx);
       const tileX = slot.tileX;
       const tileY = slot.tileY;
-      const footprint = this.footprintFor(item.tex);
+      const footprint = this.footprintFor(item.tex, slot.tileW ?? item.tileW, slot.tileH ?? item.tileH);
       const px = tileX * TILE + (footprint.w * TILE) / 2;
       const py = (tileY + footprint.h) * TILE;
       const buildingTex = this.buildingTextureFor(item.tex);
@@ -460,6 +494,8 @@ export class StreetScene extends Phaser.Scene {
         .setPadding(3, 1, 3, 1);
       this.labels.push(label);
 
+      const location = { tileX, tileY, tileW: footprint.w, tileH: footprint.h, px, py };
+
       this.points.push({
         kind: item.kind,
         label: item.label,
@@ -467,16 +503,19 @@ export class StreetScene extends Phaser.Scene {
         payload: item.payload,
         unlocked: item.unlocked,
         sprite: img,
+        location,
       });
-      this.pointLocations.set(item.payload, { tileX, tileY, tileW: footprint.w, tileH: footprint.h, px, py });
+      this.pointLocations.set(item.payload, location);
       idx++;
     }
 
+    this.setNavigationTarget(spec.navigationTarget, false);
     this.spawnNpcs(spec);
     this.spawnAmbientWalkers();
     this.addWeatherVfx();
 
-    const start = this.nearestRoadTileAround(Math.floor(this.mapWTiles / 2), ROAD_ROWS[1]);
+    const requestedStart = spec.layout?.playerStart ?? { x: Math.floor(this.mapWTiles / 2), y: ROAD_ROWS[1] };
+    const start = this.nearestRoadTileAround(requestedStart.x, requestedStart.y);
     this.player.setPosition(
       (start?.tx ?? Math.floor(this.mapWTiles / 2)) * TILE + TILE / 2,
       (start?.ty ?? ROAD_ROWS[1]) * TILE + TILE / 2,
@@ -486,14 +525,59 @@ export class StreetScene extends Phaser.Scene {
     this.lastTy = -1;
 
     // 下发小地图标记点（瓦片坐标）
+    this.emitRegionPoints();
+  }
+
+  private emitRegionPoints() {
     emitBus({
       type: 'region-points',
       points: this.points.map((p) => ({
         tx: Math.round((p.sprite.x - TILE) / TILE),
         ty: Math.round((p.sprite.y - TILE) / TILE),
         kind: p.kind,
+        label: p.label,
+        goal: Boolean(p.goal),
       })),
     });
+  }
+
+  private clearNavigationTarget() {
+    if (this.goalMarker) {
+      this.tweens.killTweensOf(this.goalMarker);
+      this.goalMarker.destroy();
+      this.goalMarker = undefined;
+    }
+    for (const point of this.points) {
+      if (!point.goal) continue;
+      point.goal = false;
+      point.sprite.clearTint();
+    }
+  }
+
+  private setNavigationTarget(target: RegionNavigationTarget | undefined, emitPoints = true) {
+    this.clearNavigationTarget();
+    if (target) {
+      const point = this.points.find((item) => item.kind === target.kind && item.payload === target.payload);
+      if (point) {
+        point.goal = true;
+        point.sprite.setTint(0xffd56a);
+        const markerY = point.location.py - point.location.tileH * TILE - 18;
+        this.goalMarker = this.add
+          .image(point.location.px, markerY, TEX.marker)
+          .setDepth(100002)
+          .setTint(0xffc94f)
+          .setScale(1.08);
+        this.tweens.add({
+          targets: this.goalMarker,
+          y: markerY - 8,
+          duration: 760,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+        });
+      }
+    }
+    if (emitPoints) this.emitRegionPoints();
   }
 
   /** 标记某瓦片为不可通行（越界忽略） */
@@ -504,6 +588,15 @@ export class StreetScene extends Phaser.Scene {
   }
 
   /** 放置一块地貌装饰瓦片；solid=true 时同时加入物理阻挡并标记不可寻路 */
+  private pointInteractionRect(location: PointLocation): InteractionRect {
+    return {
+      left: location.tileX * TILE,
+      right: (location.tileX + location.tileW) * TILE,
+      top: location.tileY * TILE,
+      bottom: (location.tileY + location.tileH) * TILE,
+    };
+  }
+
   private tileKey(tx: number, ty: number) {
     return `${tx},${ty}`;
   }
@@ -535,7 +628,22 @@ export class StreetScene extends Phaser.Scene {
     }
   }
 
-  private buildStreetNetwork() {
+  private buildStreetNetwork(layout?: RegionMapSpec['layout']) {
+    if (layout?.roads?.length) {
+      this.primaryRoadRows = [
+        ...new Set(layout.roads.flatMap((path) => path.points.map((point) => point.y))),
+      ].filter((row) => row >= 0 && row < MAP_H).sort((a, b) => a - b);
+      this.primaryRoadCols = [
+        ...new Set(layout.roads.flatMap((path) => path.points.map((point) => point.x))),
+      ].filter((col) => col >= 0 && col < this.mapWTiles).sort((a, b) => a - b);
+      for (const path of layout.roads) {
+        this.addRoadPath(path.points.map((point) => ({ tx: point.x, ty: point.y })));
+      }
+      if (!this.primaryRoadRows.length) this.primaryRoadRows = [...ROAD_ROWS];
+      if (!this.primaryRoadCols.length) this.primaryRoadCols = [7, Math.round(this.mapWTiles * 0.5), this.mapWTiles - 8];
+      return;
+    }
+
     const w = this.mapWTiles;
     const cols = [7, Math.round(w * 0.34), Math.round(w * 0.62), w - 8].map((x) =>
       Phaser.Math.Clamp(x, 4, w - 5),
@@ -609,6 +717,12 @@ export class StreetScene extends Phaser.Scene {
     return TEX.road;
   }
 
+  private bridgeAngleForRoadTile(tx: number, ty: number) {
+    const horizontal = this.isRoadTile(tx - 1, ty) || this.isRoadTile(tx + 1, ty);
+    const vertical = this.isRoadTile(tx, ty - 1) || this.isRoadTile(tx, ty + 1);
+    return horizontal || !vertical ? 90 : 0;
+  }
+
   private groundTextureAt(tx: number, ty: number) {
     const nearCross =
       this.primaryRoadRows.some((row) => Math.abs(row - ty) <= 2) &&
@@ -631,7 +745,8 @@ export class StreetScene extends Phaser.Scene {
     return TEX.ground;
   }
 
-  private footprintFor(tex: string) {
+  private footprintFor(tex: string, tileW?: number, tileH?: number) {
+    if (tileW && tileH) return { w: tileW, h: tileH };
     if (tex === TEX.gate) return { w: 3, h: 3 };
     return { w: BUILDING_TILE_W, h: BUILDING_TILE_H };
   }
@@ -645,9 +760,9 @@ export class StreetScene extends Phaser.Scene {
     this.decor.push(overlay);
   }
 
-  private canPlaceBuilding(tileX: number, tileY: number) {
-    const w = BUILDING_TILE_W;
-    const h = BUILDING_TILE_H;
+  private canPlaceBuilding(tileX: number, tileY: number, tileW = BUILDING_TILE_W, tileH = BUILDING_TILE_H) {
+    const w = tileW;
+    const h = tileH;
     if (tileX < 1 || tileY < 1 || tileX + w - 1 >= this.mapWTiles || tileY + h - 1 >= MAP_H) return false;
     for (let y = tileY; y < tileY + h; y++) {
       for (let x = tileX; x < tileX + w; x++) {
@@ -664,18 +779,63 @@ export class StreetScene extends Phaser.Scene {
     return { tileX: x, tileY: y };
   }
 
-  private buildPointSlots(count: number) {
-    const slots: { tileX: number; tileY: number }[] = [];
+  private layoutSlotForPoint(layout: RegionMapSpec['layout'] | undefined, item: PointSpec) {
+    const object = layout?.objects.find(
+      (entry) => entry.interaction === item.kind && entry.targetId === item.payload,
+    );
+    if (!object) return null;
+    return {
+      tileX: object.x,
+      tileY: object.y,
+      tileW: object.tileW,
+      tileH: object.tileH,
+    };
+  }
+
+  private layoutOccupiedSlots(layout: RegionMapSpec['layout'] | undefined) {
     const occupied = new Set<string>();
+    for (const object of layout?.objects ?? []) {
+      if (object.interaction === 'decoration' || object.interaction === 'npc') continue;
+      const tileW = object.tileW ?? BUILDING_TILE_W;
+      const tileH = object.tileH ?? BUILDING_TILE_H;
+      for (let y = object.y; y < object.y + tileH; y++) {
+        for (let x = object.x; x < object.x + tileW; x++) occupied.add(this.tileKey(x, y));
+      }
+    }
+    return occupied;
+  }
+
+  private slotOverlapsOccupied(
+    tileX: number,
+    tileY: number,
+    tileW: number,
+    tileH: number,
+    occupied: Set<string>,
+  ) {
+    for (let y = tileY; y < tileY + tileH; y++) {
+      for (let x = tileX; x < tileX + tileW; x++) {
+        if (occupied.has(this.tileKey(x, y))) return true;
+      }
+    }
+    return false;
+  }
+
+  private buildPointSlots(count: number, layout?: RegionMapSpec['layout']) {
+    const slots: { tileX: number; tileY: number }[] = [];
+    const occupied = this.layoutOccupiedSlots(layout);
     for (const row of this.primaryRoadRows) {
       for (let x = 3; x < this.mapWTiles - BUILDING_TILE_W - 3; x += 7) {
         const sides = (x + row) % 2 === 0 ? [-BUILDING_TILE_H, 1] : [1, -BUILDING_TILE_H];
         for (const side of sides) {
           const tileX = x;
           const tileY = Phaser.Math.Clamp(row + side, 1, MAP_H - BUILDING_TILE_H - 1);
-          const key = this.tileKey(tileX, tileY);
-          if (occupied.has(key) || !this.canPlaceBuilding(tileX, tileY)) continue;
-          occupied.add(key);
+          if (
+            this.slotOverlapsOccupied(tileX, tileY, BUILDING_TILE_W, BUILDING_TILE_H, occupied) ||
+            !this.canPlaceBuilding(tileX, tileY)
+          ) continue;
+          for (let y = tileY; y < tileY + BUILDING_TILE_H; y++) {
+            for (let x = tileX; x < tileX + BUILDING_TILE_W; x++) occupied.add(this.tileKey(x, y));
+          }
           slots.push({ tileX, tileY });
           if (slots.length >= count) return slots;
         }
@@ -684,9 +844,13 @@ export class StreetScene extends Phaser.Scene {
     let i = 0;
     while (slots.length < count && i < count * 4) {
       const slot = this.fallbackPointSlot(i++);
-      const key = this.tileKey(slot.tileX, slot.tileY);
-      if (occupied.has(key) || !this.canPlaceBuilding(slot.tileX, slot.tileY)) continue;
-      occupied.add(key);
+      if (
+        this.slotOverlapsOccupied(slot.tileX, slot.tileY, BUILDING_TILE_W, BUILDING_TILE_H, occupied) ||
+        !this.canPlaceBuilding(slot.tileX, slot.tileY)
+      ) continue;
+      for (let y = slot.tileY; y < slot.tileY + BUILDING_TILE_H; y++) {
+        for (let x = slot.tileX; x < slot.tileX + BUILDING_TILE_W; x++) occupied.add(this.tileKey(x, y));
+      }
       slots.push(slot);
     }
     return slots;
@@ -715,17 +879,57 @@ export class StreetScene extends Phaser.Scene {
     return best;
   }
 
-  private addDecorTile(tx: number, ty: number, tex: string, solid: boolean) {
+  private vendorStandTileForAnchor(anchor: PointLocation) {
+    const minPointDistance = INTERACT_RANGE + TILE * 0.45;
+    const targets = [
+      { tx: anchor.tileX + anchor.tileW + 2, ty: anchor.tileY + anchor.tileH },
+      { tx: anchor.tileX - 2, ty: anchor.tileY + anchor.tileH },
+      { tx: anchor.tileX + Math.floor(anchor.tileW / 2), ty: anchor.tileY + anchor.tileH + 2 },
+      { tx: anchor.tileX + Math.floor(anchor.tileW / 2), ty: anchor.tileY - 2 },
+    ];
+    const roads = this.roadTileList();
+    for (const target of targets) {
+      const sorted = [...roads].sort(
+        (a, b) =>
+          Math.abs(a.tx - target.tx) +
+          Math.abs(a.ty - target.ty) -
+          (Math.abs(b.tx - target.tx) + Math.abs(b.ty - target.ty)),
+      );
+      const stand = sorted.find((tile) => {
+        const wx = tile.tx * TILE + TILE / 2;
+        const wy = tile.ty * TILE + TILE / 2;
+        return Phaser.Math.Distance.Between(wx, wy, anchor.px, anchor.py) >= minPointDistance;
+      });
+      if (stand) return stand;
+    }
+    return this.nearestRoadTileAround(anchor.tileX + Math.floor(anchor.tileW / 2), anchor.tileY + anchor.tileH);
+  }
+
+  private addDecorTile(tx: number, ty: number, tex: string, solid: boolean, angleDeg = 0) {
     if (tx < 0 || tx >= this.mapWTiles || ty < 0 || ty >= MAP_H) return;
     const cx = tx * TILE + TILE / 2;
     const cy = ty * TILE + TILE / 2;
     const img = this.add.image(cx, cy, tex).setDepth(solid ? cy : 1);
+    if (angleDeg) img.setAngle(angleDeg);
     this.decor.push(img);
     if (solid) {
       const body = this.solids.create(cx, cy) as Phaser.Physics.Arcade.Sprite;
       body.setVisible(false);
       body.setSize(TILE, TILE).refreshBody();
       this.markBlocked(tx, ty);
+    }
+  }
+
+  private applyLayoutDecor(layout: RegionMapSpec['layout'] | undefined) {
+    for (const object of layout?.objects ?? []) {
+      if (object.interaction !== 'decoration') continue;
+      const tileW = object.tileW ?? 1;
+      const tileH = object.tileH ?? 1;
+      for (let y = object.y; y < object.y + tileH; y++) {
+        for (let x = object.x; x < object.x + tileW; x++) {
+          this.addDecorTile(x, y, TEX.rock, object.solid ?? true);
+        }
+      }
     }
   }
 
@@ -915,13 +1119,13 @@ export class StreetScene extends Phaser.Scene {
       for (let y = 0; y < MAP_H; y++) {
         const col = riverAt(y);
         const tiles = [
-          [col - 1, summerWater ? TEX.pondWaterGrassEdgeLeft : TEX.waterEdgeLeft],
+          [col - 1, summerWater ? TEX.pondWaterGrassEdgeRight : TEX.waterEdgeRight],
           [col, summerWater && (y * 5 + col) % 7 === 0 ? TEX.pondLotusDuckweed : summerWater ? TEX.pondWaterGrassCenter : TEX.water],
-          [col + 1, summerWater ? TEX.pondWaterGrassEdgeRight : TEX.waterEdgeRight],
+          [col + 1, summerWater ? TEX.pondWaterGrassEdgeLeft : TEX.waterEdgeLeft],
         ] as const;
         const onRoad = tiles.some(([x]) => this.isRoadTile(x, y));
         for (const [x, tex] of tiles) {
-          this.addDecorTile(x, y, onRoad ? TEX.bridge : tex, !onRoad);
+          this.addDecorTile(x, y, onRoad ? TEX.bridge : tex, !onRoad, onRoad ? this.bridgeAngleForRoadTile(x, y) : 0);
         }
       }
       for (const row of this.primaryRoadRows) {
@@ -971,11 +1175,12 @@ export class StreetScene extends Phaser.Scene {
     for (const n of spec.npcs) {
       let wx: number;
       let wy: number;
-      if (n.role === 'vendor' && n.anchorId) {
+      if (typeof n.tileX === 'number' && typeof n.tileY === 'number') {
+        wx = n.tileX * TILE + TILE / 2;
+        wy = n.tileY * TILE + TILE / 2;
+      } else if (n.role === 'vendor' && n.anchorId) {
         const anchor = this.pointLocations.get(n.anchorId);
-        const stand = anchor
-          ? this.nearestRoadTileAround(anchor.tileX + Math.floor(anchor.tileW / 2), anchor.tileY + anchor.tileH)
-          : null;
+        const stand = anchor ? this.vendorStandTileForAnchor(anchor) : null;
         if (stand) {
           wx = stand.tx * TILE + TILE / 2;
           wy = stand.ty * TILE + TILE / 2;
@@ -1155,6 +1360,7 @@ export class StreetScene extends Phaser.Scene {
     const startY = ROAD_ROWS[1] * TILE;
     this.player = this.physics.add.sprite(startX, startY, TEX.player, 0);
     this.player.setScale(CHARACTER_SCALE);
+    this.configurePlayerBody();
     this.player.setCollideWorldBounds(true);
     this.player.setDepth(startY);
     this.physics.add.collider(this.player, this.solids);
@@ -1184,6 +1390,17 @@ export class StreetScene extends Phaser.Scene {
         this.applyZoom(this.zoom + (dy < 0 ? ZOOM_STEP : -ZOOM_STEP));
       },
     );
+  }
+
+  private configurePlayerBody() {
+    const body = this.player.body as Phaser.Physics.Arcade.Body | null;
+    if (!body) return;
+    const frameW = this.player.frame.realWidth || TILE;
+    const frameH = this.player.frame.realHeight || TILE;
+    const bodyW = Math.min(PLAYER_BODY_WIDTH, Math.max(8, frameW - 4));
+    const bodyH = Math.min(PLAYER_BODY_HEIGHT, Math.max(8, frameH - 4));
+    body.setSize(bodyW, bodyH, false);
+    body.setOffset((frameW - bodyW) / 2, frameH - bodyH - Math.max(3, frameH * 0.1));
   }
 
   private buildCamera() {
@@ -1261,19 +1478,24 @@ export class StreetScene extends Phaser.Scene {
 
     this.updateNearby();
 
-    if (this.nearby && Phaser.Input.Keyboard.JustDown(this.wasd.interact)) {
-      const n = this.nearby;
-      if (n.kind === 'npc') {
-        emitBus({ type: 'interact-npc', npcId: n.npc.id });
-      } else {
-        const p = n.point;
-        if (p.kind === 'craft') emitBus({ type: 'interact-craft', craftId: p.payload });
-        else if (p.kind === 'industry') emitBus({ type: 'interact-industry', industryId: p.payload });
-        else if (p.kind === 'activity') emitBus({ type: 'interact-activity', activityId: p.payload });
-        else if (p.kind === 'subregionGate') emitBus({ type: 'interact-subregion-gate', subregionId: p.payload });
-        else emitBus({ type: 'interact-gate', regionId: p.payload, unlocked: !!p.unlocked });
-      }
+    if (Phaser.Input.Keyboard.JustDown(this.wasd.interact)) this.interactNearby();
+  }
+
+  private interactNearby() {
+    const n = this.nearby;
+    if (!n) return false;
+    if (n.kind === 'npc') {
+      emitBus({ type: 'interact-npc', npcId: n.npc.id });
+      return true;
     }
+
+    const p = n.point;
+    if (p.kind === 'craft') emitBus({ type: 'interact-craft', craftId: p.payload });
+    else if (p.kind === 'industry') emitBus({ type: 'interact-industry', industryId: p.payload });
+    else if (p.kind === 'activity') emitBus({ type: 'interact-activity', activityId: p.payload });
+    else if (p.kind === 'subregionGate') emitBus({ type: 'interact-subregion-gate', subregionId: p.payload });
+    else emitBus({ type: 'interact-gate', regionId: p.payload, unlocked: !!p.unlocked });
+    return true;
   }
 
   /** NPC 漫游：游客在出生点附近随机踱步，vendor 基本驻守原地 */
@@ -1350,9 +1572,11 @@ export class StreetScene extends Phaser.Scene {
     let best: Nearby | null = null;
     let bestDist = Infinity;
     for (const p of this.points) {
-      const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, p.sprite.x, p.sprite.y);
+      const rect = this.pointInteractionRect(p.location);
+      const nearest = nearestPointOnInteractionRect(this.player.x, this.player.y, rect);
+      const d = interactionRectDistance(this.player.x, this.player.y, rect);
       if (d < INTERACT_RANGE && shouldReplaceNearbyCandidate('point', d, best?.kind ?? null, bestDist)) {
-        best = { kind: 'point', point: p, x: p.sprite.x, y: p.sprite.y, hint: p.hint };
+        best = { kind: 'point', point: p, x: nearest.x, y: nearest.y, hint: p.hint };
         bestDist = d;
       }
     }

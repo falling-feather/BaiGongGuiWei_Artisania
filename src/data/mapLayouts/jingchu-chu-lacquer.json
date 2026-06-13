@@ -1,0 +1,31 @@
+{
+  "schema": "artisania-map-editor/v2",
+  "regionId": "jingchu",
+  "subregionId": "jingchu-chu-lacquer",
+  "tileSize": 32,
+  "size": { "w": 56, "h": 30 },
+  "roads": [
+    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
+    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
+    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
+    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
+    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
+    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+  ],
+  "objects": [
+    { "itemId": "player_spawn", "x": 28, "y": 15 },
+    { "itemId": "industry_lacquer", "name": "lacquer grove", "interaction": "industry", "targetId": "harvest-lacquer", "x": 8, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_lacquer", "name": "lacquer filtering bench", "interaction": "industry", "targetId": "tap-lacquer", "x": 18, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_lacquer", "name": "Chu lacquer workshop", "interaction": "craft", "targetId": "chu-lacquer", "x": 28, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_lacquer", "name": "Chu lacquer pattern yard", "interaction": "activity", "targetId": "jc-chu-lacquer-yard", "x": 39, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to lake market", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jingchu-lake-market", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to copper iron mine yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jingchu-mine-yard", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Xiang embroidery tower", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jingchu-xiang-embroidery", "x": 32, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Bashu river gorge", "interaction": "gate", "targetId": "bashu", "x": 49, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Qiandian mine road", "interaction": "gate", "targetId": "qiandian", "x": 49, "y": 13, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Ganpo lake kiln road", "interaction": "gate", "targetId": "ganpo", "x": 49, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "npc-jc-xiong-zhuxi", "name": "Xiong Zhuxi", "interaction": "npc", "npcId": "jc-xiong-zhuxi", "x": 31, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "lacquer-drying-shelf-a", "name": "lacquer drying shelf", "interaction": "decoration", "x": 18, "y": 18, "tileW": 3, "tileH": 2, "solid": true },
+    { "itemId": "wetland-altar-a", "name": "lacquer ritual table", "interaction": "decoration", "x": 39, "y": 4, "tileW": 3, "tileH": 2, "solid": true }
+  ]
+}

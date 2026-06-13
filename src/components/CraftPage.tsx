@@ -1,6 +1,23 @@
 import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { METRIC_LABELS, orderPrice } from '../engine';
+import {
+  CRAFT_FOCUS_CHECK_OPTIONS,
+  CRAFT_TECHNIQUE_OPTIONS,
+  DEFAULT_CRAFT_FOCUS_CHECK_CHOICE,
+  DEFAULT_CRAFT_TECHNIQUE_CHOICE,
+  MAX_WORKSHOP_CAPACITY,
+  METRIC_LABELS,
+  activeTechniqueStages,
+  craftFocusCheckOption,
+  craftTechniqueOption,
+  orderPrice,
+  workshopCapacityForCraft,
+  workshopExpansionCostForCraft,
+  workshopUpgradeSpaceCost,
+  workshopUsedSpaceForCraft,
+  type CraftFocusCheckChoiceId,
+  type CraftTechniqueChoiceId,
+} from '../engine';
 import { RESOURCE_INDEX } from '../data';
 import { getCraftPageTheme } from './craftPageThemes';
 
@@ -14,9 +31,18 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
   const content = useGameStore((s) => s.content);
   const craftStates = useGameStore((s) => s.state.crafts);
   const resources = useGameStore((s) => s.state.resources);
+  const workshopUpgradeRecords = useGameStore((s) => s.state.workshopUpgrades);
+  const workshopSpaces = useGameStore((s) => s.state.workshopSpaces);
+  const flags = useGameStore((s) => s.state.flags);
+  const regionReputation = useGameStore((s) => s.state.regionReputation);
+  const attributes = useGameStore((s) => s.state.profile.attributes);
+  const currentRegion = useGameStore((s) => s.state.currentRegion);
+  const currentSubregion = useGameStore((s) => s.state.currentSubregion);
   const playing = useGameStore((s) => s.state.status === 'playing');
   const dispatch = useGameStore((s) => s.dispatch);
   const [skipIds, setSkipIds] = useState<string[]>([]);
+  const [techniqueByStage, setTechniqueByStage] = useState<Record<string, CraftTechniqueChoiceId>>({});
+  const [focusCheckByStage, setFocusCheckByStage] = useState<Record<string, CraftFocusCheckChoiceId>>({});
 
   const def = content.crafts.find((c) => c.id === craftId);
   const state = craftStates.find((c) => c.craftId === craftId);
@@ -28,7 +54,28 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
 
   const skipSet = new Set(skipIds);
   const activeSteps = def.processChain.filter((s) => !(skipSet.has(s.id) && s.skippable));
-  const laborNeed = activeSteps.reduce((sum, s) => sum + s.laborCost, 0);
+  const interactionSpec = content.craftInteractions?.find((spec) => spec.craftId === craftId) ?? null;
+  const techniqueStages = activeTechniqueStages(interactionSpec, activeSteps.map((step) => step.id));
+  const techniqueChoices = techniqueStages.map((stage) => ({
+    stageId: stage.id,
+    choiceId: techniqueByStage[stage.id] ?? DEFAULT_CRAFT_TECHNIQUE_CHOICE,
+  }));
+  const focusChecks = techniqueStages.map((stage) => ({
+    stageId: stage.id,
+    choiceId: focusCheckByStage[stage.id] ?? DEFAULT_CRAFT_FOCUS_CHECK_CHOICE,
+  }));
+  const techniqueLaborDelta = techniqueChoices.reduce(
+    (sum, choice) => sum + craftTechniqueOption(choice.choiceId).laborDelta,
+    0,
+  );
+  const purchasedUpgradeIds = new Set((workshopUpgradeRecords ?? []).map((record) => record.id));
+  const workshopLaborDiscount = (content.workshopUpgrades ?? [])
+    .filter((upgrade) => upgrade.craftId === craftId && purchasedUpgradeIds.has(upgrade.id))
+    .reduce((sum, upgrade) => sum + (upgrade.effects.laborDiscount ?? 0), 0);
+  const laborNeed = Math.max(
+    1,
+    activeSteps.reduce((sum, s) => sum + s.laborCost, 0) - workshopLaborDiscount + techniqueLaborDelta,
+  );
   const materialNeed: Record<string, number> = {};
   for (const step of activeSteps) {
     for (const [key, amount] of Object.entries(step.resourceCost)) {
@@ -39,7 +86,24 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
   const materialShort = Object.entries(materialNeed).some(
     ([key, amount]) => (resources[key] ?? 0) < amount,
   );
-  const canCraft = playing && !laborShort && !materialShort;
+  const currentSubregionSpec = content.subregionContent?.find(
+    (entry) => entry.regionId === currentRegion && entry.subregionId === currentSubregion,
+  );
+  const localCraftAvailable = !currentSubregionSpec || currentSubregionSpec.craftIds.includes(craftId);
+  const currentRegionDef = content.regions?.find((region) => region.id === currentRegion);
+  const currentSubregionName =
+    currentRegionDef?.subregions.find((subregion) => subregion.id === currentSubregion)?.name ?? currentSubregion;
+  const targetSubregionNames =
+    content.subregionContent
+      ?.filter((entry) => entry.regionId === currentRegion && entry.craftIds.includes(craftId))
+      .map((entry) => currentRegionDef?.subregions.find((subregion) => subregion.id === entry.subregionId)?.name ?? entry.subregionId) ??
+    [];
+  const locationWarning = localCraftAvailable
+    ? ''
+    : `当前「${currentSubregionName}」没有开放「${def.name}」工坊，请经街景通道前往${
+        targetSubregionNames.length > 0 ? `「${targetSubregionNames.join('」或「')}」` : '对应小地区'
+      }。`;
+  const canCraft = playing && localCraftAvailable && !laborShort && !materialShort;
   const resName = (id: string) => RESOURCE_INDEX[id]?.name ?? id;
 
   const outputId = def.outputResourceId;
@@ -47,7 +111,54 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
   const orderQuote = outputId
     ? orderPrice(RESOURCE_INDEX[outputId]?.value ?? 12, state.metrics.heritage)
     : 0;
-  const canDeliver = playing && !!outputId && stock >= 1;
+  const canDeliver = playing && localCraftAvailable && !!outputId && stock >= 1;
+  const purchasedUpgrades = purchasedUpgradeIds;
+  const knownFlags = new Set(flags);
+  const upgradeRows = (content.workshopUpgrades ?? []).filter((upgrade) => upgrade.craftId === craftId);
+  const costLabel = (cost: Record<string, number>) =>
+    Object.entries(cost)
+      .filter(([, amount]) => amount > 0)
+      .map(([key, amount]) => `${resName(key)} ${resources[key] ?? 0}/${amount}`)
+      .join(' · ');
+  const upkeepFor = (upgrade: (typeof upgradeRows)[number]) =>
+    upgrade.upkeep ?? (upgrade.tier <= 1 ? { coin: 1 } : { coin: 2, labor: 1 });
+  const canPayCost = (cost: Record<string, number>) =>
+    Object.entries(cost).every(([key, amount]) => (resources[key] ?? 0) >= amount);
+  const workshopCapacity = workshopCapacityForCraft({ workshopSpaces }, craftId);
+  const workshopUsedSpace = workshopUsedSpaceForCraft({ workshopUpgrades: workshopUpgradeRecords ?? [] }, content, craftId);
+  const workshopExpansionCost = workshopExpansionCostForCraft({ workshopSpaces }, craftId);
+  const workshopExpansionPayable = canPayCost(workshopExpansionCost);
+  const workshopExpansionMaxed = workshopCapacity >= MAX_WORKSHOP_CAPACITY;
+  const canExpandWorkshop =
+    playing && localCraftAvailable && workshopExpansionPayable && !workshopExpansionMaxed && state.unlocked;
+  const requirementText = (upgrade: (typeof upgradeRows)[number]) => {
+    const requirements = upgrade.requirements;
+    if (!requirements) return '';
+    if (requirements.produced !== undefined && state.produced < requirements.produced) {
+      return `需先完成 ${requirements.produced} 批`;
+    }
+    const missingUpgrade = (requirements.upgrades ?? []).find((upgradeId) => !purchasedUpgrades.has(upgradeId));
+    if (missingUpgrade) {
+      const required = (content.workshopUpgrades ?? []).find((entry) => entry.id === missingUpgrade);
+      return `需先安置 ${required?.title ?? missingUpgrade}`;
+    }
+    const missingFlag = (requirements.flags ?? []).find((flag) => !knownFlags.has(flag));
+    if (missingFlag) return `缺见闻 ${missingFlag}`;
+    if (requirements.regionReputation) {
+      const current = regionReputation[requirements.regionReputation.regionId] ?? 0;
+      if (current < requirements.regionReputation.min) {
+        return `声望 ${current}/${requirements.regionReputation.min}`;
+      }
+    }
+    for (const [key, min] of Object.entries(requirements.attributes ?? {})) {
+      if ((attributes[key as keyof typeof attributes] ?? 0) < min) return `${key} ${attributes[key as keyof typeof attributes] ?? 0}/${min}`;
+    }
+    return '';
+  };
+  const selectTechnique = (stageId: string, choiceId: CraftTechniqueChoiceId) =>
+    setTechniqueByStage((prev) => ({ ...prev, [stageId]: choiceId }));
+  const selectFocusCheck = (stageId: string, choiceId: CraftFocusCheckChoiceId) =>
+    setFocusCheckByStage((prev) => ({ ...prev, [stageId]: choiceId }));
 
   return (
     <div className="craft-page" style={{ ['--page-accent' as string]: theme.accent }}>
@@ -113,6 +224,70 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
             ))}
           </ul>
 
+          {techniqueStages.length > 0 && (
+            <div className="craft-techniques">
+              <div className="craft-techniques__head">
+                <h4>工序手法</h4>
+                {techniqueLaborDelta !== 0 && (
+                  <span>{techniqueLaborDelta > 0 ? `额外工时 +${techniqueLaborDelta}` : `节省工时 ${Math.abs(techniqueLaborDelta)}`}</span>
+                )}
+              </div>
+              {techniqueStages.map((stage) => {
+                const selected = techniqueByStage[stage.id] ?? DEFAULT_CRAFT_TECHNIQUE_CHOICE;
+                const selectedOption = craftTechniqueOption(selected);
+                const selectedFocus = focusCheckByStage[stage.id] ?? DEFAULT_CRAFT_FOCUS_CHECK_CHOICE;
+                const selectedFocusOption = craftFocusCheckOption(selectedFocus);
+                return (
+                  <article className="craft-technique" key={stage.id}>
+                    <div className="craft-technique__copy">
+                      <b>{stage.name}</b>
+                      <span>{stage.playerAction}</span>
+                    </div>
+                    <div className="craft-technique__sets">
+                      <div className="craft-technique__set">
+                        <span className="craft-technique__set-label">手法</span>
+                        <div className="craft-technique__options" role="group" aria-label={`${stage.name}手法`}>
+                          {CRAFT_TECHNIQUE_OPTIONS.map((option) => (
+                            <button
+                              key={option.id}
+                              type="button"
+                              className={`craft-technique__option${selected === option.id ? ' is-active' : ''}`}
+                              title={option.desc}
+                              aria-pressed={selected === option.id}
+                              onClick={() => selectTechnique(stage.id, option.id)}
+                            >
+                              {option.shortLabel}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="craft-technique__set">
+                        <span className="craft-technique__set-label">校准</span>
+                        <div className="craft-technique__options" role="group" aria-label={`${stage.name}校准`}>
+                          {CRAFT_FOCUS_CHECK_OPTIONS.map((option) => (
+                            <button
+                              key={option.id}
+                              type="button"
+                              className={`craft-technique__option${selectedFocus === option.id ? ' is-active' : ''}`}
+                              title={option.desc}
+                              aria-pressed={selectedFocus === option.id}
+                              onClick={() => selectFocusCheck(stage.id, option.id)}
+                            >
+                              {option.shortLabel}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <p>
+                      {selectedOption.desc} 校准：{selectedFocusOption.desc}
+                    </p>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+
           <div className="craft-supply">
             <div className="craft-supply__row">
               <span className="craft-supply__label">耗料</span>
@@ -147,7 +322,8 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
             )}
             {!canCraft && playing && (
               <p className="craft-supply__warn">
-                {materialShort ? '物料不足，先去采料／精炼补足半成品。' : '人力不足，结束本季可恢复工时。'}
+                {locationWarning ||
+                  (materialShort ? '物料不足，先去采料／精炼补足半成品。' : '人力不足，结束本季可恢复工时。')}
               </p>
             )}
           </div>
@@ -156,7 +332,7 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
             <button
               className="btn btn--bamboo"
               disabled={!canCraft}
-              onClick={() => dispatch({ type: 'RUN_PROCESS', craftId: def.id, skipStepIds: skipIds })}
+              onClick={() => dispatch({ type: 'RUN_PROCESS', craftId: def.id, skipStepIds: skipIds, techniqueChoices, focusChecks })}
             >
               亲手制作
             </button>
@@ -164,7 +340,9 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
               className="btn btn--ghost"
               disabled={!canDeliver}
               title={
-                !outputId
+                locationWarning
+                  ? locationWarning
+                  : !outputId
                   ? '此体验点不产成品'
                   : stock < 1
                     ? '暂无成品可交付，先亲手制作一件'
@@ -175,6 +353,68 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
               接订单{outputId && stock >= 1 ? ` · ${orderQuote}文` : ''}
             </button>
           </div>
+
+          {upgradeRows.length > 0 && (
+            <div className="workshop-upgrades">
+              <div className="workshop-upgrades__summary">
+                <h4>工坊整备</h4>
+                <span>
+                  空间 {workshopUsedSpace}/{workshopCapacity}
+                </span>
+              </div>
+              <div className="workshop-upgrades__expand">
+                <span>
+                  {workshopExpansionMaxed
+                    ? `空间已达上限 ${MAX_WORKSHOP_CAPACITY} 格`
+                    : `扩建成本 ${costLabel(workshopExpansionCost)}`}
+                </span>
+                {locationWarning && <span className="is-short">需回到本地工坊点</span>}
+                {!workshopExpansionPayable && !workshopExpansionMaxed && !locationWarning && (
+                  <span className="is-short">扩建材料不足</span>
+                )}
+                <button
+                  className="btn btn--ghost"
+                  disabled={!canExpandWorkshop}
+                  onClick={() => dispatch({ type: 'EXPAND_WORKSHOP_SPACE', craftId: def.id })}
+                >
+                  扩建工坊
+                </button>
+              </div>
+              {upgradeRows.map((upgrade) => {
+                const purchased = purchasedUpgrades.has(upgrade.id);
+                const requirement = requirementText(upgrade);
+                const payable = canPayCost(upgrade.cost);
+                const spaceCost = workshopUpgradeSpaceCost(upgrade);
+                const enoughSpace = purchased || workshopUsedSpace + spaceCost <= workshopCapacity;
+                const canUpgrade = playing && localCraftAvailable && !purchased && !requirement && payable && enoughSpace;
+                return (
+                  <article className={`workshop-upgrade${purchased ? ' is-done' : ''}`} key={upgrade.id}>
+                    <div className="workshop-upgrade__head">
+                      <span>{upgrade.title}</span>
+                      <b>{purchased ? '已安置' : `阶 ${upgrade.tier}`}</b>
+                    </div>
+                    <p>{upgrade.desc}</p>
+                    <div className="workshop-upgrade__meta">
+                      <span>{costLabel(upgrade.cost)}</span>
+                      <span>季维护 {costLabel(upkeepFor(upgrade))}</span>
+                      <span>空间 {spaceCost} 格</span>
+                      {requirement && <span className="is-short">{requirement}</span>}
+                      {locationWarning && !purchased && <span className="is-short">需回到本地工坊点</span>}
+                      {!payable && !purchased && <span className="is-short">材料不足</span>}
+                      {!enoughSpace && !purchased && <span className="is-short">空间不足</span>}
+                    </div>
+                    <button
+                      className="btn btn--ghost"
+                      disabled={!canUpgrade}
+                      onClick={() => dispatch({ type: 'UPGRADE_WORKSHOP', upgradeId: upgrade.id })}
+                    >
+                      安置
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+          )}
         </section>
       </div>
     </div>

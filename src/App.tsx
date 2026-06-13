@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from './store/gameStore';
-import { onBus, emitCommand, type MiniMapPoint } from './game/EventBus';
+import { onBus, emitCommand, type MiniMapPoint, type RegionNavigationTarget } from './game/EventBus';
 import { buildRegionSpec } from './game/regionSpec';
+import { currentStreetRegionGate, isCurrentStreetSubregionGate } from './game/navigationGuards';
 import { ACHIEVEMENT_INDEX } from './data';
 import { PhaserGame } from './game/PhaserGame';
 import { Hud } from './components/Hud';
@@ -13,18 +14,26 @@ import { IndustryPage } from './components/IndustryPage';
 import { RegionPanel } from './components/RegionPanel';
 import { WorldMapModal } from './components/WorldMapModal';
 import { InventoryModal } from './components/InventoryModal';
+import { LoreModal } from './components/LoreModal';
 import { ActivityModal } from './components/ActivityModal';
 import { AchievementsModal } from './components/AchievementsModal';
 import { MainMenu } from './components/MainMenu';
 import { Tutorial } from './components/Tutorial';
 import { StoryModal } from './components/StoryModal';
 import { EventModal } from './components/EventModal';
+import { EscortCrisisModal } from './components/EscortCrisisModal';
+import { SupplyCrisisModal } from './components/SupplyCrisisModal';
+import { ActivityStallClosingModal } from './components/ActivityStallClosingModal';
 import { GameOverReport } from './components/GameOverReport';
 import { SettingsModal } from './components/SettingsModal';
 import { Minimap, type PlayerPos } from './components/Minimap';
 import { MapEditor } from './components/MapEditor';
 
 const TUTORIAL_SEEN_KEY = 'artisania:tutorial-seen';
+
+function navigationTargetSignature(target: RegionNavigationTarget | undefined) {
+  return target ? `${target.kind}:${target.payload}:${target.label}:${target.detail}` : '';
+}
 
 export function App() {
   const editorMode = new URLSearchParams(window.location.search).get('editor') === '1';
@@ -50,6 +59,7 @@ function GameApp() {
   const [mapOpen, setMapOpen] = useState(false);
   const [bagOpen, setBagOpen] = useState(false);
   const [achOpen, setAchOpen] = useState(false);
+  const [loreOpen, setLoreOpen] = useState(false);
   const [achToast, setAchToast] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [playerPos, setPlayerPos] = useState<PlayerPos | null>(null);
@@ -57,6 +67,7 @@ function GameApp() {
   const [zoom, setZoom] = useState(2);
   const sceneReadyRef = useRef(false);
   const lastSigRef = useRef('');
+  const lastTargetSigRef = useRef('');
   const knownAchRef = useRef<Set<string>>(new Set());
   const toastTimerRef = useRef<number | null>(null);
 
@@ -70,6 +81,7 @@ function GameApp() {
     await newGame(undefined, playerName, slotId);
     setView('playing');
     lastSigRef.current = '';
+    lastTargetSigRef.current = '';
     syncRegion();
     if (localStorage.getItem(TUTORIAL_SEEN_KEY) !== '1') {
       setTutorialOpen(true);
@@ -84,6 +96,7 @@ function GameApp() {
     }
     setView('playing');
     lastSigRef.current = '';
+    lastTargetSigRef.current = '';
     syncRegion();
   }
 
@@ -100,7 +113,19 @@ function GameApp() {
     const spec = buildRegionSpec(state.currentRegion, state);
     if (!spec) return;
     lastSigRef.current = sig;
+    lastTargetSigRef.current = navigationTargetSignature(spec.navigationTarget);
     emitCommand({ type: 'enter-region', spec });
+  }
+
+  function syncNavigationTarget() {
+    if (!sceneReadyRef.current) return;
+    const state = useGameStore.getState().state;
+    const spec = buildRegionSpec(state.currentRegion, state);
+    if (!spec) return;
+    const sig = navigationTargetSignature(spec.navigationTarget);
+    if (sig === lastTargetSigRef.current) return;
+    lastTargetSigRef.current = sig;
+    emitCommand({ type: 'set-navigation-target', target: spec.navigationTarget });
   }
 
   // 监听游戏世界发来的事件
@@ -115,6 +140,8 @@ function GameApp() {
       else if (payload.type === 'interact-activity') setActiveActivityId(payload.activityId);
       else if (payload.type === 'interact-npc') setActiveNpcId(payload.npcId);
       else if (payload.type === 'interact-subregion-gate') {
+        if (!isCurrentStreetSubregionGate(useGameStore.getState().state, payload.subregionId)) return;
+        setHint(null);
         useGameStore.getState().dispatch({ type: 'TRAVEL_SUBREGION', subregionId: payload.subregionId });
       } else if (payload.type === 'player-pos')
         setPlayerPos({ tx: payload.tx, ty: payload.ty, mapW: payload.mapW, mapH: payload.mapH });
@@ -122,7 +149,10 @@ function GameApp() {
       else if (payload.type === 'zoom-changed') setZoom(payload.zoom);
       else if (payload.type === 'interact-gate') {
         const dispatch = useGameStore.getState().dispatch;
-        if (payload.unlocked) {
+        const gate = currentStreetRegionGate(useGameStore.getState().state, payload.regionId);
+        if (!gate) return;
+        setHint(null);
+        if (gate.unlocked) {
           dispatch({ type: 'TRAVEL', regionId: payload.regionId });
         } else {
           dispatch({ type: 'UNLOCK_REGION', regionId: payload.regionId });
@@ -133,6 +163,7 @@ function GameApp() {
       } else if (payload.type === 'scene-ready') {
         sceneReadyRef.current = true;
         lastSigRef.current = '';
+        lastTargetSigRef.current = '';
         syncRegion();
       }
     });
@@ -155,6 +186,7 @@ function GameApp() {
     knownAchRef.current = new Set(useGameStore.getState().state.achievements);
     return useGameStore.subscribe(() => {
       syncRegion();
+      syncNavigationTarget();
       const ach = useGameStore.getState().state.achievements;
       const fresh = ach.filter((id) => !knownAchRef.current.has(id));
       if (fresh.length > 0) {
@@ -186,19 +218,25 @@ function GameApp() {
             onOpenMap={() => setMapOpen(true)}
             onOpenBag={() => setBagOpen(true)}
             onOpenAchievements={() => setAchOpen(true)}
+            onOpenLore={() => setLoreOpen(true)}
             onOpenSettings={() => setSettingsOpen(true)}
+            onInteractNearby={() => emitCommand({ type: 'interact-nearby' })}
           />
           <CraftExperienceModal craftId={activeCraftId} onClose={() => setActiveCraftId(null)} />
           <NpcDialogModal npcId={activeNpcId} onClose={() => setActiveNpcId(null)} />
           <RegionPanel open={panelOpen} onClose={() => setPanelOpen(false)} />
           <WorldMapModal open={mapOpen} onClose={() => setMapOpen(false)} />
           <InventoryModal open={bagOpen} onClose={() => setBagOpen(false)} />
+          <LoreModal open={loreOpen} onClose={() => setLoreOpen(false)} />
           <ActivityModal activityId={activeActivityId} onClose={() => setActiveActivityId(null)} />
           <AchievementsModal open={achOpen} onClose={() => setAchOpen(false)} />
           <Tutorial open={tutorialOpen} onClose={() => setTutorialOpen(false)} />
           {!tutorialOpen && <StoryModal />}
           {achToast && <div className="ach-toast">★ 解锁成就「{achToast}」</div>}
           <EventModal />
+          <EscortCrisisModal />
+          <SupplyCrisisModal />
+          <ActivityStallClosingModal />
           <GameOverReport />
           <Minimap
             player={playerPos}

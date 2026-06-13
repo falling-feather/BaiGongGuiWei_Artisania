@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "0.1.0",
+  "id": "jiangnan.full_map.pixel_preview.v01",
+  "operations": [
+    {
+      "op": "pixelizeResize",
+      "targetWidth": 384,
+      "targetHeight": 256,
+      "cropMode": "none",
+      "sampler": "dominant",
+      "alphaMode": "weighted",
+      "maxSize": 512
+    },
+    {
+      "op": "palette",
+      "maxColors": 48,
+      "distance": "rgb",
+      "mergeThreshold": 28
+    }
+  ]
+}

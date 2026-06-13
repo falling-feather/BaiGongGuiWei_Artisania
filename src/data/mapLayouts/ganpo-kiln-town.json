@@ -1,0 +1,34 @@
+{
+  "schema": "artisania-map-editor/v2",
+  "regionId": "ganpo",
+  "subregionId": "ganpo-kiln-town",
+  "tileSize": 32,
+  "size": { "w": 60, "h": 30 },
+  "roads": [
+    { "points": [{ "x": 2, "y": 7 }, { "x": 57, "y": 7 }] },
+    { "points": [{ "x": 2, "y": 15 }, { "x": 57, "y": 15 }] },
+    { "points": [{ "x": 2, "y": 24 }, { "x": 57, "y": 24 }] },
+    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
+    { "points": [{ "x": 30, "y": 3 }, { "x": 30, "y": 26 }] },
+    { "points": [{ "x": 50, "y": 3 }, { "x": 50, "y": 26 }] }
+  ],
+  "objects": [
+    { "itemId": "player_spawn", "x": 30, "y": 15 },
+    { "itemId": "industry_kiln", "name": "kaolin clay stock", "interaction": "industry", "targetId": "harvest-kaolin", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_kiln", "name": "clay washing trough", "interaction": "industry", "targetId": "mine-kaolin", "x": 15, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_ceramic", "name": "Jingdezhen porcelain hall", "interaction": "craft", "targetId": "jingdezhen-porcelain", "x": 29, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_throwing", "name": "throwing room", "interaction": "activity", "targetId": "gp-throwing-room", "x": 24, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_painting", "name": "blue painting room", "interaction": "activity", "targetId": "gp-blue-painting-room", "x": 34, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_kiln", "name": "dragon kiln", "interaction": "activity", "targetId": "gp-dragon-kiln", "x": 39, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_fair", "name": "kiln opening fair", "interaction": "activity", "targetId": "gp-kiln-opening-fair", "x": 45, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to kaolin hill", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "ganpo-kaolin-hill", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to river wood yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "ganpo-river-wood", "x": 20, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Jiangnan kiln river road", "interaction": "gate", "targetId": "jiangnan", "x": 53, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Huizhou merchant road", "interaction": "gate", "targetId": "huizhou", "x": 53, "y": 13, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Jingchu lake road", "interaction": "gate", "targetId": "jingchu", "x": 53, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "npc-gp-tang-pishou", "name": "Tang Pishou", "interaction": "npc", "npcId": "gp-tang-pishou", "x": 27, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "npc-gp-lan-yousheng", "name": "Lan Yousheng", "interaction": "npc", "npcId": "gp-lan-yousheng", "x": 34, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "npc-gp-wen-yaotou", "name": "Wen Yaotou", "interaction": "npc", "npcId": "gp-wen-yaotou", "x": 42, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "kiln-stack-a", "name": "long kiln stack", "interaction": "decoration", "x": 42, "y": 1, "tileW": 5, "tileH": 3, "solid": true }
+  ]
+}

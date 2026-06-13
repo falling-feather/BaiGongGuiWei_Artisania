@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "0.1.0",
+  "assetId": "asset",
+  "type": "character",
+  "result": "pass",
+  "checks": [
+    {
+      "id": "hasAlpha",
+      "result": "pass",
+      "message": "存在透明通道"
+    },
+    {
+      "id": "size",
+      "result": "pass",
+      "value": {
+        "w": 320,
+        "h": 192
+      }
+    },
+    {
+      "id": "paletteCount",
+      "result": "pass",
+      "value": 48,
+      "limit": 64
+    }
+  ],
+  "summary": {
+    "pass": 3,
+    "warning": 0,
+    "fail": 0
+  },
+  "suggestion": "usable",
+  "createdAt": "2026-06-07T13:50:29.389Z"
+}

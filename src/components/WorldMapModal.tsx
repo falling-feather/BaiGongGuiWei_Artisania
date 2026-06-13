@@ -77,7 +77,7 @@ export function WorldMapModal({ open, onClose }: { open: boolean; onClose: () =>
         <h3 className="modal__title">九州行脚 · 大地图</h3>
         <p className="modal__desc">
           大地图仅作路线总览与调试定位；正式迁移请在当前场景寻找出入口牌坊或商路节点，按 E 开通或前往。
-          区内小地区仍在「镇务」中切换。现有 {coin} 文。
+          区内小地区也请经场景内通道前往，「镇务」只作当前位置与路线说明。现有 {coin} 文。
         </p>
         <div className="worldmap">
           <svg className="worldmap__lines" viewBox="0 0 100 100" preserveAspectRatio="none">

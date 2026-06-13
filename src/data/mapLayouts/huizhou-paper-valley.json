@@ -1,0 +1,32 @@
+{
+  "schema": "artisania-map-editor/v2",
+  "regionId": "huizhou",
+  "subregionId": "huizhou-paper-valley",
+  "tileSize": 32,
+  "size": { "w": 56, "h": 30 },
+  "roads": [
+    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
+    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
+    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
+    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
+    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
+    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+  ],
+  "objects": [
+    { "itemId": "player_spawn", "x": 28, "y": 15 },
+    { "itemId": "industry_paper", "name": "qingtan bark grove", "interaction": "industry", "targetId": "harvest-qingtan", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_paper", "name": "paper lifting vat", "interaction": "industry", "targetId": "make-paper", "x": 15, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_tea", "name": "merchant tea ridge", "interaction": "industry", "targetId": "harvest-tea-leaf", "x": 25, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_tea", "name": "tea fixing table", "interaction": "industry", "targetId": "pick-tea", "x": 35, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_paper", "name": "Xuan paper workshop", "interaction": "craft", "targetId": "xuan-paper", "x": 26, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_paper", "name": "paper valley lesson", "interaction": "activity", "targetId": "hz-paper-valley", "x": 38, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to ink alley", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "huizhou-ink-alley", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to She stone village", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "huizhou-she-stone", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to merchant hall", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "huizhou-merchant-hall", "x": 32, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Jiangnan paper route", "interaction": "gate", "targetId": "jiangnan", "x": 49, "y": 8, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Ganpo merchant route", "interaction": "gate", "targetId": "ganpo", "x": 49, "y": 18, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "npc-hz-wang-zhiniang", "name": "Wang Zhiniang", "interaction": "npc", "npcId": "hz-wang-zhiniang", "x": 30, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "drying-wall-a", "name": "paper drying wall", "interaction": "decoration", "x": 18, "y": 18, "tileW": 4, "tileH": 2, "solid": true },
+    { "itemId": "stream-stone-a", "name": "stream stones", "interaction": "decoration", "x": 41, "y": 4, "tileW": 3, "tileH": 2, "solid": true }
+  ]
+}

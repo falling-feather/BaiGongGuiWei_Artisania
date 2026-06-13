@@ -16,6 +16,9 @@ export {
 export { REGIONS, REGION_INDEX } from './regions';
 export {
   ACTIVITY_INDEX,
+  COLLAB_RECIPES,
+  ESCORT_ENCOUNTERS,
+  HOME_VISITS,
   PLACEHOLDER_NPCS,
   REGION_ACTIVITIES,
   REGION_CONTENT,
@@ -23,8 +26,26 @@ export {
   activitiesForSubregion,
 } from './regionContent';
 export { ACTIVITY_CHALLENGE_INDEX, ACTIVITY_CHALLENGES } from './activityChallenges';
+export { CRAFT_INTERACTION_BY_ID, CRAFT_INTERACTION_INDEX, CRAFT_INTERACTIONS } from './craftInteractions';
+export { WORKSHOP_UPGRADE_INDEX, WORKSHOP_UPGRADES } from './workshopUpgrades';
 export { ITEM_DESCRIPTOR_INDEX, ITEM_DESCRIPTOR_RULES } from './itemDescriptors';
-export { REGION_MAP_POS } from './mapLayout';
+export { LORE_ENTRIES, LORE_ENTRY_INDEX } from './loreEntries';
+export {
+  REGION_MAP_POS,
+  RUNTIME_MAP_EDITOR_SNAPSHOTS,
+  RUNTIME_MAP_LAYOUTS,
+  runtimeLayoutForSubregion,
+  runtimeLayoutFromEditorSnapshot,
+} from './mapLayout';
+export type {
+  RuntimeMapEditorObject,
+  RuntimeMapEditorSnapshot,
+  RuntimeMapEditorTile,
+  RuntimeMapImportOptions,
+  RuntimeMapLayout,
+  RuntimeMapObject,
+  RuntimeMapRoadPath,
+} from './mapLayout';
 export { ACHIEVEMENTS, ACHIEVEMENT_INDEX } from './achievements';
 export { STORY_BEATS, renderStoryLine } from './story';
 export { ALL_NPCS, NPCS, NPC_INDEX, npcsForRegion } from './npcs';

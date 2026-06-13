@@ -1,11 +1,12 @@
 /**
  * Phaser ↔ React 双向事件总线。
  * - GameBusEvent：Phaser 场景 → React（交互触发、提示、就绪）。
- * - GameCommand：React → Phaser（切换地区、重建地图）。
+ * - GameCommand：React → Phaser（切换地区、重建地图、触发附近互动）。
  * 二者各走一个频道，互不耦合。
  */
 import Phaser from 'phaser';
 import type { ActivityKind } from '../engine';
+import type { RuntimeMapLayout } from '../data/mapLayout';
 
 /** 地图上一个产业交互点的层级（用于配色/图标） */
 export type IndustryTier = 'harvest' | 'refine' | 'product';
@@ -22,6 +23,18 @@ export type WeatherKind = 'clear' | 'rain' | 'snow';
 /** 地图上的 NPC 角色类别 */
 export type NpcRole = 'tourist' | 'vendor';
 
+/** 街景工坊点的当前经营状态摘要；具体扣费与校验仍由 reducer 处理。 */
+export interface RegionCraftWorkshopStatus {
+  usedSpace: number;
+  capacity: number;
+  maxCapacity: number;
+  installedUpgrades: number;
+  totalUpgrades: number;
+  availableUpgrades: number;
+  needsExpansion: boolean;
+  canExpand: boolean;
+}
+
 /** React 下发给场景的「地图 NPC」——游客随机游走，关联人物驻守店铺前 */
 export interface RegionNpcSpec {
   id: string;
@@ -29,6 +42,18 @@ export interface RegionNpcSpec {
   role: NpcRole;
   /** 关联的手艺/产业点 id（vendor 驻守其旁）；游客不填 */
   anchorId?: string;
+  /** 人工地图指定站位；缺省时由街景按锚点或道路自动派位 */
+  tileX?: number;
+  tileY?: number;
+}
+
+export type RegionNavigationTargetKind = 'gate' | 'subregionGate';
+
+export interface RegionNavigationTarget {
+  kind: RegionNavigationTargetKind;
+  payload: string;
+  label: string;
+  detail: string;
 }
 
 /** React 下发给场景的「地区地图规格」——场景据此摆点，无需 import 数据层 */
@@ -44,7 +69,7 @@ export interface RegionMapSpec {
   season: WeatherSeason;
   weather: WeatherKind;
   industries: { id: string; name: string; tier: IndustryTier }[];
-  crafts: { id: string; name: string }[];
+  crafts: { id: string; name: string; workshop?: RegionCraftWorkshopStatus }[];
   activities: { id: string; name: string; kind: ActivityKind }[];
   subregionGates: {
     subregionId: string;
@@ -62,6 +87,10 @@ export interface RegionMapSpec {
   }[];
   /** 本地 NPC（游客 + 店铺关联人物） */
   npcs: RegionNpcSpec[];
+  /** 当前追踪目标对应的街景入口，仅用于高亮与小地图提示，不触发迁移 */
+  navigationTarget?: RegionNavigationTarget;
+  /** 可选人工地图布局；缺省时 StreetScene 继续使用程序化布局 */
+  layout?: RuntimeMapLayout;
 }
 
 /** 小地图上的一个标记点（瓦片坐标 + 类别） */
@@ -69,6 +98,8 @@ export interface MiniMapPoint {
   tx: number;
   ty: number;
   kind: 'industry' | 'craft' | 'activity' | 'gate' | 'subregionGate';
+  label?: string;
+  goal?: boolean;
 }
 
 export type GameBusEvent =
@@ -96,8 +127,12 @@ export type GameBusEvent =
 export type GameCommand =
   /** 让场景重建为指定地区的地图 */
   | { type: 'enter-region'; spec: RegionMapSpec }
+  /** 仅刷新当前行脚目标的街景高亮；不改变地区、不触发迁移 */
+  | { type: 'set-navigation-target'; target?: RegionNavigationTarget }
   /** 调整相机缩放：delta 为增量，absolute 为指定倍率（二选一） */
-  | { type: 'zoom'; delta?: number; absolute?: number };
+  | { type: 'zoom'; delta?: number; absolute?: number }
+  /** 触发当前感应范围内的最近交互对象（键盘 E 以外的 HUD/触屏入口） */
+  | { type: 'interact-nearby' };
 
 export const EventBus = new Phaser.Events.EventEmitter();
 

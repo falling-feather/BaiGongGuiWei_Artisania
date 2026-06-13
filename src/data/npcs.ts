@@ -20,7 +20,7 @@ export const NPCS: NpcDef[] = [
     profession: '竹编师',
     personality: 'steady',
     knowledgeTags: ['bamboo', 'daily-orders'],
-    functions: ['mentor', 'quest', 'order'],
+    functions: ['mentor', 'quest', 'spar', 'order'],
     anchorCraftId: 'bamboo-weaving',
     preferences: [
       { label: '细篾匀整的竹器', resourceIds: ['bambooWare', 'qingshenBamboo'], craftIds: ['bamboo-weaving', 'qingshen-bamboo'], minQuality: 0.55, affinityBonus: 6 },
@@ -59,7 +59,7 @@ export const NPCS: NpcDef[] = [
     profession: '蓝染师',
     personality: 'patient',
     knowledgeTags: ['indigo', 'dyeing'],
-    functions: ['mentor', 'quest', 'collab'],
+    functions: ['mentor', 'quest', 'spar', 'collab'],
     anchorCraftId: 'indigo-dyeing',
     preferences: [
       { label: '蓝得沉静的染布', resourceIds: ['indigoCloth', 'batikCloth'], craftIds: ['indigo-dyeing', 'batik'], affinityBonus: 7 },
@@ -98,7 +98,7 @@ export const NPCS: NpcDef[] = [
     profession: '文人书法家',
     personality: 'sharp',
     knowledgeTags: ['calligraphy', 'literati', 'stationery'],
-    functions: ['mentor', 'quest', 'appraisal', 'collab'],
+    functions: ['mentor', 'quest', 'spar', 'appraisal', 'collab', 'homeVisit'],
     schedule: [
       { phase: 'morning', subregionId: 'jiangnan-jinling', note: '乌衣书院讲学' },
       { phase: 'afternoon', subregionId: 'jiangnan-jinling', note: '秦淮灯市题跋' },
@@ -151,7 +151,7 @@ export const NPCS: NpcDef[] = [
     profession: '织造师',
     personality: 'precise',
     knowledgeTags: ['silk', 'brocade', 'loom'],
-    functions: ['mentor', 'order', 'collab'],
+    functions: ['mentor', 'spar', 'order', 'collab'],
     schedule: [
       { phase: 'morning', subregionId: 'jiangnan-taihu', note: '织埠查线' },
       { phase: 'afternoon', subregionId: 'jiangnan-jinling', note: '云锦局联作' },
@@ -192,7 +192,7 @@ export const NPCS: NpcDef[] = [
     profession: '金箔匠',
     personality: 'demanding',
     knowledgeTags: ['gold-leaf', 'metalwork', 'palace-orders'],
-    functions: ['mentor', 'order', 'route', 'escort'],
+    functions: ['mentor', 'spar', 'order', 'route', 'escort'],
     schedule: [
       { phase: 'morning', subregionId: 'jiangnan-jinling', note: '金箔作开槌' },
       { phase: 'dusk', subregionId: 'jiangnan-jinling', note: '灯市验货' },
@@ -234,7 +234,7 @@ export const NPCS: NpcDef[] = [
     profession: '灯彩匠',
     personality: 'warm',
     knowledgeTags: ['lantern-fair', 'festival-orders'],
-    functions: ['quest', 'order', 'homeVisit'],
+    functions: ['quest', 'spar', 'order', 'homeVisit'],
     schedule: [
       { phase: 'dusk', subregionId: 'jiangnan-jinling', note: '秦淮灯市布灯' },
       { phase: 'night', subregionId: 'jiangnan-jinling', note: '夜市收灯' },
@@ -317,7 +317,7 @@ export const NPCS: NpcDef[] = [
     profession: '菜圃少年',
     personality: 'bright',
     knowledgeTags: ['farming', 'solar-term', 'yard'],
-    functions: ['mentor', 'homeVisit'],
+    functions: ['mentor', 'spar', 'homeVisit'],
     schedule: [
       { phase: 'dawn', subregionId: 'jiangnan-baigongyuan', note: '菜圃浇水' },
       { phase: 'morning', subregionId: 'jiangnan-baigongyuan', note: '教玩家认苗' },

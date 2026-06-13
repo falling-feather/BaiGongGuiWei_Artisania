@@ -137,8 +137,13 @@ export function createInitialState(
     metrics: aggregateTownMetrics(craftStates),
     resources: devMode ? { ...DEV_RESOURCES } : { ...INITIAL_RESOURCES },
     crafts: craftStates,
+    workshopUpgrades: [],
+    workshopSpaces: [],
     apprentices: apprentices.map((a) => ({ ...a })),
     pendingEvent: null,
+    pendingEscortCrisis: null,
+    pendingSupplyCrisis: null,
+    pendingActivityStallClosing: null,
     log: [
       devMode
         ? `开发者模式已开启，${playerName.trim()}。全境通行，资源无虞。`
@@ -156,6 +161,7 @@ export function createInitialState(
     achievements: [],
     seenStory: [],
     flags: [],
+    trackedLoreEntryId: null,
     playerName: playerName.trim(),
     devMode,
     npcAffinity: {},
@@ -165,6 +171,9 @@ export function createInitialState(
     regionReputation: currentRegion ? { [currentRegion]: devMode ? 30 : 5 } : {},
     routeStability: {},
     routeEscortRuns: {},
+    supplyCrisisRecords: [],
     activeOrders: [],
+    homeVisitRecords: [],
+    nightMarketStallRecords: [],
   };
 }

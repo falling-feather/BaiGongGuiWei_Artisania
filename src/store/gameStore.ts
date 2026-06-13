@@ -17,10 +17,15 @@ import {
 import {
   ACHIEVEMENTS,
   ALL_NPCS,
+  COLLAB_RECIPES,
+  CRAFT_INTERACTIONS,
   CRAFTS,
+  ESCORT_ENCOUNTERS,
   EVENTS,
+  HOME_VISITS,
   INDUSTRIES,
   ITEM_DESCRIPTOR_RULES,
+  LORE_ENTRIES,
   QUESTS,
   REGION_ACTIVITIES,
   REGION_CONTENT,
@@ -29,6 +34,7 @@ import {
   STARTING_APPRENTICES,
   STORY_BEATS,
   SUBREGION_CONTENT,
+  WORKSHOP_UPGRADES,
 } from '../data';
 import { localStorageAdapter } from '../storage/localStorageAdapter';
 import type { SaveSlotSummary } from '../storage/StorageAdapter';
@@ -47,7 +53,13 @@ const content: GameContent = {
   activities: REGION_ACTIVITIES,
   regionContent: REGION_CONTENT,
   subregionContent: SUBREGION_CONTENT,
+  escortEncounters: ESCORT_ENCOUNTERS,
+  collabRecipes: COLLAB_RECIPES,
+  homeVisits: HOME_VISITS,
+  craftInteractions: CRAFT_INTERACTIONS,
+  workshopUpgrades: WORKSHOP_UPGRADES,
   itemDescriptorRules: ITEM_DESCRIPTOR_RULES,
+  loreEntries: LORE_ENTRIES,
 };
 
 interface GameStore {

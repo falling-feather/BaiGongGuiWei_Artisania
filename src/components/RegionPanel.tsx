@@ -1,6 +1,6 @@
 import { useGameStore } from '../store/gameStore';
 import { RESOURCE_INDEX } from '../data';
-import { localIndustriesForSubregion } from '../data/subregionContent';
+import { craftsForSubregion, localIndustriesForSubregion } from '../data/subregionContent';
 import { emitBus } from '../game/EventBus';
 import {
   regionReputationLabel,
@@ -11,7 +11,17 @@ import {
   routeRiskScore,
   routeStabilityOf,
 } from '../engine';
-import type { CropId, IndustryDef, RegionDef, RouteSpec } from '../engine';
+import type {
+  CropId,
+  GameWeather,
+  HomeVisitRecord,
+  IndustryDef,
+  ItemInstance,
+  NightMarketStallRecord,
+  RegionDef,
+  RouteSpec,
+  SupplyCrisisRecord,
+} from '../engine';
 
 const CROP_OPTIONS: { id: CropId; name: string; output: string }[] = [
   { id: 'indigo', name: '靛草', output: '靛蓝草' },
@@ -30,6 +40,22 @@ const PHASE_LABEL = {
   dusk: '黄昏',
   night: '夜间',
 } as const;
+const SEASON_LABEL = {
+  spring: '春',
+  summer: '夏',
+  autumn: '秋',
+  winter: '冬',
+} as const;
+const WEATHER_LABEL: Record<GameWeather, string> = {
+  clear: '晴',
+  rain: '雨',
+  snow: '雪',
+};
+const WEATHER_NOTE: Record<GameWeather, string> = {
+  clear: '晴日适合晒制、赶路与常规采料。',
+  rain: '雨天会润泽植物类露天采集，田圃可借雨水免工时浇灌。',
+  snow: '雪天露天采集与田圃照料受阻，作物收成会偏紧。',
+};
 
 function routeTouches(route: RouteSpec, regionId: string): boolean {
   return route.fromRegionId === regionId || route.toRegionId === regionId;
@@ -48,6 +74,50 @@ function resName(key: string): string {
 function describeInput(input: Record<string, number>): string {
   const parts = Object.entries(input).map(([k, v]) => `${resName(k)}×${v}`);
   return parts.length ? parts.join(' ') : '仅耗工时';
+}
+
+function isHarvestIndustry(industry: IndustryDef): boolean {
+  return Object.keys(industry.input).length === 0;
+}
+
+function weatherIndustryHint(industry: IndustryDef, weather: GameWeather): string {
+  if (!isHarvestIndustry(industry)) return '';
+  if (weather === 'rain') return '雨天露天采集可能多得鲜料';
+  if (weather === 'snow') return '雪天露天采集产量与品相偏低';
+  return '';
+}
+
+function itemDisplayName(item: ItemInstance): string {
+  return item.displayName ?? RESOURCE_INDEX[item.resourceId]?.name ?? item.resourceId;
+}
+
+function visitDateLabel(record: HomeVisitRecord): string {
+  return `第 ${record.day} 日 · ${PHASE_LABEL[record.phase]}`;
+}
+
+const HOME_VISIT_KIND_LABEL: Record<NonNullable<HomeVisitRecord['choiceKind']>, string> = {
+  view: '参观',
+  inscribe: '题跋',
+  collect: '收藏',
+};
+
+function stallDateLabel(record: NightMarketStallRecord): string {
+  return `第 ${record.day} 日 · ${PHASE_LABEL[record.phase]}`;
+}
+
+const SUPPLY_RECORD_STATUS_LABEL: Record<SupplyCrisisRecord['status'], string> = {
+  watch: '待复盘',
+  strained: '吃紧',
+  closed: '已收束',
+};
+
+function supplyRecordDateLabel(record: SupplyCrisisRecord): string {
+  return `第 ${record.resolvedDay} 日处理 · 第 ${record.followUpDay} 日复盘`;
+}
+
+function supplyRecordFollowUpCost(record: SupplyCrisisRecord) {
+  if (record.status === 'strained') return { labor: record.severity + 1, coin: record.severity * 3 };
+  return { labor: 1, coin: 0 };
 }
 
 /**
@@ -69,6 +139,10 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const unlockedRegions = useGameStore((s) => s.state.unlockedRegions);
   const flags = useGameStore((s) => s.state.flags);
   const calendar = useGameStore((s) => s.state.calendar);
+  const itemInstances = useGameStore((s) => s.state.itemInstances);
+  const homeVisitRecords = useGameStore((s) => s.state.homeVisitRecords ?? []);
+  const nightMarketStallRecords = useGameStore((s) => s.state.nightMarketStallRecords ?? []);
+  const supplyCrisisRecords = useGameStore((s) => s.state.supplyCrisisRecords ?? []);
   const playing = useGameStore((s) => s.state.status === 'playing');
   const dispatch = useGameStore((s) => s.dispatch);
 
@@ -83,6 +157,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const routeSpecs = Array.from(
     new Map((content.regionContent?.flatMap((spec) => spec.routes) ?? []).map((route) => [route.id, route])).values(),
   );
+  const routeLookup = new Map(routeSpecs.map((route) => [route.id, route]));
   const currentRouteRows = routeSpecs
     .filter((route) => routeTouches(route, currentRegion))
     .map((route) => ({
@@ -101,6 +176,12 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
       escortRuns: routeEscortRuns[route.id] ?? 0,
     };
   };
+  const localSupplyCrisisRecords = supplyCrisisRecords
+    .filter((record) => {
+      const route = routeLookup.get(record.routeId);
+      return route ? routeTouches(route, currentRegion) : false;
+    })
+    .slice(0, 6);
 
   const localIndustries: IndustryDef[] = localIndustriesForSubregion(region, currentSubregion, industries);
   const currentActivities = (content.activities ?? []).filter(
@@ -109,6 +190,18 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
   const isFarmSubregion = Boolean(
     currentSub?.traits.includes('种植') || currentSub?.id.includes('baigongyuan'),
   );
+  const displayedItems = itemInstances
+    .filter((item) => item.status === 'displayed')
+    .sort((a, b) => b.quality - a.quality || a.createdTurn - b.createdTurn);
+  const recentHomeVisits = homeVisitRecords.slice(0, 4);
+  const localStallRecords = nightMarketStallRecords.filter(
+    (record) => record.regionId === currentRegion && record.subregionId === currentSubregion,
+  );
+  const bestStallRecords = [...localStallRecords]
+    .sort((a, b) => b.revenue - a.revenue || b.crowd - a.crowd || b.day - a.day)
+    .slice(0, 3);
+  const hasStallActivity = currentActivities.some((activity) => activity.reward.stall);
+  const npcNameFor = (npcId: string) => content.npcs?.find((npc) => npc.id === npcId)?.name ?? npcId;
 
   const canGather = (ind: IndustryDef): boolean => {
     if (labor < ind.laborCost) return false;
@@ -120,6 +213,35 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
     if (activity.once && completedActivities.includes(activity.id)) return false;
     if (activity.availablePhases && !activity.availablePhases.includes(calendar.phase)) return false;
     return Object.entries(activity.resourceCost ?? {}).every(([k, v]) => (resources[k] ?? 0) >= v);
+  };
+
+  const subregionSummaryFor = (targetSubregion: RegionDef['subregions'][number]) => {
+    if (!region) return { chips: [] as string[], sample: '' };
+    const targetIndustries = localIndustriesForSubregion(region, targetSubregion.id, industries);
+    const targetCrafts = craftsForSubregion(region, targetSubregion.id);
+    const targetActivities = (content.activities ?? []).filter(
+      (activity) => activity.regionId === region.id && activity.subregionId === targetSubregion.id,
+    );
+    const targetNpcs = (content.npcs ?? []).filter(
+      (npc) =>
+        npc.regionId === region.id &&
+        (npc.subregionId === targetSubregion.id ||
+          (npc.schedule ?? []).some((rule) => rule.subregionId === targetSubregion.id)),
+    );
+    const chips = [
+      targetIndustries.length ? `采料 ${targetIndustries.length}` : '',
+      targetCrafts.length ? `工坊 ${targetCrafts.length}` : '',
+      targetActivities.length ? `活动 ${targetActivities.length}` : '',
+      targetNpcs.length ? `人物 ${targetNpcs.length}` : '',
+    ].filter(Boolean);
+    const sample = [
+      ...targetCrafts.map((craft) => craft.name),
+      ...targetActivities.map((activity) => activity.name),
+      ...targetIndustries.map((industry) => industry.name),
+    ]
+      .slice(0, 3)
+      .join(' / ');
+    return { chips, sample };
   };
 
   // 库存中数量 > 0 的资源（含 coin/labor）
@@ -135,6 +257,9 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
           </small>
         </h3>
         {region && <p className="modal__desc">{region.blurb}</p>}
+        <p className="panel-note">
+          今日：第 {calendar.day} 日 · {SEASON_LABEL[calendar.season]} · {PHASE_LABEL[calendar.phase]} · {WEATHER_LABEL[calendar.weather]}。{WEATHER_NOTE[calendar.weather]}
+        </p>
 
         {region && (
           <section className="panel-block">
@@ -145,22 +270,34 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
               </p>
             )}
             <div className="subregion-grid">
-              {region.subregions.map((subregion) => (
-                <button
-                  key={subregion.id}
-                  className={`subregion-card ${subregion.id === currentSubregion ? 'is-current' : ''}`}
-                  disabled
-                  title={
-                    subregion.id === currentSubregion
-                      ? subregion.blurb
-                      : `${subregion.blurb} 请在当前场景内寻找区内通道前往。`
-                  }
-                >
-                  <b>{subregion.name}</b>
-                  <span>{subregion.role}</span>
-                  <small>{subregion.traits.join(' / ')}</small>
-                </button>
-              ))}
+              {region.subregions.map((subregion) => {
+                const summary = subregionSummaryFor(subregion);
+                const localHint = summary.chips.length ? `本地：${summary.chips.join('、')}。` : '';
+                return (
+                  <button
+                    key={subregion.id}
+                    className={`subregion-card ${subregion.id === currentSubregion ? 'is-current' : ''}`}
+                    disabled
+                    title={
+                      subregion.id === currentSubregion
+                        ? `${subregion.blurb} ${localHint}`
+                        : `${subregion.blurb} ${localHint}请在当前场景内寻找区内通道前往。`
+                    }
+                  >
+                    <b>{subregion.name}</b>
+                    <span>{subregion.role}</span>
+                    {summary.chips.length > 0 && (
+                      <span className="subregion-card__summary">
+                        {summary.chips.map((chip) => (
+                          <em key={chip}>{chip}</em>
+                        ))}
+                      </span>
+                    )}
+                    {summary.sample && <small className="subregion-card__sample">{summary.sample}</small>}
+                    <small>{subregion.traits.join(' / ')}</small>
+                  </button>
+                );
+              })}
             </div>
           </section>
         )}
@@ -186,6 +323,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
                   <span className="ind-item__name">{ind.name}</span>
                   <span className="ind-item__io">
                     {describeInput(ind.input)} → {resName(ind.output)}×{ind.yield} · 工时{ind.laborCost}
+                    {weatherIndustryHint(ind, calendar.weather) ? ` · ${weatherIndustryHint(ind, calendar.weather)}` : ''}
                   </span>
                   <span className="ind-item__blurb">{ind.blurb}</span>
                 </div>
@@ -234,57 +372,169 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
           </ul>
         </section>
 
-        {isFarmSubregion && (
+        {(hasStallActivity || localStallRecords.length > 0) && (
           <section className="panel-block">
-            <h4 className="panel-block__title">百工院田圃</h4>
-            <div className="farm-grid">
-              {farmPlots.map((plot) => (
-                <div className="farm-plot-card" key={plot.id}>
-                  <div className="farm-plot-card__head">
-                    <b>{plot.cropId ? CROP_LABEL[plot.cropId] : '空田圃'}</b>
-                    <span>{plot.cropId ? `${plot.growth}%` : '待下种'}</span>
-                  </div>
-                  {plot.cropId ? (
-                    <>
-                      <div className="farm-meter">
-                        <i style={{ width: `${plot.growth}%` }} />
+            <h4 className="panel-block__title">节令榜 · 摊位经营</h4>
+            {localStallRecords.length === 0 ? (
+              <p className="panel-empty">本地尚无摆摊记录。黄昏或夜间参与灯市、庙会、巴扎后，节令榜会记录人气、售货和阶段进度。</p>
+            ) : (
+              <>
+                <ul className="ind-list">
+                  {bestStallRecords.map((record, index) => (
+                    <li className="ind-item" key={`best-${record.id}`}>
+                      <div className="ind-item__main">
+                        <span className="ind-item__name">第 {index + 1} 名 · {record.title}</span>
+                        <span className="ind-item__io">
+                          人气 {record.crowd} · 入账 {record.revenue} 文
+                          {record.itemName ? ` · ${record.itemName}` : ''}
+                          {record.strategyTitle ? ` · ${record.strategyTitle}` : ''}
+                          {record.comboTitle ? ` · ${record.comboTitle}` : ''}
+                          {record.customerTitle ? ` · ${record.customerTitle}` : ''}
+                          {record.stageTitle ? ` · ${record.stageTitle}` : ''}
+                          {record.closingChoiceTitle ? ` · ${record.closingChoiceTitle}` : ''}
+                        </span>
+                        <span className="ind-item__blurb">{record.summary}</span>
                       </div>
-                      <div className="farm-actions">
-                        <button
-                          className="btn btn--sm btn--ghost"
-                          disabled={!playing || plot.wateredToday || labor < 1}
-                          onClick={() => dispatch({ type: 'WATER_PLOT', plotId: plot.id })}
-                        >
-                          {plot.wateredToday ? '已浇水' : '浇水'}
-                        </button>
-                        <button
-                          className="btn btn--sm btn--bamboo"
-                          disabled={!playing || plot.growth < 100}
-                          onClick={() => dispatch({ type: 'HARVEST_CROP', plotId: plot.id })}
-                        >
-                          收获
-                        </button>
+                    </li>
+                  ))}
+                </ul>
+                <ul className="ind-list">
+                  {localStallRecords.slice(0, 4).map((record) => (
+                    <li className="ind-item" key={record.id}>
+                      <div className="ind-item__main">
+                        <span className="ind-item__name">
+                          {record.stageTitle ?? record.title}
+                          {record.cycleLabel ? ` · ${record.cycleLabel}` : ''}
+                        </span>
+                        <span className="ind-item__io">
+                          {stallDateLabel(record)} · 人气 {record.crowd} · 入账 {record.revenue} 文
+                          {record.itemQuality !== undefined ? ` · 品相 ${Math.round(record.itemQuality * 100)}` : ''}
+                          {record.strategyTitle ? ` · 策略 ${record.strategyTitle}` : ''}
+                          {record.comboTitle ? ` · 组合 ${record.comboTitle}` : ''}
+                          {record.customerTitle ? ` · 客群 ${record.customerTitle}` : ''}
+                          {record.consumedExtraResourceName ? ` · 搭配 ${record.consumedExtraResourceName}` : ''}
+                          {record.closingChoiceTitle ? ` · 收摊 ${record.closingChoiceTitle}` : ''}
+                        </span>
+                        <span className="ind-item__blurb">{record.summary}</span>
                       </div>
-                    </>
-                  ) : (
-                    <div className="farm-actions farm-actions--wrap">
-                      {CROP_OPTIONS.map((crop) => (
-                        <button
-                          className="btn btn--sm btn--ghost"
-                          key={crop.id}
-                          disabled={!playing}
-                          title={`成熟后入仓：${crop.output}`}
-                          onClick={() => dispatch({ type: 'PLANT_CROP', plotId: plot.id, cropId: crop.id })}
-                        >
-                          种{crop.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </section>
+        )}
+
+        {isFarmSubregion && (
+          <>
+            <section className="panel-block">
+              <h4 className="panel-block__title">珍品阁</h4>
+              {displayedItems.length === 0 ? (
+                <p className="panel-empty">暂无陈列作品。先在背包中为高品质作品题名并陈列，NPC 来访时才有可看的代表作。</p>
+              ) : (
+                <div className="farm-grid">
+                  {displayedItems.slice(0, 6).map((item) => (
+                    <div className="farm-plot-card" key={item.id}>
+                      <div className="farm-plot-card__head">
+                        <b>{itemDisplayName(item)}</b>
+                        <span>品相 {Math.round(item.quality * 100)}</span>
+                      </div>
+                      <p className="panel-note">
+                        {RESOURCE_INDEX[item.resourceId]?.name ?? item.resourceId}
+                        {item.authorName ? ` · 作者 ${item.authorName}` : ''}
+                        {item.collaboratorNpcIds?.length ? ` · 联作 ${item.collaboratorNpcIds.length} 人` : ''}
+                      </p>
+                      {item.inscription && <p className="panel-note">题跋：{item.inscription}</p>}
+                      {item.descriptors.length > 0 && (
+                        <div className="region-chips">
+                          {item.descriptors.slice(0, 4).map((descriptor) => (
+                            <span className="stock-chip" key={descriptor}>{descriptor}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {recentHomeVisits.length > 0 && (
+                <ul className="ind-list">
+                  {recentHomeVisits.map((record) => (
+                    <li className="ind-item" key={record.id}>
+                      <div className="ind-item__main">
+                        <span className="ind-item__name">{record.title} · {npcNameFor(record.npcId)}</span>
+                        <span className="ind-item__io">
+                          {visitDateLabel(record)}
+                          {record.itemName ? ` · 看过 ${record.itemName}` : ''}
+                          {record.itemQuality !== undefined ? ` · 品相 ${Math.round(record.itemQuality * 100)}` : ''}
+                          {record.choiceLabel ? ` · ${record.choiceKind ? HOME_VISIT_KIND_LABEL[record.choiceKind] : '分支'}：${record.choiceLabel}` : ''}
+                          {record.referralTitle ? ` · 转介绍 ${record.referralTitle}` : ''}
+                        </span>
+                        <span className="ind-item__blurb">{record.summary}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section className="panel-block">
+              <h4 className="panel-block__title">百工院田圃</h4>
+              <div className="farm-grid">
+                {farmPlots.map((plot) => (
+                  <div className="farm-plot-card" key={plot.id}>
+                    <div className="farm-plot-card__head">
+                      <b>{plot.cropId ? CROP_LABEL[plot.cropId] : '空田圃'}</b>
+                      <span>{plot.cropId ? `${plot.growth}%` : '待下种'}</span>
+                    </div>
+                    {plot.cropId ? (
+                      <>
+                        <div className="farm-meter">
+                          <i style={{ width: `${plot.growth}%` }} />
+                        </div>
+                        <div className="farm-actions">
+                          <button
+                            className="btn btn--sm btn--ghost"
+                            disabled={!playing || plot.wateredToday || calendar.weather === 'snow' || (calendar.weather !== 'rain' && labor < 1)}
+                            title={
+                              calendar.weather === 'rain'
+                                ? '雨天浇灌不耗工时'
+                                : calendar.weather === 'snow'
+                                  ? '雪天封土，今日不能浇水'
+                                  : '消耗 1 工时照料田圃'
+                            }
+                            onClick={() => dispatch({ type: 'WATER_PLOT', plotId: plot.id })}
+                          >
+                            {plot.wateredToday ? '已浇水' : calendar.weather === 'rain' ? '借雨润田' : calendar.weather === 'snow' ? '雪封田' : '浇水'}
+                          </button>
+                          <button
+                            className="btn btn--sm btn--bamboo"
+                            disabled={!playing || plot.growth < 100}
+                            onClick={() => dispatch({ type: 'HARVEST_CROP', plotId: plot.id })}
+                          >
+                            收获
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="farm-actions farm-actions--wrap">
+                        {CROP_OPTIONS.map((crop) => (
+                          <button
+                            className="btn btn--sm btn--ghost"
+                            key={crop.id}
+                            disabled={!playing}
+                            title={`成熟后入仓：${crop.output}`}
+                            onClick={() => dispatch({ type: 'PLANT_CROP', plotId: plot.id, cropId: crop.id })}
+                          >
+                            种{crop.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          </>
         )}
 
         {openedRouteRows.length > 0 && (
@@ -302,6 +552,47 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
                       </span>
                       <span className="ind-item__blurb">{route.preview ?? target.blurb}</span>
                     </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+
+        {localSupplyCrisisRecords.length > 0 && (
+          <section className="panel-block">
+            <h4 className="panel-block__title">商路断供簿</h4>
+            <ul className="ind-list">
+              {localSupplyCrisisRecords.map((record) => {
+                const route = routeLookup.get(record.routeId);
+                const cost = supplyRecordFollowUpCost(record);
+                const resourceLabel = record.resourceId ? resName(record.resourceId) : '商路补给';
+                const canStabilize =
+                  playing &&
+                  record.status !== 'closed' &&
+                  labor >= cost.labor &&
+                  (resources.coin ?? 0) >= cost.coin;
+                return (
+                  <li className="ind-item" key={record.id}>
+                    <div className="ind-item__main">
+                      <span className="ind-item__name">
+                        {route?.name ?? record.routeId} · {SUPPLY_RECORD_STATUS_LABEL[record.status]}
+                      </span>
+                      <span className="ind-item__io">
+                        {record.choiceLabel} · {resourceLabel} · 风险 {record.risk} · 强度 {record.severity} · {supplyRecordDateLabel(record)}
+                      </span>
+                      <span className="ind-item__blurb">{record.summary}</span>
+                    </div>
+                    {record.status !== 'closed' && (
+                      <button
+                        className="btn btn--sm btn--bamboo"
+                        disabled={!canStabilize}
+                        title={`复盘稳路：工时 ${cost.labor}${cost.coin > 0 ? ` · ${cost.coin} 文` : ''}`}
+                        onClick={() => dispatch({ type: 'STABILIZE_SUPPLY_ROUTE', recordId: record.id })}
+                      >
+                        复盘稳路
+                      </button>
+                    )}
                   </li>
                 );
               })}

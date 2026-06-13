@@ -11,3 +11,6 @@ export * from './npcFunctions';
 export * from './routeCosts';
 export * from './regionReputation';
 export * from './routeStability';
+export * from './craftTechniques';
+export * from './lore';
+export * from './loreGuide';

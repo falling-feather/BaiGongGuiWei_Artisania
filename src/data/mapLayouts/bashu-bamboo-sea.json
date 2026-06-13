@@ -1,0 +1,33 @@
+{
+  "schema": "artisania-map-editor/v2",
+  "regionId": "bashu",
+  "subregionId": "bashu-bamboo-sea",
+  "tileSize": 32,
+  "size": { "w": 56, "h": 30 },
+  "roads": [
+    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
+    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
+    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
+    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
+    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
+    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+  ],
+  "objects": [
+    { "itemId": "player_spawn", "x": 28, "y": 15 },
+    { "itemId": "industry_bamboo", "name": "bamboo cutting slope", "interaction": "industry", "targetId": "harvest-bamboo", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_bamboo", "name": "bamboo splitting shed", "interaction": "industry", "targetId": "split-bamboo", "x": 14, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_tea", "name": "mist tea ridge", "interaction": "industry", "targetId": "harvest-tea-leaf", "x": 23, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_tea", "name": "tea fixing hearth", "interaction": "industry", "targetId": "pick-tea", "x": 32, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_bamboo", "name": "Qingshen bamboo workshop", "interaction": "craft", "targetId": "qingshen-bamboo", "x": 13, "y": 17, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_bamboo", "name": "Qingshen bamboo sea practice", "interaction": "activity", "targetId": "bs-bamboo-sea", "x": 34, "y": 17, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Jinli craft lane", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "bashu-jinli", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Linqiong iron furnace", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "bashu-linqiong-iron", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to tea horse post", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "bashu-tea-horse", "x": 32, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Qiandian mountain road", "interaction": "gate", "targetId": "qiandian", "x": 49, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Jingchu river gorge", "interaction": "gate", "targetId": "jingchu", "x": 49, "y": 13, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Xueyu snow pass", "interaction": "gate", "targetId": "xueyu", "x": 49, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "npc-bs-luo-qingmie", "name": "Luo Qingmie", "interaction": "npc", "npcId": "bs-luo-qingmie", "x": 17, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "bamboo-grove-a", "name": "bamboo grove", "interaction": "decoration", "x": 38, "y": 1, "tileW": 4, "tileH": 3, "solid": true },
+    { "itemId": "bamboo-rack-a", "name": "drying bamboo strips", "interaction": "decoration", "x": 21, "y": 19, "tileW": 3, "tileH": 2, "solid": true }
+  ]
+}

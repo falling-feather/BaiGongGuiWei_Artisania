@@ -1,5 +1,13 @@
+import { useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { METRIC_KEYS, METRIC_LABELS, zoneOf, type Metrics } from '../engine';
+import {
+  buildLoreTravelGuide,
+  METRIC_KEYS,
+  METRIC_LABELS,
+  uniqueRoutesFromRegions,
+  zoneOf,
+  type Metrics,
+} from '../engine';
 import { REGION_INDEX } from '../data';
 
 const UI_ROOT = '/assets/game/ui';
@@ -32,24 +40,42 @@ export function Hud({
   onOpenMap,
   onOpenBag,
   onOpenAchievements,
+  onOpenLore,
   onOpenSettings,
+  onInteractNearby,
 }: {
   hint: string | null;
   onOpenPanel: () => void;
   onOpenMap: () => void;
   onOpenBag: () => void;
   onOpenAchievements: () => void;
+  onOpenLore: () => void;
   onOpenSettings: () => void;
+  onInteractNearby: () => void;
 }) {
   const metrics = useGameStore((s) => s.state.metrics);
   const calendar = useGameStore((s) => s.state.calendar);
   const playing = useGameStore((s) => s.state.status === 'playing');
+  const state = useGameStore((s) => s.state);
+  const content = useGameStore((s) => s.content);
   const currentRegion = useGameStore((s) => s.state.currentRegion);
   const currentSubregion = useGameStore((s) => s.state.currentSubregion);
-  const hasEvent = useGameStore((s) => s.state.pendingEvent !== null);
+  const hasEvent = useGameStore(
+    (s) =>
+      s.state.pendingEvent !== null ||
+      s.state.pendingEscortCrisis !== null ||
+      s.state.pendingSupplyCrisis !== null ||
+      s.state.pendingActivityStallClosing !== null,
+  );
   const dispatch = useGameStore((s) => s.dispatch);
   const region = REGION_INDEX[currentRegion];
   const subregion = region?.subregions.find((item) => item.id === currentSubregion);
+  const routeSpecs = useMemo(() => uniqueRoutesFromRegions(content.regionContent), [content.regionContent]);
+  const trackedEntry = content.loreEntries?.find((entry) => entry.id === state.trackedLoreEntryId);
+  const travelGuide = useMemo(
+    () => buildLoreTravelGuide(state, trackedEntry, content.regions ?? [], routeSpecs),
+    [content.regions, routeSpecs, state, trackedEntry],
+  );
 
   const tools = [
     { label: '大地图', icon: `${UI_ROOT}/icon_map.png`, frame: `${UI_ROOT}/hud_button.png`, onClick: onOpenMap },
@@ -59,6 +85,13 @@ export function Hud({
       icon: `${UI_ROOT}/icon_achievement.png`,
       frame: `${UI_ROOT}/hud_button.png`,
       onClick: onOpenAchievements,
+    },
+    {
+      label: '百工志',
+      icon: `${UI_ROOT}/icon_panel.png`,
+      frame: `${UI_ROOT}/hud_button.png`,
+      onClick: onOpenLore,
+      disabled: !playing,
     },
     {
       label: '镇务',
@@ -140,6 +173,28 @@ export function Hud({
         <div className="hud hud--hint">
           <img className="hud__panel-frame" src={`${UI_ROOT}/hud_panel.png`} alt="" draggable={false} />
           <span>{hint}</span>
+          <button className="hud__hint-action" type="button" onClick={onInteractNearby}>
+            互动
+          </button>
+        </div>
+      )}
+
+      {travelGuide && (
+        <div className="hud hud--travel-guide">
+          <img className="hud__panel-frame" src={`${UI_ROOT}/hud_panel.png`} alt="" draggable={false} />
+          <div className="hud__travel-copy">
+            <b>行脚目标</b>
+            <span>{travelGuide.instruction}</span>
+          </div>
+          <button
+            className="hud__travel-clear"
+            type="button"
+            onClick={() => dispatch({ type: 'CLEAR_LORE_TRACKING' })}
+            title="取消行脚目标"
+            aria-label="取消行脚目标"
+          >
+            ×
+          </button>
         </div>
       )}
 

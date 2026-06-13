@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "0.1.0",
+  "id": "jiangnan.core_character_lineup.pixel_preview.v01",
+  "operations": [
+    {
+      "op": "pixelizeResize",
+      "targetWidth": 320,
+      "targetHeight": 192,
+      "cropMode": "fit",
+      "sampler": "dominant",
+      "alphaMode": "weighted",
+      "maxSize": 512
+    },
+    {
+      "op": "palette",
+      "maxColors": 48,
+      "distance": "rgb",
+      "mergeThreshold": 22
+    }
+  ]
+}

@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { gameReducer, itemDefectSummary, nextStoryBeat, orderPrice } from '../reducer';
+import { loreProgress, unlockedLoreEntries } from '../lore';
 import { createInitialState } from '../state';
 import type { GameContent } from '../reducer';
-import type { ActiveOrder, ItemInstance } from '../types';
+import type { ActiveOrder, GameState, ItemInstance } from '../types';
 import { CRAFTS } from '../../data/crafts';
 import { STARTING_APPRENTICES } from '../../data/apprentices';
 import { EVENTS } from '../../data/events';
@@ -14,6 +15,7 @@ import { RESOURCES } from '../../data/resources';
 import { ALL_NPCS, NPCS } from '../../data/npcs';
 import { QUESTS } from '../../data/quests';
 import { ITEM_DESCRIPTOR_RULES } from '../../data/itemDescriptors';
+import { LORE_ENTRIES } from '../../data/loreEntries';
 import { CRAFT_INTERACTIONS } from '../../data/craftInteractions';
 import { WORKSHOP_UPGRADES } from '../../data/workshopUpgrades';
 import { ACTIVITY_CHALLENGES } from '../../data/activityChallenges';
@@ -42,6 +44,7 @@ const content: GameContent = {
   craftInteractions: CRAFT_INTERACTIONS,
   workshopUpgrades: WORKSHOP_UPGRADES,
   itemDescriptorRules: ITEM_DESCRIPTOR_RULES,
+  loreEntries: LORE_ENTRIES,
 };
 
 function freshState() {
@@ -272,6 +275,26 @@ describe('gameReducer', () => {
     expect(s.crafts.length).toBeGreaterThan(0);
   });
 
+  it('TRACK_LORE_ENTRY 只设置行脚目标，不改变当前位置', () => {
+    const s0 = {
+      ...freshState(),
+      unlockedRegions: REGIONS.map((region) => region.id),
+      currentRegion: 'jiangnan',
+      currentSubregion: 'jiangnan-longquan',
+    };
+    const s1 = gameReducer(s0, { type: 'TRACK_LORE_ENTRY', loreEntryId: 'subregion-ganpo-kiln-town' }, content);
+
+    expect(s1.trackedLoreEntryId).toBe('subregion-ganpo-kiln-town');
+    expect(s1.currentRegion).toBe('jiangnan');
+    expect(s1.currentSubregion).toBe('jiangnan-longquan');
+    expect(s1.log.some((line) => line.includes('行脚目标'))).toBe(true);
+
+    const s2 = gameReducer(s1, { type: 'CLEAR_LORE_TRACKING' }, content);
+    expect(s2.trackedLoreEntryId).toBeNull();
+    expect(s2.currentRegion).toBe('jiangnan');
+    expect(s2.currentSubregion).toBe('jiangnan-longquan');
+  });
+
   it('RUN_PROCESS 会产出并消耗人力', () => {
     const s0 = freshState();
     const craftId = s0.crafts[0].craftId;
@@ -294,6 +317,8 @@ describe('gameReducer', () => {
 
     expect(sword.qualityDimensions?.resilience).toBeLessThan(0.62);
     expect(sword.defects?.some((defect) => defect.id === 'sword-brittle-core')).toBe(true);
+    expect(sword.defects?.find((defect) => defect.id === 'sword-brittle-core')?.sourceStageName).toBe('选铁定剑形');
+    expect(itemDefectSummary(sword)).toContain('病根：省略「选铁定剑形」关联工序');
     expect(sword.appraisal).toContain('可择法返修');
   });
 
@@ -717,6 +742,7 @@ describe('gameReducer', () => {
     expect(blocked.activeOrders.find((item) => item.id === order.id)?.status).toBe('active');
     expect(blocked.resources.oilpaperUmbrella).toBe(1);
     expect(blocked.log[0]).toContain('缺陷折损');
+    expect(blocked.log[0]).toContain('选竹裁纸');
 
     const repaired = gameReducer(
       blocked,
@@ -1690,6 +1716,7 @@ describe('gameReducer', () => {
     const appraised = s.itemInstances.find((item) => item.id === sword.id)!;
 
     expect(appraised.inscription).toContain('脆心');
+    expect(appraised.inscription).toContain('选铁定剑形');
     expect(appraised.inscription).toContain('回火复整');
     expect(s.flags).toContain('appraised-defective-item');
     expect(s.flags).toContain('npc-appraisal-defect:sword-brittle-core');
@@ -2634,6 +2661,350 @@ describe('gameReducer', () => {
     expect(followUp?.title).toBe('来季巴扎货约预约');
     expect(followUp?.resourceId).toBe('jadeCarving');
     expect(s.npcStates['xu-sali']?.knownTopics).toContain('bazaar-contract');
+  });
+
+  it('赣鄱瓷镇开窑会会推进瓷样摊、归档火色簿并生成复样单', () => {
+    const base = freshState();
+    let s: GameState = {
+      ...base,
+      currentRegion: 'ganpo',
+      currentSubregion: 'ganpo-kiln-town',
+      unlockedRegions: [...new Set([...base.unlockedRegions, 'ganpo', 'huizhou', 'jingchu'])],
+      calendar: { ...base.calendar, day: 2, phase: 'afternoon' },
+      resources: {
+        ...base.resources,
+        porcelainClay: 3,
+        coal: 3,
+        celadonWare: 1,
+        pigmentRefined: 1,
+        labor: 10,
+      },
+    };
+
+    const beforeCoin = s.resources.coin ?? 0;
+    const beforeReputation = s.regionReputation.ganpo ?? 0;
+
+    s = gameReducer(
+      s,
+      {
+        type: 'PERFORM_ACTIVITY',
+        activityId: 'gp-kiln-opening-fair',
+        quality: 0.88,
+        stallStrategyId: 'fire-color-ranking',
+      },
+      content,
+    );
+    expect(s.flags).toContain('festival-stall:gp-kiln-opening-fair');
+    expect(s.flags).toContain('stall-stage:gp-kiln-opening-fair:test-shard');
+    expect(s.flags).toContain('stall-strategy:gp-kiln-opening-fair:fire-color-ranking');
+    expect(s.flags).toContain('kiln-opening-trial-order-open');
+    expect(s.resources.coin).toBeGreaterThan(beforeCoin);
+    expect(s.regionReputation.ganpo).toBeGreaterThan(beforeReputation);
+    expect(s.nightMarketStallRecords[0]).toMatchObject({
+      activityId: 'gp-kiln-opening-fair',
+      title: '开窑瓷样摊',
+      itemResourceId: 'jingdezhenPorcelain',
+      stageId: 'test-shard',
+      strategyId: 'fire-color-ranking',
+      cycleLabel: '开窑日',
+    });
+    expect(s.activeOrders.some((order) => order.title === '开窑试片急单')).toBe(true);
+
+    s = {
+      ...s,
+      calendar: { ...s.calendar, day: 3, phase: 'dusk' },
+      resources: { ...s.resources, porcelainClay: 3, coal: 3, celadonWare: 1, labor: 10 },
+    };
+    s = gameReducer(s, { type: 'PERFORM_ACTIVITY', activityId: 'gp-kiln-opening-fair', quality: 0.78 }, content);
+    expect(s.flags).toContain('stall-stage:gp-kiln-opening-fair:market-review');
+
+    s = {
+      ...s,
+      calendar: { ...s.calendar, day: 4, phase: 'night' },
+      resources: { ...s.resources, porcelainClay: 3, coal: 3, pigmentRefined: 1, labor: 10 },
+    };
+    s = gameReducer(s, { type: 'PERFORM_ACTIVITY', activityId: 'gp-kiln-opening-fair', quality: 0.82 }, content);
+    expect(s.flags).toContain('stall-stage:gp-kiln-opening-fair:ledger-closing');
+    expect(s.flags).toContain('stall-chain-completed:gp-kiln-opening-fair');
+    expect(s.pendingActivityStallClosing).toMatchObject({
+      activityId: 'gp-kiln-opening-fair',
+      stageId: 'ledger-closing',
+    });
+
+    const beforeAffinity = s.npcAffinity['gp-wen-yaotou'] ?? 0;
+    s = gameReducer(s, { type: 'RESOLVE_ACTIVITY_STALL_CLOSING', choiceId: 'archive-fire-color-ledger' }, content);
+    expect(s.pendingActivityStallClosing).toBeNull();
+    expect(s.flags).toContain('kiln-closing-fire-color-ledger');
+    expect(s.flags).toContain('stall-closing-choice:gp-kiln-opening-fair:archive-fire-color-ledger');
+    expect(s.flags).toContain('stall-closing-followup-order:gp-kiln-opening-fair:archive-fire-color-ledger');
+    expect(s.nightMarketStallRecords[0]).toMatchObject({
+      closingChoiceId: 'archive-fire-color-ledger',
+      closingChoiceTitle: '归档火色簿',
+    });
+    expect(s.npcAffinity['gp-wen-yaotou']).toBeGreaterThan(beforeAffinity);
+    expect(s.npcStates['gp-wen-yaotou']?.knownTopics).toContain('fire-color-ledger');
+    expect(s.npcStates['gp-wen-yaotou']?.knownTopics).toContain('fire-color-return-order');
+
+    const followUp = s.activeOrders.find((order) => order.title === '瓷镇火色复样单');
+    expect(followUp).toMatchObject({
+      npcId: 'gp-wen-yaotou',
+      resourceId: 'jingdezhenPorcelain',
+      quantity: 1,
+      orderKind: 'festival',
+      sourceActivityId: 'gp-kiln-opening-fair',
+      status: 'active',
+    });
+  });
+
+  it('巴蜀茶马会会推进货摊阶段、封账路书并生成轻担茶约', () => {
+    const base = freshState();
+    let s: GameState = {
+      ...base,
+      currentRegion: 'bashu',
+      currentSubregion: 'bashu-tea-horse',
+      unlockedRegions: [...new Set([...base.unlockedRegions, 'bashu', 'qiandian', 'xueyu'])],
+      calendar: { ...base.calendar, day: 1, phase: 'morning' },
+      resources: {
+        ...base.resources,
+        tea: 3,
+        teaLeaf: 2,
+        bambooWare: 2,
+        ironIngot: 1,
+        labor: 10,
+      },
+    };
+
+    const beforeCoin = s.resources.coin ?? 0;
+    const beforeReputation = s.regionReputation.bashu ?? 0;
+
+    s = gameReducer(
+      s,
+      {
+        type: 'PERFORM_ACTIVITY',
+        activityId: 'bs-tea-horse-post',
+        quality: 0.9,
+        stallStrategyId: 'load-ledger-table',
+      },
+      content,
+    );
+    expect(s.flags).toContain('festival-stall:bs-tea-horse-post');
+    expect(s.flags).toContain('stall-stage:bs-tea-horse-post:open-post');
+    expect(s.flags).toContain('stall-strategy:bs-tea-horse-post:load-ledger-table');
+    expect(s.flags).toContain('tea-horse-supply-order-open');
+    expect(s.resources.coin).toBeGreaterThan(beforeCoin);
+    expect(s.regionReputation.bashu).toBeGreaterThan(beforeReputation);
+    expect(s.nightMarketStallRecords[0]).toMatchObject({
+      activityId: 'bs-tea-horse-post',
+      title: '茶马会货摊',
+      itemResourceId: 'tea',
+      stageId: 'open-post',
+      strategyId: 'load-ledger-table',
+      comboId: 'tea-bamboo-load',
+      customerId: 'mabang-carriers',
+      cycleLabel: '茶马会',
+    });
+    expect(s.npcStates['bs-mabang-ayue']?.knownTopics).toContain('stall-combo:tea-bamboo-load');
+
+    s = {
+      ...s,
+      calendar: { ...s.calendar, day: 2, phase: 'afternoon' },
+      resources: { ...s.resources, tea: 3, teaLeaf: 2, bambooWare: 1, labor: 10 },
+    };
+    s = gameReducer(
+      s,
+      {
+        type: 'PERFORM_ACTIVITY',
+        activityId: 'bs-tea-horse-post',
+        quality: 0.82,
+        stallStrategyId: 'border-tea-contract',
+      },
+      content,
+    );
+    expect(s.flags).toContain('stall-stage:bs-tea-horse-post:barter-noon');
+    expect(s.flags).toContain('stall-strategy:bs-tea-horse-post:border-tea-contract');
+
+    s = {
+      ...s,
+      calendar: { ...s.calendar, day: 3, phase: 'dusk' },
+      resources: { ...s.resources, tea: 3, ironIngot: 1, labor: 10 },
+    };
+    s = gameReducer(
+      s,
+      {
+        type: 'PERFORM_ACTIVITY',
+        activityId: 'bs-tea-horse-post',
+        quality: 0.86,
+        stallStrategyId: 'snow-pass-account',
+      },
+      content,
+    );
+    expect(s.flags).toContain('stall-stage:bs-tea-horse-post:ledger-close');
+    expect(s.flags).toContain('stall-chain-completed:bs-tea-horse-post');
+    expect(s.pendingActivityStallClosing).toMatchObject({
+      activityId: 'bs-tea-horse-post',
+      stageId: 'ledger-close',
+    });
+
+    const beforeAffinity = s.npcAffinity['bs-mabang-ayue'] ?? 0;
+    s = gameReducer(s, { type: 'RESOLVE_ACTIVITY_STALL_CLOSING', choiceId: 'archive-load-ledger' }, content);
+    expect(s.pendingActivityStallClosing).toBeNull();
+    expect(s.flags).toContain('tea-horse-closing-load-ledger');
+    expect(s.flags).toContain('stall-closing-choice:bs-tea-horse-post:archive-load-ledger');
+    expect(s.flags).toContain('stall-closing-followup-order:bs-tea-horse-post:archive-load-ledger');
+    expect(s.flags).toContain('route-known:route-bashu-qiandian-tea-horse');
+    expect(s.npcAffinity['bs-mabang-ayue']).toBeGreaterThan(beforeAffinity);
+    expect(s.npcStates['bs-mabang-ayue']?.knownTopics).toContain('tea-horse-load-ledger');
+    expect(s.npcStates['bs-mabang-ayue']?.knownTopics).toContain('light-load-tea-order');
+    expect(s.nightMarketStallRecords[0]).toMatchObject({
+      closingChoiceId: 'archive-load-ledger',
+      closingChoiceTitle: '归档货重路书',
+    });
+
+    const followUp = s.activeOrders.find((order) => order.title === '马帮轻担茶约');
+    expect(followUp).toMatchObject({
+      npcId: 'bs-mabang-ayue',
+      resourceId: 'tea',
+      quantity: 2,
+      orderKind: 'route',
+      sourceActivityId: 'bs-tea-horse-post',
+      status: 'active',
+    });
+
+    const ready = {
+      ...s,
+      resources: { ...s.resources, tea: (s.resources.tea ?? 0) + (followUp?.quantity ?? 0) },
+    };
+    const delivered = gameReducer(ready, { type: 'FULFILL_ORDER', orderId: followUp!.id }, content);
+    expect(delivered.flags).toContain(`order-completed:${followUp!.id}`);
+    expect(delivered.flags).toContain('route-order-completed:bs-tea-horse-post');
+    expect(delivered.regionReputation.bashu).toBeGreaterThan(s.regionReputation.bashu ?? 0);
+  });
+
+  it('岭南骑楼夜市会推进船期摊位、归档样账并生成外销复样单', () => {
+    const base = freshState();
+    let s: GameState = {
+      ...base,
+      currentRegion: 'lingnan',
+      currentSubregion: 'lingnan-harbor',
+      unlockedRegions: [...new Set([...base.unlockedRegions, 'lingnan', 'qiandian'])],
+      calendar: { ...base.calendar, day: 2, phase: 'dusk' },
+      resources: {
+        ...base.resources,
+        gambieredSilk: 2,
+        cantonEmbroidery: 1,
+        tea: 2,
+        shiwanWare: 1,
+        duanInkstone: 1,
+        ironIngot: 1,
+        labor: 10,
+      },
+    };
+
+    const beforeCoin = s.resources.coin ?? 0;
+    const beforeReputation = s.regionReputation.lingnan ?? 0;
+
+    s = gameReducer(
+      s,
+      {
+        type: 'PERFORM_ACTIVITY',
+        activityId: 'ln-qilou-night-market',
+        quality: 0.9,
+        stallStrategyId: 'ship-date-ledger-table',
+      },
+      content,
+    );
+    expect(s.flags).toContain('festival-stall:ln-qilou-night-market');
+    expect(s.flags).toContain('stall-stage:ln-qilou-night-market:open-awning');
+    expect(s.flags).toContain('stall-strategy:ln-qilou-night-market:ship-date-ledger-table');
+    expect(s.flags).toContain('qilou-ship-date-order-open');
+    expect(s.resources.coin).toBeGreaterThan(beforeCoin);
+    expect(s.regionReputation.lingnan).toBeGreaterThan(beforeReputation);
+    expect(s.nightMarketStallRecords[0]).toMatchObject({
+      activityId: 'ln-qilou-night-market',
+      title: '骑楼夜市摊',
+      itemResourceId: 'gambieredSilk',
+      stageId: 'open-awning',
+      strategyId: 'ship-date-ledger-table',
+      comboId: 'sail-date-silk-roll',
+      customerId: 'harbor-exporters',
+      cycleLabel: '骑楼开市夜',
+    });
+    expect(s.activeOrders.some((order) => order.title === '骑楼船期急单')).toBe(true);
+    expect(s.npcStates['ln-wu-haichao']?.knownTopics).toContain('stall-combo:sail-date-silk-roll');
+
+    s = {
+      ...s,
+      calendar: { ...s.calendar, day: 3, phase: 'night' },
+      resources: { ...s.resources, tea: 2, shiwanWare: 1, labor: 10 },
+    };
+    s = gameReducer(
+      s,
+      {
+        type: 'PERFORM_ACTIVITY',
+        activityId: 'ln-qilou-night-market',
+        quality: 0.84,
+        stallStrategyId: 'rain-awning-supper',
+      },
+      content,
+    );
+    expect(s.flags).toContain('stall-stage:ln-qilou-night-market:night-bargain');
+    expect(s.flags).toContain('stall-strategy:ln-qilou-night-market:rain-awning-supper');
+
+    s = {
+      ...s,
+      calendar: { ...s.calendar, day: 4, phase: 'dusk' },
+      resources: { ...s.resources, gambieredSilk: 2, duanInkstone: 1, ironIngot: 1, labor: 10 },
+    };
+    s = gameReducer(
+      s,
+      {
+        type: 'PERFORM_ACTIVITY',
+        activityId: 'ln-qilou-night-market',
+        quality: 0.86,
+        stallStrategyId: 'wenfang-cargo-ledger',
+      },
+      content,
+    );
+    expect(s.flags).toContain('stall-stage:ln-qilou-night-market:ship-date-close');
+    expect(s.flags).toContain('stall-chain-completed:ln-qilou-night-market');
+    expect(s.pendingActivityStallClosing).toMatchObject({
+      activityId: 'ln-qilou-night-market',
+      stageId: 'ship-date-close',
+    });
+
+    const beforeAffinity = s.npcAffinity['ln-wu-haichao'] ?? 0;
+    s = gameReducer(s, { type: 'RESOLVE_ACTIVITY_STALL_CLOSING', choiceId: 'archive-ship-date-ledger' }, content);
+    expect(s.pendingActivityStallClosing).toBeNull();
+    expect(s.flags).toContain('qilou-closing-ship-date-ledger');
+    expect(s.flags).toContain('stall-closing-choice:ln-qilou-night-market:archive-ship-date-ledger');
+    expect(s.flags).toContain('stall-closing-followup-order:ln-qilou-night-market:archive-ship-date-ledger');
+    expect(s.flags).toContain('route-known:route-qiandian-lingnan-harbor');
+    expect(s.npcAffinity['ln-wu-haichao']).toBeGreaterThan(beforeAffinity);
+    expect(s.npcStates['ln-wu-haichao']?.knownTopics).toContain('qilou-ship-date-ledger');
+    expect(s.npcStates['ln-wu-haichao']?.knownTopics).toContain('qilou-return-sample-order');
+    expect(s.nightMarketStallRecords[0]).toMatchObject({
+      closingChoiceId: 'archive-ship-date-ledger',
+      closingChoiceTitle: '归档船期样账',
+    });
+
+    const followUp = s.activeOrders.find((order) => order.title === '骑楼船期样单');
+    expect(followUp).toMatchObject({
+      npcId: 'ln-wu-haichao',
+      resourceId: 'gambieredSilk',
+      quantity: 1,
+      orderKind: 'route',
+      sourceActivityId: 'ln-qilou-night-market',
+      status: 'active',
+    });
+
+    const ready = {
+      ...s,
+      resources: { ...s.resources, gambieredSilk: (s.resources.gambieredSilk ?? 0) + (followUp?.quantity ?? 0) },
+    };
+    const delivered = gameReducer(ready, { type: 'FULFILL_ORDER', orderId: followUp!.id }, content);
+    expect(delivered.flags).toContain(`order-completed:${followUp!.id}`);
+    expect(delivered.flags).toContain('route-order-completed:ln-qilou-night-market');
+    expect(delivered.regionReputation.lingnan).toBeGreaterThan(s.regionReputation.lingnan ?? 0);
   });
 
   it('地图规格会带出当前小地区活动点和占位 NPC 锚点', () => {
@@ -3604,6 +3975,135 @@ describe('gameReducer', () => {
     expect(
       ended.report?.relationshipOutcomes?.some(
         (line) => line.includes('洛桑画师') && line.includes('净室礼法续簿') && line.includes('雪域来客'),
+      ),
+    ).toBe(true);
+  });
+
+  it('百工院来访：玉柜留样复单交付后会解锁西域藏客回访与续订', () => {
+    let s = freshState();
+    const jade: ItemInstance = {
+      id: 'display-xiyu-jade-cabinet',
+      resourceId: 'jadeCarving',
+      sourceCraftId: 'jade-carving',
+      originRegionId: 'xiyu',
+      originSubregionId: 'xiyu-jade-yard',
+      createdTurn: s.turn,
+      quality: 0.78,
+      descriptors: ['水线成窗', '顺绺开意'],
+      appraisal: '顺着水线开意，玉料脾性清楚。',
+      displayName: '西域顺料玉作',
+      authorName: '测试匠',
+      status: 'displayed',
+    };
+    const replica: ItemInstance = {
+      ...jade,
+      id: 'held-xiyu-jade-replica',
+      displayName: '西域顺料复样',
+      status: 'held',
+      quality: 0.75,
+      createdTurn: s.turn + 1,
+    };
+    s = {
+      ...s,
+      itemInstances: [jade, replica, ...s.itemInstances],
+      resources: { ...s.resources, jadeCarving: (s.resources.jadeCarving ?? 0) + 2 },
+      npcAffinity: { ...s.npcAffinity, 'xu-a-yue': 30 },
+    };
+
+    s = gameReducer(
+      s,
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'xu-a-yue',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'jade-cabinet-ledger',
+      },
+      content,
+    );
+
+    const record = s.homeVisitRecords[0];
+    const order = s.activeOrders.find((item) => item.id === record.referralOrderId)!;
+    expect(record).toMatchObject({
+      title: '顺玉开柜',
+      choiceId: 'jade-cabinet-ledger',
+      choiceKind: 'collect',
+      referralTitle: '玉柜留样复单',
+      itemName: '西域顺料玉作',
+    });
+    expect(order).toMatchObject({
+      npcId: 'xu-a-yue',
+      regionId: 'xiyu',
+      orderKind: 'referral',
+      sourceHomeVisitRecordId: record.id,
+      sourceHomeVisitChoiceId: 'jade-cabinet-ledger',
+      resourceId: 'jadeCarving',
+      status: 'active',
+    });
+    expect(order.desc).toContain('西域顺料玉作');
+    expect(s.flags).toContain('homevisit-referral:jade-cabinet-ledger');
+    expect(s.npcStates['xu-a-yue'].knownTopics).toContain('jade-referral');
+
+    const delivered = gameReducer(s, { type: 'FULFILL_ORDER', orderId: order.id }, content);
+    expect(delivered.activeOrders.find((item) => item.id === order.id)?.status).toBe('completed');
+    expect(delivered.flags).toContain(`homevisit-order-completed:${record.id}`);
+    expect(delivered.flags).toContain('homevisit-referral-completed:jade-cabinet-ledger');
+    expect(delivered.itemInstances.find((item) => item.id === jade.id)?.status).toBe('displayed');
+    expect(delivered.itemInstances.some((item) => item.id === replica.id)).toBe(false);
+
+    const returned = gameReducer(
+      {
+        ...delivered,
+        calendar: { ...delivered.calendar, day: delivered.calendar.day + 1 },
+      },
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'xu-a-yue',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'jade-ethics-ledger',
+      },
+      content,
+    );
+    const returnRecord = returned.homeVisitRecords[0];
+    const renewalOrder = returned.activeOrders.find((item) => item.id === returnRecord.referralOrderId)!;
+    expect(returnRecord).toMatchObject({
+      title: '藏客回访 · 玉柜声誉',
+      choiceId: 'jade-ethics-ledger',
+      choiceKind: 'collect',
+      referralTitle: '玉柜顺料续订单',
+      itemName: '西域顺料玉作',
+    });
+    expect(returned.flags).toContain('homevisit:homevisit-ayue-collector-return');
+    expect(returned.flags).toContain('homevisit-ayue-collector-return-resolved');
+    expect(returned.flags).toContain('collector-reputation-jade-renewed');
+    expect(returned.npcStates['xu-a-yue'].knownTopics).toContain('collector-return');
+    expect(returned.npcStates['xu-a-yue'].knownTopics).toContain('jade-ethics-ledger');
+    expect(renewalOrder).toMatchObject({
+      title: '玉柜顺料续订单',
+      orderKind: 'referral',
+      sourceHomeVisitRecordId: returnRecord.id,
+      sourceHomeVisitChoiceId: 'jade-ethics-ledger',
+      resourceId: 'jadeCarving',
+      minQuality: 0.72,
+      rewardCoin: 64,
+      status: 'active',
+    });
+
+    const ended = gameReducer(
+      {
+        ...returned,
+        npcAffinity: { ...returned.npcAffinity, 'xu-a-yue': 80 },
+        turn: returned.maxTurns,
+        pendingEvent: null,
+        pendingEscortCrisis: null,
+        pendingSupplyCrisis: null,
+        pendingActivityStallClosing: null,
+      },
+      { type: 'END_TURN' },
+      content,
+    );
+    expect(
+      ended.report?.relationshipOutcomes?.some(
+        (line) => line.includes('玉师阿月') && line.includes('玉柜伦理续簿') && line.includes('识玉行客'),
       ),
     ).toBe(true);
   });
@@ -5152,6 +5652,43 @@ describe('gameReducer', () => {
     s = gameReducer(s, { type: 'COMPLETE_QUEST', questId: 'q-longquan-first-sword' }, content);
     expect(s.completedQuests).toContain('q-longquan-first-sword');
     expect(s.flags).toContain('longquan-first-sword-approved');
+  });
+
+  it('百工志：基础词条常驻，生活活动会解锁见闻和商路词条', () => {
+    const initialIds = unlockedLoreEntries(content.loreEntries, freshState()).map((entry) => entry.id);
+    expect(initialIds).toEqual(
+      expect.arrayContaining(['world-baigong-plaque', 'system-four-metrics', 'region-jiangnan-water-market']),
+    );
+    expect(initialIds).not.toContain('life-lake-tea-house');
+
+    let s = gameReducer(freshState(), { type: 'TRAVEL_SUBREGION', subregionId: 'jiangnan-linan' }, content);
+    s = { ...s, resources: { ...s.resources, teaLeaf: 1, labor: 4 } };
+    s = gameReducer(s, { type: 'PERFORM_ACTIVITY', activityId: 'jn-lake-tea-house', quality: 0.9 }, content);
+
+    const ids = unlockedLoreEntries(content.loreEntries, s).map((entry) => entry.id);
+    expect(ids).toContain('life-lake-tea-house');
+    expect(ids).toContain('route-jiangnan-huizhou-paper');
+    expect(loreProgress(content.loreEntries, s).unlocked).toBeGreaterThan(initialIds.length);
+  });
+
+  it('百工志：工艺专注校准会解锁青瓷与校准词条', () => {
+    let s = gameReducer(freshState(), { type: 'TRAVEL_SUBREGION', subregionId: 'jiangnan-longquan' }, content);
+    s = { ...s, resources: { ...s.resources, porcelainClay: 1, coal: 1, labor: 10 } };
+    s = gameReducer(
+      s,
+      {
+        type: 'RUN_PROCESS',
+        craftId: 'celadon',
+        skipStepIds: [],
+        focusChecks: [{ stageId: 'celadon-clay-select', choiceId: 'align' }],
+      },
+      content,
+    );
+
+    expect(s.flags).toContain('craft-focus-check-used:celadon');
+    const ids = unlockedLoreEntries(content.loreEntries, s).map((entry) => entry.id);
+    expect(ids).toContain('craft-celadon-clay-fire');
+    expect(ids).toContain('system-focus-checks');
   });
 
   it('全流程 demo：家园种植→江南制作订单→解锁徽州→跨区制纸订单可自循环', () => {

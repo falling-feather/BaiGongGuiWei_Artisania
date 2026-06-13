@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "0.1.0",
+  "id": "jiangnan.building.pixel_preview.v01",
+  "operations": [
+    {
+      "op": "pixelizeResize",
+      "targetWidth": 256,
+      "targetHeight": 256,
+      "cropMode": "fit",
+      "sampler": "dominant",
+      "alphaMode": "weighted",
+      "maxSize": 512
+    },
+    {
+      "op": "palette",
+      "maxColors": 40,
+      "distance": "rgb",
+      "mergeThreshold": 24
+    }
+  ]
+}

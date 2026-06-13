@@ -1,0 +1,33 @@
+{
+  "schema": "artisania-map-editor/v2",
+  "regionId": "xueyu",
+  "subregionId": "xueyu-thangka-court",
+  "tileSize": 32,
+  "size": { "w": 58, "h": 30 },
+  "roads": [
+    { "points": [{ "x": 2, "y": 7 }, { "x": 55, "y": 7 }] },
+    { "points": [{ "x": 2, "y": 15 }, { "x": 55, "y": 15 }] },
+    { "points": [{ "x": 2, "y": 24 }, { "x": 55, "y": 24 }] },
+    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
+    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
+    { "points": [{ "x": 50, "y": 3 }, { "x": 50, "y": 26 }] }
+  ],
+  "objects": [
+    { "itemId": "player_spawn", "x": 29, "y": 15 },
+    { "itemId": "industry_pigment", "name": "mineral pigment altar", "interaction": "industry", "targetId": "harvest-pigment", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_pigment", "name": "pigment grinding stone", "interaction": "industry", "targetId": "grind-pigment", "x": 15, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_paper", "name": "paper preparing table", "interaction": "industry", "targetId": "make-paper", "x": 25, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_thangka", "name": "Thangka painting court", "interaction": "craft", "targetId": "thangka", "x": 10, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_paper", "name": "Tibetan paper room", "interaction": "craft", "targetId": "tibetan-paper", "x": 25, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_incense", "name": "Tibetan incense bench", "interaction": "craft", "targetId": "tibetan-incense", "x": 40, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_thangka", "name": "measure line lesson", "interaction": "activity", "targetId": "xy-thangka-court", "x": 36, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to snow pass", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xueyu-snow-pass", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to pigment valley", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xueyu-pigment-valley", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to silver tent", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xueyu-silver-tent", "x": 32, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Bashu snow road", "interaction": "gate", "targetId": "bashu", "x": 52, "y": 9, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Xiyu caravan road", "interaction": "gate", "targetId": "xiyu", "x": 52, "y": 19, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "npc-xy-losang", "name": "Losang painter", "interaction": "npc", "npcId": "xy-losang", "x": 14, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "mani-wall-a", "name": "mani stone wall", "interaction": "decoration", "x": 42, "y": 4, "tileW": 4, "tileH": 2, "solid": true },
+    { "itemId": "snow-shrine-a", "name": "snow shrine", "interaction": "decoration", "x": 44, "y": 20, "tileW": 3, "tileH": 2, "solid": true }
+  ]
+}

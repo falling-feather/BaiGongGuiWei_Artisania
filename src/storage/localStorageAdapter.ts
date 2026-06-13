@@ -19,7 +19,7 @@ const ACTIVE_KEY = 'artisania:saves:active';
 const SLOT_PREFIX = 'artisania:saves:slot:';
 const DEFAULT_SLOT_ID = 'slot-1';
 const MAX_SAVE_SLOTS = 5;
-const COMPATIBLE_SAVE_VERSIONS = new Set([5, 6, 7, 8, SAVE_VERSION]);
+const COMPATIBLE_SAVE_VERSIONS = new Set([5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, SAVE_VERSION]);
 
 function slotKey(slotId: string) {
   return `${SLOT_PREFIX}${slotId}`;
@@ -47,12 +47,21 @@ function migrateState(state: GameState): GameState {
     calendar: state.calendar ?? createCalendar(day),
     farmPlots: state.farmPlots ?? createInitialFarmPlots(),
     itemInstances: state.itemInstances ?? [],
+    pendingEscortCrisis: state.pendingEscortCrisis ?? null,
+    pendingSupplyCrisis: state.pendingSupplyCrisis ?? null,
+    pendingActivityStallClosing: state.pendingActivityStallClosing ?? null,
     npcStates: state.npcStates ?? {},
     completedActivities: state.completedActivities ?? [],
     regionReputation: state.regionReputation ?? (state.currentRegion ? { [state.currentRegion]: 5 } : {}),
     routeStability: state.routeStability ?? {},
     routeEscortRuns: state.routeEscortRuns ?? {},
+    supplyCrisisRecords: state.supplyCrisisRecords ?? [],
     activeOrders: state.activeOrders ?? [],
+    homeVisitRecords: state.homeVisitRecords ?? [],
+    nightMarketStallRecords: state.nightMarketStallRecords ?? [],
+    workshopUpgrades: state.workshopUpgrades ?? [],
+    workshopSpaces: state.workshopSpaces ?? [],
+    trackedLoreEntryId: state.trackedLoreEntryId ?? null,
   };
 }
 

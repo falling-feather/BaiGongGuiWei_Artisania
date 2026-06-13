@@ -8,11 +8,15 @@ export function GameOverReport() {
   const newGame = useGameStore((s) => s.newGame);
 
   if (status !== 'ended' || !report) return null;
+  const regionalOutcomes = report.regionalOutcomes ?? [];
+  const relationshipOutcomes = report.relationshipOutcomes ?? [];
+  const hasOutcomes = regionalOutcomes.length > 0 || relationshipOutcomes.length > 0;
 
   return (
     <div className="modal__backdrop">
       <div className="modal">
         <h3 className="modal__title">{report.title}</h3>
+        {report.socialTitle && <p className="panel-note">江湖称号：{report.socialTitle}</p>}
         <p className="modal__desc">{report.summary}</p>
 
         <div className="report__metrics">
@@ -39,6 +43,27 @@ export function GameOverReport() {
               <li key={i}>{h}</li>
             ))}
           </ul>
+        )}
+
+        {hasOutcomes && (
+          <div className="report__epilogue report__outcomes">
+            {regionalOutcomes.length > 0 && (
+              <>
+                <h4 className="report__outcome-title">地方回声</h4>
+                {regionalOutcomes.map((line, i) => (
+                  <p key={`region-${i}`}>{line}</p>
+                ))}
+              </>
+            )}
+            {relationshipOutcomes.length > 0 && (
+              <>
+                <h4 className="report__outcome-title">人情回声</h4>
+                {relationshipOutcomes.map((line, i) => (
+                  <p key={`npc-${i}`}>{line}</p>
+                ))}
+              </>
+            )}
+          </div>
         )}
 
         {report.epilogue && (

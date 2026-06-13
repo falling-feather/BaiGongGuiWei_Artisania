@@ -14,7 +14,12 @@ export function StoryModal() {
   const beat = nextStoryBeat(state, content);
   if (!beat) return null;
   // 有待处理的随机事件时，先让位给事件抉择
-  if (state.pendingEvent) return null;
+  if (
+    state.pendingEvent ||
+    state.pendingEscortCrisis ||
+    state.pendingSupplyCrisis ||
+    state.pendingActivityStallClosing
+  ) return null;
 
   return (
     <div className="modal__backdrop">

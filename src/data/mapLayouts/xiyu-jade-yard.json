@@ -1,0 +1,30 @@
+{
+  "schema": "artisania-map-editor/v2",
+  "regionId": "xiyu",
+  "subregionId": "xiyu-jade-yard",
+  "tileSize": 32,
+  "size": { "w": 52, "h": 28 },
+  "roads": [
+    { "points": [{ "x": 2, "y": 8 }, { "x": 49, "y": 8 }] },
+    { "points": [{ "x": 2, "y": 15 }, { "x": 49, "y": 15 }] },
+    { "points": [{ "x": 2, "y": 21 }, { "x": 49, "y": 21 }] },
+    { "points": [{ "x": 9, "y": 4 }, { "x": 9, "y": 24 }] },
+    { "points": [{ "x": 26, "y": 4 }, { "x": 26, "y": 24 }] },
+    { "points": [{ "x": 43, "y": 4 }, { "x": 43, "y": 24 }] }
+  ],
+  "objects": [
+    { "itemId": "player_spawn", "x": 26, "y": 14 },
+    { "itemId": "industry_mine", "name": "copper sand pass", "interaction": "industry", "targetId": "harvest-copper-ore", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_forge", "name": "oasis copper furnace", "interaction": "industry", "targetId": "smelt-copper", "x": 14, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_lacquer", "name": "Kunlun jade workshop", "interaction": "craft", "targetId": "jade-carving", "x": 24, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "action_mining", "name": "Kunlun jade yard", "interaction": "activity", "targetId": "xiyu-jade-yard", "x": 35, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to oasis bazaar", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xiyu-bazaar", "x": 4, "y": 18, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to caravan post", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xiyu-caravan-post", "x": 20, "y": 18, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Atlas loom", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xiyu-atlas-loom", "x": 36, "y": 18, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "plateau silk road", "interaction": "gate", "targetId": "xueyu", "x": 46, "y": 12, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "jade-yard-caravan-sign", "name": "ticket house route sign", "interaction": "decoration", "x": 46, "y": 23, "tileW": 2, "tileH": 2, "solid": true },
+    { "itemId": "npc-xu-a-yue", "name": "Xu A-yue", "interaction": "npc", "npcId": "xu-a-yue", "x": 27, "y": 8, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "jade-yard-rock-a", "name": "jade stone pile", "interaction": "decoration", "x": 31, "y": 1, "tileW": 3, "tileH": 2, "solid": true },
+    { "itemId": "jade-yard-rock-b", "name": "gobi ridge", "interaction": "decoration", "x": 40, "y": 1, "tileW": 3, "tileH": 2, "solid": true }
+  ]
+}

@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
 import { ACTIVITY_CHALLENGE_INDEX, RESOURCE_INDEX } from '../data';
 import { useGameStore } from '../store/gameStore';
-import type { ActivityKind, ActivityMiniGameType, ResourcePool } from '../engine';
+import type {
+  ActivityChallengeChoice,
+  ActivityChallengeDef,
+  ActivityChallengeRoundDef,
+  ActivityKind,
+  ActivityMiniGameType,
+  ActivityStallDef,
+  ResourcePool,
+} from '../engine';
 
 const KIND_LABEL: Record<ActivityKind, string> = {
   resource: '采集',
@@ -38,6 +46,50 @@ function describePool(pool: ResourcePool | undefined): string {
   return entries.map(([key, amount]) => `${resName(key)}x${amount}`).join('、');
 }
 
+function generatedOrderText(activity: { reward: { generatedOrder?: {
+  title: string;
+  resourceId: string;
+  quantity: number;
+  expiresIn: number;
+  dayCycle?: { cycleDays: number; offset: number; label: string };
+} } }, day: number): string {
+  const order = activity.reward.generatedOrder;
+  if (!order) return '';
+  const cycle = order.dayCycle;
+  const dayNote = cycle
+    ? ((((day - cycle.offset) % cycle.cycleDays + cycle.cycleDays) % cycle.cycleDays === 0)
+        ? cycle.label
+        : `${cycle.label}未到`)
+    : '活动后';
+  return `节令单：${order.title}（${resName(order.resourceId)}x${order.quantity}，限${order.expiresIn}日，${dayNote}）`;
+}
+
+function stallText(stall: ActivityStallDef | undefined, day: number): string {
+  if (!stall) return '';
+  const cycle = stall.dayCycle;
+  const dayNote = cycle
+    ? ((((day - cycle.offset) % cycle.cycleDays + cycle.cycleDays) % cycle.cycleDays === 0)
+        ? cycle.label
+        : `${cycle.label}外`)
+    : '常设';
+  const customerNote = stall.customers?.length ? `，客群 ${stall.customers.map((customer) => customer.title).join('、')}` : '';
+  const comboNote = stall.combos?.length ? `，组合 ${stall.combos.map((combo) => combo.title).join('、')}` : '';
+  const strategyNote = stall.strategies?.length ? `，策略 ${stall.strategies.map((strategy) => strategy.title).join('、')}` : '';
+  return `节令摊位：${stall.title}（可售 ${stall.stockResourceIds.map(resName).join('、')}，${dayNote}${customerNote}${comboNote}${strategyNote}）`;
+}
+
+function getChallengeRounds(challenge: ActivityChallengeDef | null): ActivityChallengeRoundDef[] {
+  if (!challenge) return [];
+  if (challenge.rounds?.length) return challenge.rounds;
+  return [{ id: `${challenge.id}:main`, prompt: challenge.prompt, choices: challenge.choices }];
+}
+
+function averageChallengeQuality(choices: ActivityChallengeChoice[]): number {
+  if (choices.length === 0) return 0.82;
+  const total = choices.reduce((sum, choice) => sum + choice.quality, 0);
+  return Number((total / choices.length).toFixed(2));
+}
+
 export function ActivityModal({
   activityId,
   onClose,
@@ -48,10 +100,12 @@ export function ActivityModal({
   const content = useGameStore((s) => s.content);
   const state = useGameStore((s) => s.state);
   const dispatch = useGameStore((s) => s.dispatch);
-  const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
+  const [selectedChoiceIds, setSelectedChoiceIds] = useState<Record<string, string>>({});
+  const [selectedStallStrategyId, setSelectedStallStrategyId] = useState<string | null>(null);
 
   useEffect(() => {
-    setSelectedChoiceId(null);
+    setSelectedChoiceIds({});
+    setSelectedStallStrategyId(null);
   }, [activityId]);
 
   if (!activityId) return null;
@@ -60,7 +114,14 @@ export function ActivityModal({
   if (!activity) return null;
 
   const challenge = ACTIVITY_CHALLENGE_INDEX[activity.id] ?? null;
-  const selectedChoice = challenge?.choices.find((choice) => choice.id === selectedChoiceId) ?? null;
+  const challengeRounds = getChallengeRounds(challenge);
+  const selectedChoices = challengeRounds
+    .map((round) => round.choices.find((choice) => choice.id === selectedChoiceIds[round.id]))
+    .filter((choice): choice is ActivityChallengeChoice => Boolean(choice));
+  const challengeComplete = !challenge || selectedChoices.length === challengeRounds.length;
+  const challengeQuality = challenge ? averageChallengeQuality(selectedChoices) : 0.82;
+  const stallStrategies = activity.reward.stall?.strategies ?? [];
+  const selectedStallStrategy = stallStrategies.find((strategy) => strategy.id === selectedStallStrategyId) ?? null;
   const completed = state.completedActivities.includes(activity.id);
   const laborShort = (state.resources.labor ?? 0) < activity.laborCost;
   const phaseBlocked = Boolean(
@@ -81,19 +142,27 @@ export function ActivityModal({
     !phaseBlocked &&
     !materialShort &&
     !(activity.once && completed) &&
-    (!challenge || Boolean(selectedChoice));
+    challengeComplete &&
+    (stallStrategies.length === 0 || Boolean(selectedStallStrategy));
   const rewardText = [
     describePool(activity.reward.resources),
     activity.reward.attributes
       ? Object.entries(activity.reward.attributes).map(([key, amount]) => `${key}+${amount}`).join('、')
       : '',
     routeReward ? `路线情报：${routeReward}` : '',
+    generatedOrderText(activity, state.calendar.day),
+    stallText(activity.reward.stall, state.calendar.day),
   ]
     .filter((value) => value && value !== '无')
     .join('；') || '阅历';
 
   const perform = () => {
-    dispatch({ type: 'PERFORM_ACTIVITY', activityId: activity.id, quality: selectedChoice?.quality ?? 0.82 });
+    dispatch({
+      type: 'PERFORM_ACTIVITY',
+      activityId: activity.id,
+      quality: challengeQuality,
+      stallStrategyId: selectedStallStrategy?.id,
+    });
     onClose();
   };
 
@@ -119,20 +188,62 @@ export function ActivityModal({
               <b>{challenge.title}</b>
               <span>{MINI_LABEL[challenge.miniGame]}</span>
             </div>
-            <p>{challenge.prompt}</p>
+            <div className="activity-round-list">
+              {challengeRounds.map((round, index) => (
+                <div className="activity-round" key={round.id}>
+                  <p className="activity-round__prompt">
+                    {challengeRounds.length > 1 ? `第 ${index + 1} 轮：${round.prompt}` : round.prompt}
+                  </p>
+                  <div className="activity-choice-list">
+                    {round.choices.map((choice) => {
+                      const selected = choice.id === selectedChoiceIds[round.id];
+                      return (
+                        <button
+                          className={`activity-choice${selected ? ' is-selected' : ''}`}
+                          key={choice.id}
+                          onClick={() =>
+                            setSelectedChoiceIds((current) => ({ ...current, [round.id]: choice.id }))
+                          }
+                          type="button"
+                        >
+                          {choice.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {selectedChoices.length > 0 && (
+              <div className="activity-feedback">
+                {selectedChoices.map((choice) => (
+                  <p key={choice.id}>{choice.feedback}</p>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {stallStrategies.length > 0 && (
+          <section className="activity-challenge">
+            <div className="activity-challenge__head">
+              <b>摊位策略</b>
+              <span>{activity.reward.stall?.title}</span>
+            </div>
             <div className="activity-choice-list">
-              {challenge.choices.map((choice) => (
+              {stallStrategies.map((strategy) => (
                 <button
-                  className={`activity-choice${choice.id === selectedChoiceId ? ' is-selected' : ''}`}
-                  key={choice.id}
-                  onClick={() => setSelectedChoiceId(choice.id)}
+                  className={`activity-choice${strategy.id === selectedStallStrategyId ? ' is-selected' : ''}`}
+                  key={strategy.id}
+                  onClick={() => setSelectedStallStrategyId(strategy.id)}
                   type="button"
                 >
-                  {choice.label}
+                  {strategy.title}
+                  <small>{strategy.desc}</small>
                 </button>
               ))}
             </div>
-            {selectedChoice && <p className="activity-feedback">{selectedChoice.feedback}</p>}
+            {selectedStallStrategy && <p className="activity-feedback">{selectedStallStrategy.desc}</p>}
           </section>
         )}
 
