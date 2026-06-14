@@ -1,0 +1,29 @@
+{
+  "schema": "artisania-map-editor/v2",
+  "regionId": "bashu",
+  "subregionId": "bashu-tea-horse",
+  "tileSize": 32,
+  "size": { "w": 56, "h": 30 },
+  "roads": [
+    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
+    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
+    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
+    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
+    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
+    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+  ],
+  "objects": [
+    { "itemId": "player_spawn", "x": 28, "y": 15 },
+    { "itemId": "industry_tea", "name": "mist tea ridge", "interaction": "industry", "targetId": "harvest-tea-leaf", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_tea", "name": "tea fixing hearth", "interaction": "industry", "targetId": "pick-tea", "x": 14, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_route", "name": "tea horse post fair", "interaction": "activity", "targetId": "bs-tea-horse-post", "x": 25, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Jinli craft lane", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "bashu-jinli", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Qingshen bamboo sea", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "bashu-bamboo-sea", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Linqiong iron furnace", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "bashu-linqiong-iron", "x": 32, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Qiandian tea horse road", "interaction": "gate", "targetId": "qiandian", "x": 49, "y": 8, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Xueyu snow pass", "interaction": "gate", "targetId": "xueyu", "x": 49, "y": 17, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "npc-bs-mabang-ayue", "name": "Mabang Ayue", "interaction": "npc", "npcId": "bs-mabang-ayue", "x": 29, "y": 10, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "pack-saddle-a", "name": "pack saddle stand", "interaction": "decoration", "x": 35, "y": 16, "tileW": 4, "tileH": 2, "solid": true },
+    { "itemId": "tea-crate-a", "name": "pressed tea crates", "interaction": "decoration", "x": 20, "y": 16, "tileW": 3, "tileH": 2, "solid": true }
+  ]
+}

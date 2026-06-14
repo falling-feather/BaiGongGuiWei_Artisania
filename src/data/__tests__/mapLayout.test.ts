@@ -87,8 +87,12 @@ describe('runtime map editor adapter', () => {
 
     expect([...snapshotsBySubregion.keys()]).toEqual([
       'jiangnan-longquan',
+      'jiangnan-jinling',
       'bashu-bamboo-sea',
+      'bashu-jinli',
+      'bashu-tea-horse',
       'lingnan-gambiered-yard',
+      'lingnan-harbor',
       'qiandian-miao-village',
       'jingchu-chu-lacquer',
       'ganpo-kiln-town',
@@ -97,6 +101,8 @@ describe('runtime map editor adapter', () => {
       'sanjin-lacquer-yard',
       'xueyu-thangka-court',
       'xiyu-jade-yard',
+      'xiyu-bazaar',
+      'xiyu-caravan-post',
     ]);
     expect(new Set(RUNTIME_MAP_EDITOR_SNAPSHOTS.map((snapshot) => snapshot.regionId))).toEqual(
       new Set(['jiangnan', 'bashu', 'lingnan', 'qiandian', 'jingchu', 'ganpo', 'huizhou', 'jingji', 'sanjin', 'xueyu', 'xiyu']),
@@ -115,11 +121,41 @@ describe('runtime map editor adapter', () => {
         expect.objectContaining({ interaction: 'npc', npcId: 'jn-ye-qingzhan' }),
       ]),
     );
+    expect(snapshotsBySubregion.get('jiangnan-jinling')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'activity', targetId: 'jn-qinhuai-lantern' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jn-qiao-zhaoye' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('bashu-tea-horse')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'activity', targetId: 'bs-tea-horse-post' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'bs-mabang-ayue' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('lingnan-harbor')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'activity', targetId: 'ln-qilou-night-market' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'ln-wu-haichao' }),
+      ]),
+    );
     expect(snapshotsBySubregion.get('xiyu-jade-yard')?.objects).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ interaction: 'craft', targetId: 'jade-carving' }),
         expect.objectContaining({ interaction: 'activity', targetId: 'xiyu-jade-yard' }),
         expect.objectContaining({ interaction: 'npc', npcId: 'xu-a-yue' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('xiyu-bazaar')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'activity', targetId: 'xiyu-bazaar-trade' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'xu-sali' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('xiyu-caravan-post')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'activity', targetId: 'xiyu-caravan-post' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'xu-tuoling-shu' }),
       ]),
     );
 

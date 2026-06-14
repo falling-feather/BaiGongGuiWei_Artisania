@@ -17,7 +17,7 @@ export const PRIORITY_SCOPE_REQUIREMENTS: PriorityRegionRequirement[] = [
     requiredCraftIds: ['longquan-sword', 'celadon', 'oilpaper-umbrella', 'kesi'],
     requiredActivityIds: ['jn-qinhuai-lantern'],
     requiredNpcIds: ['jn-ning-ciqiu', 'jn-ye-qingzhan', 'jn-qiao-zhaoye'],
-    requiredLayoutSubregionIds: ['jiangnan-longquan'],
+    requiredLayoutSubregionIds: ['jiangnan-longquan', 'jiangnan-jinling'],
     requiredLoreEntryIds: ['region-jiangnan-water-market', 'subregion-jiangnan-longquan', 'craft-longquan-sword-temper'],
   },
   {
@@ -26,7 +26,7 @@ export const PRIORITY_SCOPE_REQUIREMENTS: PriorityRegionRequirement[] = [
     requiredCraftIds: ['shu-brocade'],
     requiredActivityIds: ['bs-tea-horse-post'],
     requiredNpcIds: ['bs-zhuo-jinniang', 'bs-mabang-ayue'],
-    requiredLayoutSubregionIds: ['bashu-bamboo-sea'],
+    requiredLayoutSubregionIds: ['bashu-bamboo-sea', 'bashu-jinli', 'bashu-tea-horse'],
     requiredLoreEntryIds: ['region-bashu-bamboo-sea', 'subregion-bashu-bamboo-sea', 'route-tea-horse-ledger'],
   },
   {
@@ -35,7 +35,7 @@ export const PRIORITY_SCOPE_REQUIREMENTS: PriorityRegionRequirement[] = [
     requiredCraftIds: ['gambiered-silk'],
     requiredActivityIds: ['ln-qilou-night-market'],
     requiredNpcIds: ['ln-he-yunsha', 'ln-wu-haichao'],
-    requiredLayoutSubregionIds: ['lingnan-gambiered-yard'],
+    requiredLayoutSubregionIds: ['lingnan-gambiered-yard', 'lingnan-harbor'],
     requiredLoreEntryIds: [
       'region-lingnan-gambiered-yard',
       'subregion-lingnan-gambiered-yard',
@@ -56,8 +56,8 @@ export const PRIORITY_SCOPE_REQUIREMENTS: PriorityRegionRequirement[] = [
     tier: 'anchor',
     requiredCraftIds: ['jade-carving'],
     requiredActivityIds: ['xiyu-bazaar-trade'],
-    requiredNpcIds: ['xu-a-yue', 'xu-tuoling-shu'],
-    requiredLayoutSubregionIds: ['xiyu-jade-yard'],
+    requiredNpcIds: ['xu-a-yue', 'xu-sali', 'xu-tuoling-shu'],
+    requiredLayoutSubregionIds: ['xiyu-jade-yard', 'xiyu-bazaar', 'xiyu-caravan-post'],
     requiredLoreEntryIds: ['region-xiyu-jade-yard', 'subregion-xiyu-jade-yard', 'craft-jade-material-ethics'],
   },
   {

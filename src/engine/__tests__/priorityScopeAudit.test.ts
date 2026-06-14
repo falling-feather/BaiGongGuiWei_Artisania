@@ -54,7 +54,7 @@ describe('priority scope audit', () => {
     const audit = buildPriorityScopeAudit(freshState(), PRIORITY_JOURNEY_STEPS, PRIORITY_SCOPE_REQUIREMENTS, content);
 
     expect(audit.totalSteps).toBe(5);
-    expect(audit.totalMilestones).toBe(10);
+    expect(audit.totalMilestones).toBe(11);
     expect(audit.completedSteps).toBe(0);
     expect(audit.completedMilestones).toBe(0);
     expect(audit.readyAnchorRegions).toBe(5);

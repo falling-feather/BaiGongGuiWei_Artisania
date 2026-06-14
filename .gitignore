@@ -18,5 +18,9 @@ dist-ssr/
 !.vscode/extensions.json
 *.log
 
+# Codex local dev server logs
+.codex-*.out
+.codex-*.err
+
 # Test coverage
 coverage/

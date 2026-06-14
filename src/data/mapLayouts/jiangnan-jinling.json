@@ -1,0 +1,34 @@
+{
+  "schema": "artisania-map-editor/v2",
+  "regionId": "jiangnan",
+  "subregionId": "jiangnan-jinling",
+  "tileSize": 32,
+  "size": { "w": 58, "h": 28 },
+  "roads": [
+    { "points": [{ "x": 2, "y": 7 }, { "x": 55, "y": 7 }] },
+    { "points": [{ "x": 2, "y": 14 }, { "x": 55, "y": 14 }] },
+    { "points": [{ "x": 2, "y": 21 }, { "x": 55, "y": 21 }] },
+    { "points": [{ "x": 8, "y": 3 }, { "x": 8, "y": 24 }] },
+    { "points": [{ "x": 28, "y": 3 }, { "x": 28, "y": 24 }] },
+    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 24 }] }
+  ],
+  "objects": [
+    { "itemId": "player_spawn", "x": 29, "y": 14 },
+    { "itemId": "industry_silk", "name": "brocade cocoon baskets", "interaction": "industry", "targetId": "harvest-cocoon", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_silk", "name": "jinling silk reeling room", "interaction": "industry", "targetId": "sericulture", "x": 14, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_textile", "name": "kesi brocade bureau", "interaction": "craft", "targetId": "kesi", "x": 24, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_lantern", "name": "Qinhuai lantern market", "interaction": "activity", "targetId": "jn-qinhuai-lantern", "x": 35, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_gold_leaf", "name": "gold leaf shop", "interaction": "activity", "targetId": "jn-gold-leaf-shop", "x": 44, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Longquan mountain forge", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-longquan", "x": 4, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Suhang water market", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-suhang", "x": 16, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Taihu weaving dock", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-taihu", "x": 28, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Baigong courtyard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-baigongyuan", "x": 40, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Jingji canal road", "interaction": "gate", "targetId": "jingji", "x": 52, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Ganpo kiln river road", "interaction": "gate", "targetId": "ganpo", "x": 52, "y": 13, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Huizhou paper road", "interaction": "gate", "targetId": "huizhou", "x": 52, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "npc-jn-qiao-zhaoye", "name": "Qiao Zhaoye", "interaction": "npc", "npcId": "jn-qiao-zhaoye", "x": 28, "y": 10, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "npc-jn-ning-ciqiu", "name": "Ning Ciqiu", "interaction": "npc", "npcId": "jn-ning-ciqiu", "x": 33, "y": 10, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "lantern-rack-a", "name": "lantern riddle rack", "interaction": "decoration", "x": 20, "y": 16, "tileW": 4, "tileH": 2, "solid": true },
+    { "itemId": "brocade-frame-a", "name": "brocade frame", "interaction": "decoration", "x": 39, "y": 16, "tileW": 4, "tileH": 2, "solid": true }
+  ]
+}

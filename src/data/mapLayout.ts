@@ -1,6 +1,10 @@
 import jiangnanLongquanMap from './mapLayouts/jiangnan-longquan.json';
+import jiangnanJinlingMap from './mapLayouts/jiangnan-jinling.json';
 import bashuBambooSeaMap from './mapLayouts/bashu-bamboo-sea.json';
+import bashuJinliMap from './mapLayouts/bashu-jinli.json';
+import bashuTeaHorseMap from './mapLayouts/bashu-tea-horse.json';
 import lingnanGambieredYardMap from './mapLayouts/lingnan-gambiered-yard.json';
+import lingnanHarborMap from './mapLayouts/lingnan-harbor.json';
 import qiandianMiaoVillageMap from './mapLayouts/qiandian-miao-village.json';
 import jingchuChuLacquerMap from './mapLayouts/jingchu-chu-lacquer.json';
 import ganpoKilnTownMap from './mapLayouts/ganpo-kiln-town.json';
@@ -9,6 +13,8 @@ import jingjiPalaceYardMap from './mapLayouts/jingji-palace-yard.json';
 import sanjinLacquerYardMap from './mapLayouts/sanjin-lacquer-yard.json';
 import xueyuThangkaCourtMap from './mapLayouts/xueyu-thangka-court.json';
 import xiyuJadeYardMap from './mapLayouts/xiyu-jade-yard.json';
+import xiyuBazaarMap from './mapLayouts/xiyu-bazaar.json';
+import xiyuCaravanPostMap from './mapLayouts/xiyu-caravan-post.json';
 
 /**
  * 大地图布局 —— 各地区在全国地图上的近似坐标（百分比，0–100）。
@@ -293,8 +299,12 @@ export function runtimeLayoutFromEditorSnapshot(
 /** Editor-compatible first batch: runtime consumes these checked-in JSON assets through runtimeLayoutFromEditorSnapshot. */
 export const RUNTIME_MAP_EDITOR_SNAPSHOTS: RuntimeMapEditorSnapshot[] = [
   jiangnanLongquanMap,
+  jiangnanJinlingMap,
   bashuBambooSeaMap,
+  bashuJinliMap,
+  bashuTeaHorseMap,
   lingnanGambieredYardMap,
+  lingnanHarborMap,
   qiandianMiaoVillageMap,
   jingchuChuLacquerMap,
   ganpoKilnTownMap,
@@ -303,6 +313,8 @@ export const RUNTIME_MAP_EDITOR_SNAPSHOTS: RuntimeMapEditorSnapshot[] = [
   sanjinLacquerYardMap,
   xueyuThangkaCourtMap,
   xiyuJadeYardMap,
+  xiyuBazaarMap,
+  xiyuCaravanPostMap,
 ];
 
 /** Runtime layouts consumed by StreetScene. Keep sources above editor-compatible. */

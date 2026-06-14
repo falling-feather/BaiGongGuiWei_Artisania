@@ -105,7 +105,7 @@ export const PRIORITY_JOURNEY_STEPS: PriorityJourneyStep[] = [
     id: 'journey-xiyu',
     regionId: 'xiyu',
     title: '西域收束',
-    summary: '完成玉作样品，并用绿洲巴扎收束稀有材料、议价和信用玩法。',
+    summary: '完成玉作样品，用绿洲巴扎收束稀有材料与信用玩法，再到驼队驿站确认远行商路。',
     milestones: [
       {
         id: 'journey-xiyu-craft-sample',
@@ -123,6 +123,15 @@ export const PRIORITY_JOURNEY_STEPS: PriorityJourneyStep[] = [
         targetLoreEntryId: 'subregion-xiyu-bazaar',
         activityId: 'xiyu-bazaar-trade',
         hint: '在绿洲巴扎完成交易摊位链，收束议价、稀有材料和商路信用。',
+      },
+      {
+        id: 'journey-xiyu-caravan-route',
+        label: '驼队远行确认',
+        kind: 'completedActivities',
+        ids: ['xiyu-caravan-post'],
+        targetLoreEntryId: 'subregion-xiyu-caravan-post',
+        activityId: 'xiyu-caravan-post',
+        hint: '在驼队驿站完成远行议路，确认西域到雪域的商路补给与护商口径。',
       },
     ],
   },

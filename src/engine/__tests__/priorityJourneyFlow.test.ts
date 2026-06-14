@@ -53,9 +53,13 @@ interface PriorityFlowPlan {
   craftSubregionId: string;
   activityId: string;
   activitySubregionId: string;
+  expectedNpcId: string;
   closingChoiceId: string;
   phases: TimePhase[];
   strategies?: Array<string | undefined>;
+  postActivityId?: string;
+  postActivitySubregionId?: string;
+  postActivityFlag?: string;
 }
 
 const FLOW_PLANS: PriorityFlowPlan[] = [
@@ -67,6 +71,7 @@ const FLOW_PLANS: PriorityFlowPlan[] = [
     craftSubregionId: 'jiangnan-longquan',
     activityId: 'jn-qinhuai-lantern',
     activitySubregionId: 'jiangnan-jinling',
+    expectedNpcId: 'jn-qiao-zhaoye',
     closingChoiceId: 'archive-riddle-ledger',
     phases: ['dusk', 'dusk', 'night'],
   },
@@ -78,6 +83,7 @@ const FLOW_PLANS: PriorityFlowPlan[] = [
     craftSubregionId: 'bashu-jinli',
     activityId: 'bs-tea-horse-post',
     activitySubregionId: 'bashu-tea-horse',
+    expectedNpcId: 'bs-mabang-ayue',
     closingChoiceId: 'archive-load-ledger',
     phases: ['morning', 'afternoon', 'dusk'],
     strategies: ['load-ledger-table', 'border-tea-contract', 'snow-pass-account'],
@@ -90,6 +96,7 @@ const FLOW_PLANS: PriorityFlowPlan[] = [
     craftSubregionId: 'lingnan-gambiered-yard',
     activityId: 'ln-qilou-night-market',
     activitySubregionId: 'lingnan-harbor',
+    expectedNpcId: 'ln-wu-haichao',
     closingChoiceId: 'archive-ship-date-ledger',
     phases: ['dusk', 'night', 'dusk'],
     strategies: ['ship-date-ledger-table', 'rain-awning-supper', 'wenfang-cargo-ledger'],
@@ -102,6 +109,7 @@ const FLOW_PLANS: PriorityFlowPlan[] = [
     craftSubregionId: 'ganpo-kiln-town',
     activityId: 'gp-kiln-opening-fair',
     activitySubregionId: 'ganpo-kiln-town',
+    expectedNpcId: 'gp-wen-yaotou',
     closingChoiceId: 'archive-fire-color-ledger',
     phases: ['afternoon', 'dusk', 'night'],
     strategies: ['fire-color-ranking', undefined, undefined],
@@ -113,9 +121,13 @@ const FLOW_PLANS: PriorityFlowPlan[] = [
     craftSubregionId: 'xiyu-jade-yard',
     activityId: 'xiyu-bazaar-trade',
     activitySubregionId: 'xiyu-bazaar',
+    expectedNpcId: 'xu-sali',
     closingChoiceId: 'seal-barter-contract',
     phases: ['dusk', 'dusk', 'dusk'],
     strategies: ['connoisseur-rare-table', undefined, undefined],
+    postActivityId: 'xiyu-caravan-post',
+    postActivitySubregionId: 'xiyu-caravan-post',
+    postActivityFlag: 'caravan-route-known',
   },
 ];
 
@@ -200,6 +212,8 @@ function runCraftSample(state: GameState, plan: PriorityFlowPlan): GameState {
 function runActivityChain(state: GameState, plan: PriorityFlowPlan): GameState {
   const activity = activityDef(plan.activityId);
   let next = placeAt(state, plan.regionId, plan.activitySubregionId);
+  const beforeReputation = next.regionReputation[plan.regionId] ?? 0;
+  const beforeAffinity = next.npcAffinity[plan.expectedNpcId] ?? 0;
 
   for (const [index, phase] of plan.phases.entries()) {
     next = addResources(
@@ -232,6 +246,36 @@ function runActivityChain(state: GameState, plan: PriorityFlowPlan): GameState {
 
   expect(next.pendingActivityStallClosing).toBeNull();
   expect(next.flags).toContain(`stall-closing-resolved:${plan.activityId}`);
+  expect(next.regionReputation[plan.regionId]).toBeGreaterThan(beforeReputation);
+  expect(next.npcAffinity[plan.expectedNpcId]).toBeGreaterThan(beforeAffinity);
+  expect(next.activeOrders).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        sourceActivityId: plan.activityId,
+        npcId: plan.expectedNpcId,
+      }),
+    ]),
+  );
+  return next;
+}
+
+function runActivityOnce(
+  state: GameState,
+  regionId: string,
+  subregionId: string,
+  activityId: string,
+  expectedFlag?: string,
+): GameState {
+  const activity = activityDef(activityId);
+  const ready = addResources(placeAt(state, regionId, subregionId), stallInputs(activity));
+  const beforeReputation = ready.regionReputation[regionId] ?? 0;
+  const beforeAffinity = activity.npcId ? ready.npcAffinity[activity.npcId] ?? 0 : 0;
+  const next = gameReducer(ready, { type: 'PERFORM_ACTIVITY', activityId, quality: 0.9 }, content);
+
+  expect(next.completedActivities).toContain(activityId);
+  expect(next.regionReputation[regionId]).toBeGreaterThan(beforeReputation);
+  if (activity.npcId) expect(next.npcAffinity[activity.npcId]).toBeGreaterThan(beforeAffinity);
+  if (expectedFlag) expect(next.flags).toContain(expectedFlag);
   return next;
 }
 
@@ -250,6 +294,22 @@ describe('priority journey reducer flow', () => {
 
       state = runActivityChain(state, plan);
       const guide = guideFor(state);
+
+      if (plan.postActivityId && plan.postActivitySubregionId) {
+        expect(guide?.status).toBe('active');
+        expect(guide?.step?.id).toBe(plan.stepId);
+        expect(guide?.milestone?.activityId).toBe(plan.postActivityId);
+
+        state = runActivityOnce(
+          state,
+          plan.regionId,
+          plan.postActivitySubregionId,
+          plan.postActivityId,
+          plan.postActivityFlag,
+        );
+        expect(guideFor(state)?.status).toBe('complete');
+        continue;
+      }
 
       if (plan.expectedNextStepId) {
         expect(guide?.status).toBe('active');

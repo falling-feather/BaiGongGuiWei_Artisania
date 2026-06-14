@@ -35,6 +35,13 @@ function withFlags(state: GameState, flags: string[]): GameState {
   };
 }
 
+function withCompletedActivities(state: GameState, activityIds: string[]): GameState {
+  return {
+    ...state,
+    completedActivities: [...new Set([...state.completedActivities, ...activityIds])],
+  };
+}
+
 function guideFor(state: GameState) {
   return buildPriorityJourneyGuide(state, PRIORITY_JOURNEY_STEPS, LORE_ENTRIES, REGIONS, routes);
 }
@@ -90,11 +97,37 @@ describe('priority journey guide', () => {
       'stall-chain-completed:gp-kiln-opening-fair',
       'stall-chain-completed:xiyu-bazaar-trade',
     ]);
+    state = withCompletedActivities(state, ['xiyu-caravan-post']);
 
     const guide = guideFor(state);
 
     expect(guide?.status).toBe('complete');
     expect(guide?.step).toBeNull();
     expect(guide?.completedStepIds).toHaveLength(PRIORITY_JOURNEY_STEPS.length);
+  });
+
+  it('keeps Xiyu active after the bazaar until the caravan post route is confirmed', () => {
+    let state = freshState();
+    for (const craftId of ['longquan-sword', 'shu-brocade', 'gambiered-silk', 'jingdezhen-porcelain', 'jade-carving']) {
+      state = withCraftProduced(state, craftId);
+    }
+    state = withFlags(state, [
+      'stall-chain-completed:jn-qinhuai-lantern',
+      'stall-chain-completed:bs-tea-horse-post',
+      'stall-chain-completed:ln-qilou-night-market',
+      'stall-chain-completed:gp-kiln-opening-fair',
+      'stall-chain-completed:xiyu-bazaar-trade',
+    ]);
+
+    const beforeCaravan = guideFor(state);
+
+    expect(beforeCaravan?.status).toBe('active');
+    expect(beforeCaravan?.step?.id).toBe('journey-xiyu');
+    expect(beforeCaravan?.milestone?.id).toBe('journey-xiyu-caravan-route');
+    expect(beforeCaravan?.travelGuide?.targetSubregionId).toBe('xiyu-caravan-post');
+
+    const afterCaravan = guideFor(withCompletedActivities(state, ['xiyu-caravan-post']));
+
+    expect(afterCaravan?.status).toBe('complete');
   });
 });
