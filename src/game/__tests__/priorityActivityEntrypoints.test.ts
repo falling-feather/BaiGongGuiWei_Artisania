@@ -30,7 +30,7 @@ const PRIORITY_ACTIVITY_ENTRYPOINTS: PriorityActivityEntrypointCase[] = [
     activitySubregionId: 'bashu-tea-horse',
     activityId: 'bs-tea-horse-post',
     producedCraftIds: ['longquan-sword', 'shu-brocade'],
-    flags: ['stall-chain-completed:jn-qinhuai-lantern'],
+    flags: ['stall-closing-resolved:jn-qinhuai-lantern'],
   },
   {
     name: 'Lingnan qilou night market',
@@ -40,8 +40,8 @@ const PRIORITY_ACTIVITY_ENTRYPOINTS: PriorityActivityEntrypointCase[] = [
     activityId: 'ln-qilou-night-market',
     producedCraftIds: ['longquan-sword', 'shu-brocade', 'gambiered-silk'],
     flags: [
-      'stall-chain-completed:jn-qinhuai-lantern',
-      'stall-chain-completed:bs-tea-horse-post',
+      'stall-closing-resolved:jn-qinhuai-lantern',
+      'stall-closing-resolved:bs-tea-horse-post',
     ],
   },
   {
@@ -52,9 +52,9 @@ const PRIORITY_ACTIVITY_ENTRYPOINTS: PriorityActivityEntrypointCase[] = [
     activityId: 'gp-kiln-opening-fair',
     producedCraftIds: ['longquan-sword', 'shu-brocade', 'gambiered-silk', 'jingdezhen-porcelain'],
     flags: [
-      'stall-chain-completed:jn-qinhuai-lantern',
-      'stall-chain-completed:bs-tea-horse-post',
-      'stall-chain-completed:ln-qilou-night-market',
+      'stall-closing-resolved:jn-qinhuai-lantern',
+      'stall-closing-resolved:bs-tea-horse-post',
+      'stall-closing-resolved:ln-qilou-night-market',
     ],
   },
   {
@@ -65,10 +65,10 @@ const PRIORITY_ACTIVITY_ENTRYPOINTS: PriorityActivityEntrypointCase[] = [
     activityId: 'xiyu-bazaar-trade',
     producedCraftIds: ['longquan-sword', 'shu-brocade', 'gambiered-silk', 'jingdezhen-porcelain', 'jade-carving'],
     flags: [
-      'stall-chain-completed:jn-qinhuai-lantern',
-      'stall-chain-completed:bs-tea-horse-post',
-      'stall-chain-completed:ln-qilou-night-market',
-      'stall-chain-completed:gp-kiln-opening-fair',
+      'stall-closing-resolved:jn-qinhuai-lantern',
+      'stall-closing-resolved:bs-tea-horse-post',
+      'stall-closing-resolved:ln-qilou-night-market',
+      'stall-closing-resolved:gp-kiln-opening-fair',
     ],
   },
 ];

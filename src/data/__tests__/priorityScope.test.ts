@@ -294,8 +294,8 @@ describe('current priority scope guard', () => {
             errors.push(`${milestone.id}: missing activity ${milestone.activityId}`);
           }
           for (const flag of milestone.ids) {
-            if (!flag.startsWith('stall-chain-completed:')) {
-              errors.push(`${milestone.id}: non-stall completion flag ${flag}`);
+            if (!flag.startsWith('stall-closing-resolved:')) {
+              errors.push(`${milestone.id}: non-stall closing flag ${flag}`);
             }
           }
         }

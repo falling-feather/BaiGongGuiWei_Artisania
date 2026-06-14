@@ -42,7 +42,7 @@ function freshState(): GameState {
 function completeJiangnanMainline(state: GameState): GameState {
   return {
     ...state,
-    flags: [...state.flags, 'stall-chain-completed:jn-qinhuai-lantern'],
+    flags: [...state.flags, 'stall-closing-resolved:jn-qinhuai-lantern'],
     crafts: state.crafts.map((craft) =>
       craft.craftId === 'longquan-sword' ? { ...craft, produced: Math.max(1, craft.produced) } : craft,
     ),

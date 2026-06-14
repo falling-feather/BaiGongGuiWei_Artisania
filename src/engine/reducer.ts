@@ -3257,7 +3257,6 @@ function regionEndingText(standing: ReportRegionStanding): string {
 function buildRegionalOutcomes(standings: ReportRegionStanding[]): string[] {
   return standings
     .filter((standing) => standing.score >= 36)
-    .slice(0, 3)
     .map((standing) => `【${standing.name}】${regionEndingText(standing)}`);
 }
 

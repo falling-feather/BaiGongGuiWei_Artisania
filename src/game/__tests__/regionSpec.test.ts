@@ -185,7 +185,7 @@ describe('lore travel target hints', () => {
       crafts: base.crafts.map((craft) =>
         craft.craftId === 'longquan-sword' ? { ...craft, produced: 1 } : craft,
       ),
-      flags: [...base.flags, 'stall-chain-completed:jn-qinhuai-lantern'],
+      flags: [...base.flags, 'stall-closing-resolved:jn-qinhuai-lantern'],
     });
 
     expect(spec?.navigationTarget).toMatchObject({

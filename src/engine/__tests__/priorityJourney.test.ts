@@ -66,7 +66,7 @@ describe('priority journey guide', () => {
 
   it('moves to the next region only after the anchor festival closes', () => {
     const state = withFlags(withCraftProduced(freshState(), 'longquan-sword'), [
-      'stall-chain-completed:jn-qinhuai-lantern',
+      'stall-closing-resolved:jn-qinhuai-lantern',
     ]);
     const guide = guideFor(state);
 
@@ -77,7 +77,7 @@ describe('priority journey guide', () => {
 
   it('treats each milestone kind as a concrete completion condition', () => {
     const state = withFlags(withCraftProduced(freshState(), 'shu-brocade'), [
-      'stall-chain-completed:bs-tea-horse-post',
+      'stall-closing-resolved:bs-tea-horse-post',
     ]);
     const bashuStep = PRIORITY_JOURNEY_STEPS.find((step) => step.id === 'journey-bashu')!;
 
@@ -91,11 +91,11 @@ describe('priority journey guide', () => {
       state = withCraftProduced(state, craftId);
     }
     state = withFlags(state, [
-      'stall-chain-completed:jn-qinhuai-lantern',
-      'stall-chain-completed:bs-tea-horse-post',
-      'stall-chain-completed:ln-qilou-night-market',
-      'stall-chain-completed:gp-kiln-opening-fair',
-      'stall-chain-completed:xiyu-bazaar-trade',
+      'stall-closing-resolved:jn-qinhuai-lantern',
+      'stall-closing-resolved:bs-tea-horse-post',
+      'stall-closing-resolved:ln-qilou-night-market',
+      'stall-closing-resolved:gp-kiln-opening-fair',
+      'stall-closing-resolved:xiyu-bazaar-trade',
     ]);
     state = withCompletedActivities(state, ['xiyu-caravan-post']);
 
@@ -112,11 +112,11 @@ describe('priority journey guide', () => {
       state = withCraftProduced(state, craftId);
     }
     state = withFlags(state, [
-      'stall-chain-completed:jn-qinhuai-lantern',
-      'stall-chain-completed:bs-tea-horse-post',
-      'stall-chain-completed:ln-qilou-night-market',
-      'stall-chain-completed:gp-kiln-opening-fair',
-      'stall-chain-completed:xiyu-bazaar-trade',
+      'stall-closing-resolved:jn-qinhuai-lantern',
+      'stall-closing-resolved:bs-tea-horse-post',
+      'stall-closing-resolved:ln-qilou-night-market',
+      'stall-closing-resolved:gp-kiln-opening-fair',
+      'stall-closing-resolved:xiyu-bazaar-trade',
     ]);
 
     const beforeCaravan = guideFor(state);
