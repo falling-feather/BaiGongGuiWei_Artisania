@@ -39,6 +39,13 @@ export {
   PRIORITY_SKELETON_REGION_IDS,
 } from './priorityScope';
 export {
+  FULL_SCOPE_REGION_IDS,
+  FULL_SCOPE_REGION_REQUIREMENTS,
+  type FullScopeMinimums,
+  type FullScopePriorityTier,
+  type FullScopeRegionRequirement,
+} from './fullScope';
+export {
   REGION_MAP_POS,
   RUNTIME_MAP_EDITOR_SNAPSHOTS,
   RUNTIME_MAP_LAYOUTS,
