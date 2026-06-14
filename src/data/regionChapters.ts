@@ -312,8 +312,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-pingyao-hand-polish'],
     escortEncounterIds: ['escort-jingji-canal-tribute'],
     smokeScenarioIds: ['chapter-sanjin-piaohao-lacquer'],
-    nextActions: ['补票号信用单的长期违约/回本指标', '补煤铁窑塬或清徐醋坊人工地图'],
-    gaps: ['票号已有活动即时订单，但仍需章节化信用风险和长期违约指标。', 'sanjin-coal-yard 与 sanjin-vinegar-yard 仍缺人工 JSON。'],
+    nextActions: ['补票号复违约利钱后日谈与更多账本分支', '补煤铁窑塬或清徐醋坊人工地图'],
+    gaps: ['已有票号活动即时订单、雷掌柜信用单违约、推光样柜回访与票号漆档续单回本修复；仍缺复违约利钱后日谈和更多账本分支。', 'sanjin-coal-yard 与 sanjin-vinegar-yard 仍缺人工 JSON。'],
   },
   {
     id: 'chapter-xueyu-thangka-snowpass',

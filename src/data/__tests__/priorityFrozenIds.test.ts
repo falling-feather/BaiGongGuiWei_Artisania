@@ -39,6 +39,7 @@ const FROZEN_SUBREGION_IDS = [
   'jingchu-chu-lacquer',
   'huizhou-paper-valley',
   'jingji-palace-yard',
+  'sanjin-piaohao',
   'sanjin-lacquer-yard',
   'xueyu-thangka-court',
   'xueyu-snow-pass',
@@ -99,6 +100,7 @@ const FROZEN_NPC_IDS = [
   'hz-wang-zhiniang',
   'jj-lan-daqi',
   'sj-pingyao-qipo',
+  'sj-lei-zhanggui',
   'xy-losang',
   'xy-yak-captain',
 ];
@@ -121,11 +123,17 @@ const FROZEN_ROUTE_IDS = [
 const FROZEN_HOME_VISIT_IDS = [
   'homevisit-alan-silver-ritual-case',
   'homevisit-alan-tea-road-client-return',
+  'homevisit-pingyao-polish-room',
+  'homevisit-pingyao-client-return',
   'homevisit-losang-thangka-hall',
   'homevisit-losang-patron-return',
 ];
 
-const FROZEN_COLLAB_RECIPE_IDS = ['collab-alan-silver-ritual-fit', 'collab-losang-mineral-layer'];
+const FROZEN_COLLAB_RECIPE_IDS = [
+  'collab-alan-silver-ritual-fit',
+  'collab-pingyao-hand-polish',
+  'collab-losang-mineral-layer',
+];
 
 const FROZEN_LAYOUT_SUBREGION_IDS = [
   'jiangnan-longquan',
@@ -143,6 +151,7 @@ const FROZEN_LAYOUT_SUBREGION_IDS = [
   'jingchu-chu-lacquer',
   'huizhou-paper-valley',
   'jingji-palace-yard',
+  'sanjin-piaohao',
   'sanjin-lacquer-yard',
   'xueyu-thangka-court',
 ];

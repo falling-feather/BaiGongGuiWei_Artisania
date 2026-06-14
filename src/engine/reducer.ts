@@ -5127,6 +5127,11 @@ function orderTrustScore(
     .some((routeId) => state.flags.includes(`route-known:${routeId}`)) ? 8 : 0;
   const piaohaoBonus = state.flags.includes('sanjin-piaohao-credit-note') || state.flags.includes('piaohao-credit') ? 26 : 0;
   const consignmentBonus = state.flags.includes('fang-route-ledger-advice') ? 8 : 0;
+  const sanjinCreditDefault = npc.id === 'sj-lei-zhanggui' && state.flags.includes('credit-default:sj-lei-zhanggui');
+  const sanjinCreditRepaired =
+    state.flags.includes('credit-default-repaired:sj-lei-zhanggui') ||
+    state.flags.includes('sanjin-credit-payback-restored');
+  const sanjinCreditAdjustment = sanjinCreditDefault ? (sanjinCreditRepaired ? 6 : -18) : 0;
   return Math.max(0, Math.min(100, Math.round(
     reputation * 0.65 +
     affinity * 0.45 +
@@ -5135,7 +5140,8 @@ function orderTrustScore(
     routeKnownBonus +
     piaohaoBonus +
     consignmentBonus -
-    routeRisk * 0.18,
+    routeRisk * 0.18 +
+    sanjinCreditAdjustment,
   )));
 }
 
@@ -5150,13 +5156,18 @@ function npcOrderTerms(
   const trust = orderTrustScore(state, npc, affinity, reputation, routeRisk);
   if (npc.id === 'sj-lei-zhanggui') {
     const depositCoin = trust >= 62 ? 0 : trust >= 42 ? 6 : 12;
+    const defaulted = state.flags.includes('credit-default:sj-lei-zhanggui');
+    const repaired =
+      state.flags.includes('credit-default-repaired:sj-lei-zhanggui') ||
+      state.flags.includes('sanjin-credit-payback-restored');
+    const defaultNote = defaulted && !repaired ? '旧失约未补，' : defaulted && repaired ? '旧失约已由漆柜续订单补回，' : '';
     return {
       orderKind: 'credit',
       titleSuffix: '信用押货单',
       descLead: '票号看的是兑付、押货与失约成本。',
       creditNote: depositCoin > 0
-        ? `信用 ${trust}，票号先收 ${depositCoin} 文保票，按期交付返还；误期会伤票号信用。`
-        : `信用 ${trust}，票号愿先垫保票，不另收押金；误期会伤票号信用。`,
+        ? `${defaultNote}信用 ${trust}，票号先收 ${depositCoin} 文保票，按期交付返还；误期会伤票号信用。`
+        : `${defaultNote}信用 ${trust}，票号愿先垫保票，不另收押金；误期会伤票号信用。`,
       depositCoin,
       rewardPremium: depositCoin + (trust >= 62 ? 10 : 6),
       minQualityDelta: trust >= 62 ? 0.03 : 0.05,
@@ -5374,6 +5385,14 @@ function fulfillOrder(state: GameState, content: GameContent, orderId: string): 
   }
   if (order.sourceHomeVisitRecordId) flags.add(`homevisit-order-completed:${order.sourceHomeVisitRecordId}`);
   if (order.sourceHomeVisitChoiceId) flags.add(`homevisit-referral-completed:${order.sourceHomeVisitChoiceId}`);
+  if (
+    order.sourceHomeVisitChoiceId === 'polish-credit-ledger' &&
+    state.flags.includes('credit-default:sj-lei-zhanggui')
+  ) {
+    flags.add('credit-default-repaired:sj-lei-zhanggui');
+    flags.add('credit-default-recovered:polish-credit-ledger');
+    flags.add('sanjin-credit-payback-restored');
+  }
   for (const routeId of order.routeIds ?? []) flags.add(`route-known:${routeId}`);
 
   const base: GameState = {
