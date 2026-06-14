@@ -2,8 +2,10 @@ import {
   DEV_NAME,
   createCalendar,
   createInitialState,
+  type ActiveOrder,
   type GameContent,
   type GameState,
+  type ItemInstance,
   type ResourcePool,
   type TimePhase,
 } from '../engine';
@@ -11,7 +13,7 @@ import {
 export interface PrioritySmokeScenario {
   id: string;
   label: string;
-  node: 'N1' | 'N2';
+  node: 'N1' | 'N2' | 'N3';
   regionId: string;
   subregionId: string;
   activityId: string;
@@ -219,6 +221,21 @@ export const PRIORITY_SMOKE_SCENARIOS = {
     loreEntryId: 'region-xueyu-thangka-court',
     requiredActivityId: 'xy-thangka-court',
   },
+  'n3-thangka-reject': {
+    id: 'n3-thangka-reject',
+    label: 'N3 Thangka Rejection',
+    node: 'N3',
+    regionId: 'xueyu',
+    subregionId: 'xueyu-thangka-court',
+    activityId: 'xy-thangka-court',
+    producedCraftIds: [],
+    priorCompletedActivityIds: [],
+    phases: ['morning'],
+    localCraftId: 'thangka',
+    localNpcId: 'xy-losang',
+    loreEntryId: 'region-xueyu-thangka-court',
+    requiredActivityId: 'xy-thangka-court',
+  },
 } satisfies Record<string, PrioritySmokeScenario>;
 
 export type PrioritySmokeScenarioId = keyof typeof PRIORITY_SMOKE_SCENARIOS;
@@ -235,6 +252,11 @@ export const PRIORITY_STALL_SMOKE_SCENARIO_IDS = PRIORITY_SMOKE_SCENARIO_IDS.fil
 export const PRIORITY_SKELETON_SMOKE_SCENARIO_IDS = PRIORITY_SMOKE_SCENARIO_IDS.filter((scenarioId) => {
   const scenario: PrioritySmokeScenario = PRIORITY_SMOKE_SCENARIOS[scenarioId];
   return scenario.node === 'N2';
+});
+
+export const PRIORITY_N3_SMOKE_SCENARIO_IDS = PRIORITY_SMOKE_SCENARIO_IDS.filter((scenarioId) => {
+  const scenario: PrioritySmokeScenario = PRIORITY_SMOKE_SCENARIOS[scenarioId];
+  return scenario.node === 'N3';
 });
 
 export function prioritySmokeScenarioById(id: string): PrioritySmokeScenario | null {
@@ -321,7 +343,7 @@ export function buildPrioritySmokeState(content: GameContent, scenarioId: string
   const npcAffinity = Object.fromEntries((content.npcs ?? []).map((npc) => [npc.id, 24]));
   const routeStability = Object.fromEntries(routeIds.map((routeId) => [routeId, 30]));
 
-  return {
+  const state: GameState = {
     ...base,
     seed: 20260614,
     currentRegion: scenario.regionId,
@@ -355,5 +377,57 @@ export function buildPrioritySmokeState(content: GameContent, scenarioId: string
     log: [`N1 smoke scenario loaded: ${scenario.label}`],
     playerName: DEV_NAME,
     devMode: true,
+  };
+  if (scenario.id !== 'n3-thangka-reject') return state;
+
+  const defectiveThangka: ItemInstance = {
+    id: 'smoke-n3-thangka-off-measure',
+    resourceId: 'thangka',
+    sourceCraftId: 'thangka',
+    originRegionId: 'xueyu',
+    originSubregionId: 'xueyu-thangka-court',
+    createdTurn: state.turn,
+    quality: 0.72,
+    qualityDimensions: { form: 0.48, finish: 0.62, spirit: 0.64 },
+    defects: [
+      {
+        id: 'thangka-off-measure',
+        label: '度量偏',
+        dimension: 'form',
+        severity: 2,
+        description: '起稿度量偏移，形制不够庄重。',
+        repairOptionIds: ['thangka-regrid'],
+        source: 'craft',
+        sourceStageId: 'thangka-grid',
+        sourceStageName: '绷布度量',
+        sourceReason: '省略「绷布度量」关联工序',
+      },
+    ],
+    repairHistory: [],
+    descriptors: ['度量偏'],
+    appraisal: '这幅唐卡矿彩尚清，但绷布度量失了准头，需先重校度量。',
+    status: 'held',
+  };
+  const rejectionOrder: ActiveOrder = {
+    id: 'smoke-n3-thangka-reject-order',
+    npcId: 'xy-losang',
+    regionId: 'xueyu',
+    title: '洛桑画师的度量复核单',
+    desc: '画院只收度量稳住的唐卡样件。',
+    resourceId: 'thangka',
+    quantity: 1,
+    minQuality: 0.7,
+    rewardCoin: 68,
+    orderKind: 'credit',
+    createdDay: state.calendar.day,
+    status: 'active',
+  };
+
+  return {
+    ...state,
+    resources: { ...state.resources, thangka: 1 },
+    itemInstances: [defectiveThangka],
+    activeOrders: [rejectionOrder],
+    log: [`N3 smoke scenario loaded: ${scenario.label}`],
   };
 }

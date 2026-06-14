@@ -301,6 +301,72 @@ body {
   color: #fff;
 }
 
+.craft-feedback {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(122, 74, 44, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 247, 225, 0.72);
+}
+
+.craft-feedback--recent {
+  background: rgba(244, 250, 239, 0.75);
+}
+
+.craft-feedback__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.craft-feedback__head h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.craft-feedback__head span,
+.craft-feedback p,
+.craft-feedback__item span {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--indigo-soft);
+}
+
+.craft-feedback__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.craft-feedback__chips span {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(45, 80, 135, 0.1);
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.craft-feedback__repair,
+.craft-feedback__warn {
+  color: var(--vermilion) !important;
+}
+
+.craft-feedback__item {
+  display: grid;
+  gap: 3px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(30, 47, 78, 0.1);
+}
+
+.craft-feedback__item:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
 .craft-supply {
   margin: 4px 0 14px;
   padding: 10px 12px;
@@ -3701,6 +3767,16 @@ body {
   margin: 4px 0;
   font-size: 12px;
   opacity: 0.85;
+}
+.npc-quest__issue {
+  margin: 6px 0 0;
+  padding: 6px 8px;
+  border: 1px solid rgba(190, 60, 45, 0.2);
+  border-radius: 8px;
+  background: rgba(190, 60, 45, 0.08);
+  color: var(--vermilion);
+  font-size: 12px;
+  line-height: 1.5;
 }
 .npc-quest__foot {
   display: flex;

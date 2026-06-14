@@ -445,6 +445,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
                   </div>
                   <button
                     className="btn btn--sm btn--bamboo"
+                    data-smoke={`region-craft:${craft.id}`}
                     disabled={!playing}
                     onClick={() => {
                       emitBus({ type: 'interact-craft', craftId: craft.id });

@@ -492,6 +492,11 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
                     <span className="npc-quest__done">{order.rewardCoin} 文</span>
                   </div>
                   <p className="npc-quest__desc">{order.desc}</p>
+                  {issue && (
+                    <p className="npc-quest__issue" data-smoke={`npc-order-issue:${order.id}`}>
+                      {issue}
+                    </p>
+                  )}
                   <div className="npc-quest__foot">
                     <span className="npc-quest__req">
                       需 {orderResourceName(order)} {stock}/{order.quantity}

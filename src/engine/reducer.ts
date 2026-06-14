@@ -157,6 +157,7 @@ const REGION_UNLOCK_COST = 30;
 const ESCORT_LABOR_COST = 2;
 const SPAR_LABOR_COST = 1;
 const MASTERWORK_MIN_QUALITY = 0.7;
+const MARKET_ORDER_MIN_QUALITY = 0.5;
 
 /** 每回合自然补充的资源（轻量半成品回补，模拟持续供料） */
 const TURN_RESOURCE_REGEN: Record<string, number> = {
@@ -1032,6 +1033,36 @@ function orderTrackedItems(state: GameState, order: ActiveOrder): ItemInstance[]
 
 function orderItemMeetsRequirements(item: ItemInstance, order: ActiveOrder): boolean {
   return itemEffectiveQuality(item) >= order.minQuality && !orderItemHasBlockingDefect(item, order);
+}
+
+function quickMarketOrderIssue(item: ItemInstance, content: GameContent): string | null {
+  const defect = highestSeverityDefect(item);
+  if (defect && defect.severity >= 2) {
+    return `「${itemShortName(item, content)}」带有「${defect.label}」${defectSourceNote(defect)}，普通市场单也会先拒收；请返修后再交。`;
+  }
+  const effectiveQuality = itemEffectiveQuality(item);
+  if (effectiveQuality < MARKET_ORDER_MIN_QUALITY) {
+    const defectNote = defect ? `，主要受「${defect.label}」${defectSourceNote(defect)}影响` : '';
+    return `「${itemShortName(item, content)}」有效品相仅 ${Math.round(effectiveQuality * 100)}，市场验收至少需 ${Math.round(MARKET_ORDER_MIN_QUALITY * 100)}${defectNote}。`;
+  }
+  return null;
+}
+
+function quickMarketOrderItemIndex(state: GameState, content: GameContent, resourceId: string): { index: number | null; issue: string | null } {
+  const tracked = state.itemInstances
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => item.resourceId === resourceId && !itemIsUnavailableForConsumption(item));
+  if (tracked.length === 0) return { index: null, issue: null };
+
+  const eligible = tracked
+    .filter(({ item }) => !quickMarketOrderIssue(item, content))
+    .sort((a, b) => itemEffectiveQuality(b.item) - itemEffectiveQuality(a.item) || b.item.quality - a.item.quality)[0];
+  if (eligible) return { index: eligible.index, issue: null };
+
+  const representative = [...tracked].sort(
+    (a, b) => itemDefectSeverity(b.item) - itemDefectSeverity(a.item) || itemEffectiveQuality(a.item) - itemEffectiveQuality(b.item),
+  )[0];
+  return { index: null, issue: representative ? quickMarketOrderIssue(representative.item, content) : null };
 }
 
 export function orderDeliveryIssue(state: GameState, order: ActiveOrder, content: GameContent): string | null {
@@ -3489,18 +3520,17 @@ function reduce(
       const craftState = findCraftState(state, action.craftId);
       const heritage = craftState?.metrics.heritage ?? 50;
       const price = orderPrice(product?.value ?? 12, heritage);
-      const soldIndex = state.itemInstances.findIndex(
-        (item) => item.resourceId === outputId && (!item.status || item.status === 'held'),
-      );
+      const marketItem = quickMarketOrderItemIndex(state, content, outputId);
+      if (marketItem.issue) return { ...state, log: pushLog(state.log, marketItem.issue) };
       const afterOrder = applyEffect(state, {
         resources: { coin: price, [outputId]: -1 },
         craftMetrics: { [action.craftId]: { market: 6, heritage: 2, spirit: 1 } },
         logMessage: `交付一笔「${name}」订单，售出「${productName}」×1，进账 ${price} 文，真品口碑使市场看好。`,
       });
-      const afterStock = soldIndex >= 0
+      const afterStock = marketItem.index !== null
         ? {
             ...afterOrder,
-            itemInstances: state.itemInstances.filter((_, index) => index !== soldIndex),
+            itemInstances: state.itemInstances.filter((_, index) => index !== marketItem.index),
           }
         : afterOrder;
       return applyProfileXp(afterStock, { commerce: 2 });

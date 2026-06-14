@@ -267,6 +267,78 @@ function craftDefectivePingyaoLacquer(seedState: ReturnType<typeof freshState> =
   return { state: s, lacquer: s.itemInstances.find((item) => item.resourceId === 'pingyaoLacquer')! };
 }
 
+function craftDefectiveQingshenBamboo(seedState: ReturnType<typeof freshState> = freshState()) {
+  let s: ReturnType<typeof freshState> = {
+    ...seedState,
+    unlockedRegions: [...new Set([...seedState.unlockedRegions, 'bashu'])],
+    resources: { ...seedState.resources, bambooSplit: 2, indigoVat: 2, labor: 40 },
+  };
+  s = gameReducer(s, { type: 'TRAVEL', regionId: 'bashu' }, content);
+  s = gameReducer(s, { type: 'TRAVEL_SUBREGION', subregionId: 'bashu-bamboo-sea' }, content);
+  s = gameReducer(
+    s,
+    {
+      type: 'RUN_PROCESS',
+      craftId: 'qingshen-bamboo',
+      skipStepIds: ['qingshen-bamboo-prep'],
+      techniqueChoices: [
+        { stageId: 'qingshen-bamboo-split', choiceId: 'rushed' },
+        { stageId: 'qingshen-bamboo-weave', choiceId: 'rushed' },
+      ],
+    },
+    content,
+  );
+  return { state: s, bamboo: s.itemInstances.find((item) => item.resourceId === 'qingshenBamboo')! };
+}
+
+function craftDefectiveThangka(seedState: ReturnType<typeof freshState> = freshState()) {
+  let s: ReturnType<typeof freshState> = {
+    ...seedState,
+    unlockedRegions: [...new Set([...seedState.unlockedRegions, 'xueyu'])],
+    resources: { ...seedState.resources, pigmentRefined: 3, paperSheet: 1, labor: 40 },
+  };
+  s = gameReducer(s, { type: 'TRAVEL', regionId: 'xueyu' }, content);
+  s = gameReducer(s, { type: 'TRAVEL_SUBREGION', subregionId: 'xueyu-thangka-court' }, content);
+  s = gameReducer(
+    s,
+    {
+      type: 'RUN_PROCESS',
+      craftId: 'thangka',
+      skipStepIds: ['thangka-prep'],
+      techniqueChoices: [
+        { stageId: 'thangka-line', choiceId: 'rushed' },
+        { stageId: 'thangka-color', choiceId: 'rushed' },
+      ],
+    },
+    content,
+  );
+  return { state: s, thangka: s.itemInstances.find((item) => item.resourceId === 'thangka')! };
+}
+
+function craftDefectiveJade(seedState: ReturnType<typeof freshState> = freshState()) {
+  let s: ReturnType<typeof freshState> = {
+    ...seedState,
+    unlockedRegions: [...new Set([...seedState.unlockedRegions, 'xiyu'])],
+    resources: { ...seedState.resources, labor: 40 },
+  };
+  s = gameReducer(s, { type: 'TRAVEL', regionId: 'xiyu' }, content);
+  s = gameReducer(s, { type: 'TRAVEL_SUBREGION', subregionId: 'xiyu-jade-yard' }, content);
+  s = gameReducer(
+    s,
+    {
+      type: 'RUN_PROCESS',
+      craftId: 'jade-carving',
+      skipStepIds: ['jade-carving-prep'],
+      techniqueChoices: [
+        { stageId: 'jade-cut', choiceId: 'rushed' },
+        { stageId: 'jade-polish', choiceId: 'rushed' },
+      ],
+    },
+    content,
+  );
+  return { state: s, jade: s.itemInstances.find((item) => item.resourceId === 'jadeCarving')! };
+}
+
 describe('gameReducer', () => {
   it('NEW_GAME 重置为可游玩状态', () => {
     const s = gameReducer(freshState(), { type: 'NEW_GAME', seed: 1 }, content);
@@ -1702,6 +1774,141 @@ describe('gameReducer', () => {
     expect(fixed.descriptors).toContain('师承返修');
     expect(repaired.flags).toContain('mentor-repair-used:pingyao-slow-polish');
     expect(repaired.flags).toContain('mentor-repair-defect:pingyao-cloudy-gloss');
+  });
+
+  it('RUN_PROCESS 会在工时或原料不足时拒绝开工并保留库存', () => {
+    const base = gameReducer(freshState(), { type: 'TRAVEL_SUBREGION', subregionId: 'jiangnan-longquan' }, content);
+    const noLaborState = {
+      ...base,
+      resources: { ...base.resources, ironIngot: 1, coal: 1, labor: 0 },
+    };
+    const noLabor = gameReducer(noLaborState, { type: 'RUN_PROCESS', craftId: 'longquan-sword', skipStepIds: [] }, content);
+    expect(noLabor.resources.treasureSword ?? 0).toBe(0);
+    expect(noLabor.itemInstances.some((item) => item.resourceId === 'treasureSword')).toBe(false);
+    expect(noLabor.log[0]).toContain('人力不足');
+
+    const noMaterialState = {
+      ...base,
+      resources: { ...base.resources, ironIngot: 0, coal: 1, labor: 20 },
+    };
+    const noMaterial = gameReducer(noMaterialState, { type: 'RUN_PROCESS', craftId: 'longquan-sword', skipStepIds: [] }, content);
+    expect(noMaterial.resources.treasureSword ?? 0).toBe(0);
+    expect(noMaterial.itemInstances.some((item) => item.resourceId === 'treasureSword')).toBe(false);
+    expect(noMaterial.log[0]).toContain('原料不足');
+  });
+
+  it('青神竹编市场单会拒收重缺陷作品，返修后才可快捷交付', () => {
+    let { state: s, bamboo } = craftDefectiveQingshenBamboo();
+    expect(bamboo.defects?.map((defect) => defect.id)).toEqual(
+      expect.arrayContaining(['bamboo-frayed-strand']),
+    );
+
+    const blocked = gameReducer(s, { type: 'TAKE_ORDER', craftId: 'qingshen-bamboo' }, content);
+    expect(blocked.resources.qingshenBamboo).toBe(1);
+    expect(blocked.itemInstances.some((item) => item.id === bamboo.id)).toBe(true);
+    expect(blocked.log[0]).toContain('炸篾');
+    expect(blocked.log[0]).toContain('返修');
+
+    s = gameReducer(
+      blocked,
+      {
+        type: 'REPAIR_ITEM',
+        itemId: bamboo.id,
+        defectId: 'bamboo-frayed-strand',
+        repairOptionId: 'bamboo-trim-strand',
+      },
+      content,
+    );
+    const repaired = s.itemInstances.find((item) => item.id === bamboo.id)!;
+    expect(repaired.defects?.some((defect) => defect.id === 'bamboo-frayed-strand')).toBe(false);
+    expect(repaired.repairHistory?.[0]?.sourceStageName).toBeTruthy();
+
+    const delivered = gameReducer(s, { type: 'TAKE_ORDER', craftId: 'qingshen-bamboo' }, content);
+    expect(delivered.resources.qingshenBamboo).toBe(0);
+    expect(delivered.itemInstances.some((item) => item.id === bamboo.id)).toBe(false);
+    expect(delivered.log[0]).toContain('交付一笔');
+  });
+
+  it('玉师阿月授艺会压低玉作绺裂并进入师承返修履历', () => {
+    let s = freshState();
+    s = { ...s, npcAffinity: { ...s.npcAffinity, 'xu-a-yue': 8 } };
+    s = gameReducer(s, { type: 'USE_NPC_FUNCTION', npcId: 'xu-a-yue', functionKind: 'mentor' }, content);
+    const crafted = craftDefectiveJade(s);
+    s = crafted.state;
+    const jade = crafted.jade;
+    const crack = jade.defects?.find((defect) => defect.id === 'jade-open-crack');
+    const laborBefore = s.resources.labor ?? 0;
+
+    expect(s.flags).toContain('craft-mentor:jade-carving');
+    expect(s.flags).toContain('craft-mentor-defect:jade-open-crack');
+    expect(crack?.severity).toBe(1);
+    expect(crack?.mitigatedByMentor).toBe(true);
+    expect(itemDefectSummary(jade)).toContain('师傅压过');
+
+    const repaired = gameReducer(
+      s,
+      {
+        type: 'REPAIR_ITEM',
+        itemId: jade.id,
+        defectId: 'jade-open-crack',
+        repairOptionId: 'jade-follow-crack',
+      },
+      content,
+    );
+    const fixed = repaired.itemInstances.find((item) => item.id === jade.id)!;
+    expect(repaired.resources.labor).toBe(laborBefore - 1);
+    expect(fixed.repairHistory?.[0]?.mentorGuided).toBe(true);
+    expect(fixed.defects?.some((defect) => defect.id === 'jade-open-crack')).toBe(false);
+    expect(fixed.descriptors).toContain('师承返修');
+    expect(repaired.flags).toContain('mentor-repair-used:jade-follow-crack');
+  });
+
+  it('唐卡信用单会点名度量病根，重校后可完成交付', () => {
+    let { state: s, thangka } = craftDefectiveThangka();
+    const order: ActiveOrder = {
+      id: 'test-thangka-renewal-order',
+      npcId: 'xy-losang',
+      regionId: 'xueyu',
+      title: '洛桑画师的度量复核单',
+      desc: '画院只收度量稳住的唐卡样件。',
+      resourceId: 'thangka',
+      quantity: 1,
+      minQuality: 0.45,
+      rewardCoin: 68,
+      orderKind: 'credit',
+      createdDay: s.calendar.day,
+      status: 'active',
+    };
+    s = { ...s, activeOrders: [order] };
+
+    expect(thangka.defects?.map((defect) => defect.id)).toEqual(
+      expect.arrayContaining(['thangka-off-measure']),
+    );
+
+    const blocked = gameReducer(s, { type: 'FULFILL_ORDER', orderId: order.id }, content);
+    expect(blocked.activeOrders.find((item) => item.id === order.id)?.status).toBe('active');
+    expect(blocked.resources.thangka).toBe(1);
+    expect(blocked.log[0]).toContain('度量偏');
+    expect(blocked.log[0]).toContain('病根');
+
+    const repaired = gameReducer(
+      blocked,
+      {
+        type: 'REPAIR_ITEM',
+        itemId: thangka.id,
+        defectId: 'thangka-off-measure',
+        repairOptionId: 'thangka-regrid',
+      },
+      content,
+    );
+    const regridded = repaired.itemInstances.find((item) => item.id === thangka.id)!;
+    expect(regridded.defects?.some((defect) => defect.id === 'thangka-off-measure')).toBe(false);
+    expect(regridded.repairHistory?.[0]?.sourceStageName).toBe('绷布度量');
+
+    const delivered = gameReducer(repaired, { type: 'FULFILL_ORDER', orderId: order.id }, content);
+    expect(delivered.activeOrders.find((item) => item.id === order.id)?.status).toBe('completed');
+    expect(delivered.resources.thangka).toBe(0);
+    expect(delivered.flags).toContain(`order-completed:${order.id}`);
   });
 
   it('USE_NPC_FUNCTION 鉴评会点名缺陷并提示返修方向', () => {

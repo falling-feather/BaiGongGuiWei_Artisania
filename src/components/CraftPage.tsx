@@ -10,6 +10,8 @@ import {
   activeTechniqueStages,
   craftFocusCheckOption,
   craftTechniqueOption,
+  itemDefectSummary,
+  itemEffectiveQuality,
   orderPrice,
   workshopCapacityForCraft,
   workshopExpansionCostForCraft,
@@ -26,6 +28,12 @@ const RESOURCE_NAME_FALLBACK: Record<string, string> = {
   labor: '工时',
 };
 
+const STAGE_OUTCOME_LABEL = {
+  steady: '稳',
+  standard: '平',
+  risky: '险',
+} as const;
+
 /**
  * 工艺独立页 —— 整页工坊（替代弹窗）。
  * 所有手艺均以此页呈现：左侧主题立绘/工坊story，右侧工坊台交互。
@@ -38,6 +46,7 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
   const resources = useGameStore((s) => s.state.resources);
   const workshopUpgradeRecords = useGameStore((s) => s.state.workshopUpgrades);
   const workshopSpaces = useGameStore((s) => s.state.workshopSpaces);
+  const itemInstances = useGameStore((s) => s.state.itemInstances);
   const flags = useGameStore((s) => s.state.flags);
   const regionReputation = useGameStore((s) => s.state.regionReputation);
   const attributes = useGameStore((s) => s.state.profile.attributes);
@@ -164,6 +173,17 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
     setTechniqueByStage((prev) => ({ ...prev, [stageId]: choiceId }));
   const selectFocusCheck = (stageId: string, choiceId: CraftFocusCheckChoiceId) =>
     setFocusCheckByStage((prev) => ({ ...prev, [stageId]: choiceId }));
+  const defectRepairHints = interactionSpec?.defects.map((defect) => {
+    const repairs = interactionSpec.repairOptions
+      .filter((option) => defect.repairOptionIds.includes(option.id))
+      .map((option) => option.label)
+      .join(' / ');
+    return `${defect.label} -> ${repairs || '需回炉自检'}`;
+  }) ?? [];
+  const recentCraftItems = itemInstances
+    .filter((item) => item.sourceCraftId === craftId && item.resourceId === outputId)
+    .sort((a, b) => b.createdTurn - a.createdTurn)
+    .slice(0, 2);
 
   return (
     <div className="craft-page" style={{ ['--page-accent' as string]: theme.accent }}>
@@ -290,6 +310,60 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
                   </article>
                 );
               })}
+            </div>
+          )}
+
+          {interactionSpec && (
+            <div className="craft-feedback" data-smoke={`craft-feedback:${craftId}`}>
+              <div className="craft-feedback__head">
+                <h4>工艺诊断</h4>
+                <span>{interactionSpec.title}</span>
+              </div>
+              <p>{interactionSpec.summary}</p>
+              <div className="craft-feedback__chips">
+                {interactionSpec.materialNotes.map((note) => (
+                  <span key={note}>{note}</span>
+                ))}
+                {(interactionSpec.orderHooks ?? []).map((hook) => (
+                  <span key={hook}>{hook}</span>
+                ))}
+              </div>
+              {defectRepairHints.length > 0 && (
+                <p className="craft-feedback__repair">返修预案：{defectRepairHints.join('；')}</p>
+              )}
+            </div>
+          )}
+
+          {recentCraftItems.length > 0 && (
+            <div className="craft-feedback craft-feedback--recent" data-smoke={`craft-recent:${craftId}`}>
+              <div className="craft-feedback__head">
+                <h4>最近出品</h4>
+                <span>验收会读取有效品相与缺陷</span>
+              </div>
+              {recentCraftItems.map((item) => (
+                <article className="craft-feedback__item" key={item.id}>
+                  <b>{resName(item.resourceId)}</b>
+                  <span>
+                    品相 {Math.round(item.quality * 100)}
+                    {item.defects?.length ? ` · 有效 ${Math.round(itemEffectiveQuality(item) * 100)}` : ''}
+                  </span>
+                  {(item.craftStageOutcomes ?? []).length > 0 && (
+                    <p>
+                      阶段：
+                      {(item.craftStageOutcomes ?? [])
+                        .slice(0, 3)
+                        .map((outcome) => `${outcome.stageName}${STAGE_OUTCOME_LABEL[outcome.result]}`)
+                        .join(' / ')}
+                    </p>
+                  )}
+                  {item.defects?.length ? (
+                    <p className="craft-feedback__warn">{itemDefectSummary(item)}</p>
+                  ) : (
+                    <p>暂无显性缺陷，可直接尝试订单验收。</p>
+                  )}
+                  {item.repairHistory?.[0] && <p>最近返修：{item.repairHistory[0].summary}</p>}
+                </article>
+              ))}
             </div>
           )}
 

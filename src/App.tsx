@@ -74,18 +74,22 @@ function GameApp() {
   const smokeScenarioId = import.meta.env.DEV
     ? new URLSearchParams(window.location.search).get('smoke')
     : null;
+  const smokeNpcId = import.meta.env.DEV
+    ? new URLSearchParams(window.location.search).get('npc')
+    : null;
 
   // 首次挂载：恢复存档并探测是否有可续的存档
   useEffect(() => {
     if (smokeScenarioId && loadPrioritySmokeScenario(smokeScenarioId)) {
       setView('playing');
+      if (smokeNpcId) window.setTimeout(() => setActiveNpcId(smokeNpcId), 0);
       lastSigRef.current = '';
       lastTargetSigRef.current = '';
       syncRegion();
       return;
     }
     void loadFromStorage();
-  }, [loadFromStorage, loadPrioritySmokeScenario, smokeScenarioId]);
+  }, [loadFromStorage, loadPrioritySmokeScenario, smokeScenarioId, smokeNpcId]);
 
   // 主菜单入口
   async function startNew(playerName: string, slotId?: string) {

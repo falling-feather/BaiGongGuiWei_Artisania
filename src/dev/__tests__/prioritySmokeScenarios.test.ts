@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gameReducer, type ActivityDef, type GameContent, type GameState } from '../../engine';
+import { gameReducer, orderDeliveryIssue, type ActivityDef, type GameContent, type GameState } from '../../engine';
 import {
   ACHIEVEMENTS,
   ALL_NPCS,
@@ -24,6 +24,7 @@ import {
 } from '../../data';
 import {
   PRIORITY_SMOKE_SCENARIOS,
+  PRIORITY_N3_SMOKE_SCENARIO_IDS,
   PRIORITY_SMOKE_SCENARIO_IDS,
   PRIORITY_SKELETON_SMOKE_SCENARIO_IDS,
   PRIORITY_STALL_SMOKE_SCENARIO_IDS,
@@ -117,6 +118,25 @@ describe('priority smoke scenarios', () => {
       }
     },
   );
+
+  it.each(PRIORITY_N3_SMOKE_SCENARIO_IDS)('%s exposes a visible rejection-order smoke state', (scenarioId) => {
+    const state = buildPrioritySmokeState(content, scenarioId);
+    if (!state) throw new Error(`Missing smoke scenario ${scenarioId}`);
+    const order = state.activeOrders.find((candidate) => candidate.status === 'active');
+    const flawed = state.itemInstances.find((item) => item.resourceId === 'thangka');
+
+    expect(order).toMatchObject({
+      id: 'smoke-n3-thangka-reject-order',
+      npcId: 'xy-losang',
+      orderKind: 'credit',
+    });
+    expect(flawed?.defects?.[0]).toMatchObject({
+      id: 'thangka-off-measure',
+      sourceStageName: '绷布度量',
+    });
+    expect(order ? orderDeliveryIssue(state, order, content) : '').toContain('度量偏');
+    expect(order ? orderDeliveryIssue(state, order, content) : '').toContain('病根');
+  });
 
   it.each(PRIORITY_SKELETON_SMOKE_SCENARIO_IDS)(
     '%s can run its N2 scoped activity or route quest without a map shortcut',
