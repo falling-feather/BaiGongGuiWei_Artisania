@@ -3,8 +3,10 @@ import {
   ACTIVITY_CHALLENGES,
   ACTIVITY_INDEX,
   ALL_NPCS,
+  COLLAB_RECIPES,
   CRAFTS,
   CRAFT_INTERACTION_INDEX,
+  HOME_VISITS,
   LORE_ENTRY_INDEX,
   PRIORITY_ANCHOR_REGION_IDS,
   PRIORITY_SCOPE_REGION_IDS,
@@ -89,6 +91,8 @@ const FROZEN_NPC_IDS = [
   'xu-sali',
   'xu-tuoling-shu',
   'qd-yinniang-alan',
+  'qd-mu-luozi',
+  'qd-danqing-sao',
   'jc-xiong-zhuxi',
   'hz-wang-zhiniang',
   'jj-lan-daqi',
@@ -110,6 +114,13 @@ const FROZEN_ROUTE_IDS = [
   'route-jingji-sanjin-official',
   'route-xueyu-xiyu-caravan',
 ];
+
+const FROZEN_HOME_VISIT_IDS = [
+  'homevisit-alan-silver-ritual-case',
+  'homevisit-alan-tea-road-client-return',
+];
+
+const FROZEN_COLLAB_RECIPE_IDS = ['collab-alan-silver-ritual-fit'];
 
 const FROZEN_LAYOUT_SUBREGION_IDS = [
   'jiangnan-longquan',
@@ -148,6 +159,8 @@ describe('current priority frozen ids', () => {
   const challengedActivityIds = new Set(ACTIVITY_CHALLENGES.map((challenge) => challenge.activityId));
   const npcIds = new Set(ALL_NPCS.map((npc) => npc.id));
   const routeIds = new Set(REGION_ROUTES.map((route) => route.id));
+  const homeVisitIds = new Set(HOME_VISITS.map((visit) => visit.id));
+  const collabRecipeIds = new Set(COLLAB_RECIPES.map((recipe) => recipe.id));
   const layoutSubregionIds = new Set(RUNTIME_MAP_LAYOUTS.map((layout) => layout.subregionId));
 
   it('keeps the current-priority region partition frozen', () => {
@@ -163,6 +176,8 @@ describe('current priority frozen ids', () => {
     expectFrozenIds('activities', FROZEN_ACTIVITY_IDS, activityIds);
     expectFrozenIds('npcs', FROZEN_NPC_IDS, npcIds);
     expectFrozenIds('routes', FROZEN_ROUTE_IDS, routeIds);
+    expectFrozenIds('home visits', FROZEN_HOME_VISIT_IDS, homeVisitIds);
+    expectFrozenIds('collab recipes', FROZEN_COLLAB_RECIPE_IDS, collabRecipeIds);
     expectFrozenIds('layouts', FROZEN_LAYOUT_SUBREGION_IDS, layoutSubregionIds);
 
     const craftsWithoutInteractions = FROZEN_CRAFT_IDS.filter((craftId) => !CRAFT_INTERACTION_INDEX[craftId]);
