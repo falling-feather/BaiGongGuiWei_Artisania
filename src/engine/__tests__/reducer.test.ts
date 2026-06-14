@@ -4134,12 +4134,19 @@ describe('gameReducer', () => {
     expect(s.flags).toContain('homevisit-referral:reverent-loan-hall');
     expect(s.npcStates['xy-losang'].knownTopics).toContain('reverent-referral');
 
-    const delivered = gameReducer(s, { type: 'FULFILL_ORDER', orderId: order.id }, content);
+    let delivered = gameReducer(s, { type: 'FULFILL_ORDER', orderId: order.id }, content);
     expect(delivered.activeOrders.find((item) => item.id === order.id)?.status).toBe('completed');
     expect(delivered.flags).toContain(`homevisit-order-completed:${record.id}`);
     expect(delivered.flags).toContain('homevisit-referral-completed:reverent-loan-hall');
     expect(delivered.itemInstances.find((item) => item.id === thangka.id)?.status).toBe('displayed');
     expect(delivered.itemInstances.some((item) => item.id === replica.id)).toBe(false);
+
+    delivered = {
+      ...delivered,
+      flags: [...new Set([...delivered.flags, 'activity-order-completed:xy-snow-pass'])],
+      calendar: { ...delivered.calendar, day: delivered.calendar.day + 1, phase: 'morning' },
+    };
+    expect(delivered.flags).toContain('activity-order-completed:xy-snow-pass');
 
     const returned = gameReducer(
       {

@@ -343,8 +343,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-losang-mineral-layer'],
     escortEncounterIds: ['escort-snow-pass-windbreak', 'escort-caravan-water-ledger'],
     smokeScenarioIds: ['chapter-xueyu-thangka-snowpass'],
-    nextActions: ['补雪山驿口或颜料矿谷人工地图', '补高原供展订单长线回访'],
-    gaps: ['已有活动即时订单和唐卡失败分支，但缺完整地区章节长线收束。', 'xueyu-snow-pass、xueyu-pigment-valley 与 xueyu-silver-tent 仍缺人工 JSON。'],
+    nextActions: ['补雪山驿口或颜料矿谷人工地图', '补颜料矿谷/银器帐房人物回访', '补雪山驿路护商结果接入供展续单后日谈'],
+    gaps: ['已有雪口活动即时订单、唐卡失败分支和净室供展回访续单；仍缺颜料矿谷/银器帐房人物回访与雪山驿路后日谈。', 'xueyu-snow-pass、xueyu-pigment-valley 与 xueyu-silver-tent 仍缺人工 JSON。'],
   },
   {
     id: 'chapter-xiyu-bazaar-caravan',
