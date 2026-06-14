@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RUNTIME_MAP_LAYOUTS } from '..';
+import { ACTIVITY_INDEX, PRIORITY_SCOPE_REQUIREMENTS, RUNTIME_MAP_LAYOUTS } from '..';
 
 interface PriorityMapLayoutCase {
   subregionId: string;
@@ -105,6 +105,41 @@ describe('priority runtime map layout entrypoints', () => {
     for (const gateId of testCase.regionGateIds ?? []) {
       if (!layout.objects.some((object) => object.interaction === 'gate' && object.targetId === gateId)) {
         errors.push(`${testCase.subregionId}: missing region gate ${gateId}`);
+      }
+    }
+
+    expect(errors).toEqual([]);
+  });
+
+  it('keeps N2 skeleton entry layouts connected to their scoped activity subregions', () => {
+    const errors: string[] = [];
+
+    for (const requirement of PRIORITY_SCOPE_REQUIREMENTS.filter((entry) => entry.tier === 'skeleton')) {
+      for (const subregionId of requirement.requiredLayoutSubregionIds) {
+        const layout = layoutFor(subregionId);
+
+        for (const activityId of requirement.requiredActivityIds) {
+          const activity = ACTIVITY_INDEX[activityId];
+          if (!activity) {
+            errors.push(`${requirement.regionId}: missing activity ${activityId}`);
+            continue;
+          }
+
+          const isLocalActivity = activity.subregionId === subregionId;
+          const hasLocalActivityObject = layout.objects.some(
+            (object) => object.interaction === 'activity' && object.targetId === activityId,
+          );
+          const hasSubregionGateToActivity = layout.objects.some(
+            (object) => object.interaction === 'subregionGate' && object.targetId === activity.subregionId,
+          );
+
+          if (isLocalActivity && !hasLocalActivityObject) {
+            errors.push(`${subregionId}: missing local skeleton activity ${activityId}`);
+          }
+          if (!isLocalActivity && !hasSubregionGateToActivity) {
+            errors.push(`${subregionId}: missing gate to ${activity.subregionId} for ${activityId}`);
+          }
+        }
       }
     }
 

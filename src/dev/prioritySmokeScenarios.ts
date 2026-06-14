@@ -11,12 +11,19 @@ import {
 export interface PrioritySmokeScenario {
   id: string;
   label: string;
+  node: 'N1' | 'N2';
   regionId: string;
   subregionId: string;
   activityId: string;
   producedCraftIds: string[];
   priorCompletedActivityIds: string[];
   phases: TimePhase[];
+  localCraftId?: string;
+  localNpcId?: string;
+  localQuestId?: string;
+  loreEntryId?: string;
+  requiredActivityId?: string;
+  requiredQuestId?: string;
   strategies?: Array<string | undefined>;
   closingChoiceId?: string;
   postActivityId?: string;
@@ -28,6 +35,7 @@ export const PRIORITY_SMOKE_SCENARIOS = {
   jiangnan: {
     id: 'jiangnan',
     label: 'N1 Jiangnan Qinhuai',
+    node: 'N1',
     regionId: 'jiangnan',
     subregionId: 'jiangnan-jinling',
     activityId: 'jn-qinhuai-lantern',
@@ -39,6 +47,7 @@ export const PRIORITY_SMOKE_SCENARIOS = {
   bashu: {
     id: 'bashu',
     label: 'N1 Bashu Tea Horse',
+    node: 'N1',
     regionId: 'bashu',
     subregionId: 'bashu-tea-horse',
     activityId: 'bs-tea-horse-post',
@@ -51,6 +60,7 @@ export const PRIORITY_SMOKE_SCENARIOS = {
   lingnan: {
     id: 'lingnan',
     label: 'N1 Lingnan Qilou',
+    node: 'N1',
     regionId: 'lingnan',
     subregionId: 'lingnan-harbor',
     activityId: 'ln-qilou-night-market',
@@ -63,6 +73,7 @@ export const PRIORITY_SMOKE_SCENARIOS = {
   ganpo: {
     id: 'ganpo',
     label: 'N1 Ganpo Kiln Fair',
+    node: 'N1',
     regionId: 'ganpo',
     subregionId: 'ganpo-kiln-town',
     activityId: 'gp-kiln-opening-fair',
@@ -75,6 +86,7 @@ export const PRIORITY_SMOKE_SCENARIOS = {
   xiyu: {
     id: 'xiyu',
     label: 'N1 Xiyu Bazaar',
+    node: 'N1',
     regionId: 'xiyu',
     subregionId: 'xiyu-bazaar',
     activityId: 'xiyu-bazaar-trade',
@@ -95,6 +107,7 @@ export const PRIORITY_SMOKE_SCENARIOS = {
   'xiyu-caravan': {
     id: 'xiyu-caravan',
     label: 'N1 Xiyu Caravan Post',
+    node: 'N1',
     regionId: 'xiyu',
     subregionId: 'xiyu-caravan-post',
     activityId: 'xiyu-caravan-post',
@@ -109,6 +122,103 @@ export const PRIORITY_SMOKE_SCENARIOS = {
     phases: ['dusk'],
     postActivityFlag: 'caravan-route-known',
   },
+  qiandian: {
+    id: 'qiandian',
+    label: 'N2 Qiandian Skeleton',
+    node: 'N2',
+    regionId: 'qiandian',
+    subregionId: 'qiandian-miao-village',
+    activityId: 'qd-miao-silver-shop',
+    producedCraftIds: [],
+    priorCompletedActivityIds: [],
+    phases: ['morning'],
+    localCraftId: 'miao-silver',
+    localNpcId: 'qd-yinniang-alan',
+    localQuestId: 'q-qiandian-silver-etiquette',
+    loreEntryId: 'region-qiandian-miao-village',
+    requiredActivityId: 'qd-tea-horse-road',
+    requiredQuestId: 'q-qiandian-tea-road-contact',
+  },
+  jingchu: {
+    id: 'jingchu',
+    label: 'N2 Jingchu Skeleton',
+    node: 'N2',
+    regionId: 'jingchu',
+    subregionId: 'jingchu-chu-lacquer',
+    activityId: 'jc-chu-lacquer-yard',
+    producedCraftIds: [],
+    priorCompletedActivityIds: [],
+    phases: ['morning'],
+    localCraftId: 'chu-lacquer',
+    localNpcId: 'jc-xiong-zhuxi',
+    loreEntryId: 'region-jingchu-chu-lacquer',
+    requiredActivityId: 'jc-ferry-market',
+    requiredQuestId: 'q-jingchu-water-ledger',
+  },
+  huizhou: {
+    id: 'huizhou',
+    label: 'N2 Huizhou Skeleton',
+    node: 'N2',
+    regionId: 'huizhou',
+    subregionId: 'huizhou-paper-valley',
+    activityId: 'hz-paper-valley',
+    producedCraftIds: [],
+    priorCompletedActivityIds: [],
+    phases: ['morning'],
+    localCraftId: 'xuan-paper',
+    localNpcId: 'hz-wang-zhiniang',
+    localQuestId: 'q-huizhou-paper-ink-pledge',
+    loreEntryId: 'region-huizhou-paper-valley',
+    requiredActivityId: 'hz-merchant-hall',
+  },
+  jingji: {
+    id: 'jingji',
+    label: 'N2 Jingji Skeleton',
+    node: 'N2',
+    regionId: 'jingji',
+    subregionId: 'jingji-palace-yard',
+    activityId: 'jj-cloisonne-yard',
+    producedCraftIds: [],
+    priorCompletedActivityIds: [],
+    phases: ['morning'],
+    localCraftId: 'cloisonne',
+    localNpcId: 'jj-lan-daqi',
+    localQuestId: 'q-jingji-cloisonne-sample',
+    loreEntryId: 'region-jingji-palace-yard',
+    requiredActivityId: 'jj-official-gate',
+    requiredQuestId: 'q-jingji-official-nameproof',
+  },
+  sanjin: {
+    id: 'sanjin',
+    label: 'N2 Sanjin Skeleton',
+    node: 'N2',
+    regionId: 'sanjin',
+    subregionId: 'sanjin-lacquer-yard',
+    activityId: 'sj-pingyao-lacquer',
+    producedCraftIds: [],
+    priorCompletedActivityIds: [],
+    phases: ['morning'],
+    localCraftId: 'pingyao-lacquer',
+    localNpcId: 'sj-pingyao-qipo',
+    loreEntryId: 'region-sanjin-lacquer-yard',
+    requiredActivityId: 'sj-piaohao',
+    requiredQuestId: 'q-sanjin-piaohao-credit',
+  },
+  xueyu: {
+    id: 'xueyu',
+    label: 'N2 Xueyu Skeleton',
+    node: 'N2',
+    regionId: 'xueyu',
+    subregionId: 'xueyu-thangka-court',
+    activityId: 'xy-thangka-court',
+    producedCraftIds: [],
+    priorCompletedActivityIds: [],
+    phases: ['morning'],
+    localCraftId: 'thangka',
+    localNpcId: 'xy-losang',
+    loreEntryId: 'region-xueyu-thangka-court',
+    requiredActivityId: 'xy-thangka-court',
+  },
 } satisfies Record<string, PrioritySmokeScenario>;
 
 export type PrioritySmokeScenarioId = keyof typeof PRIORITY_SMOKE_SCENARIOS;
@@ -120,6 +230,11 @@ export const PRIORITY_SMOKE_SCENARIO_IDS = Object.keys(
 export const PRIORITY_STALL_SMOKE_SCENARIO_IDS = PRIORITY_SMOKE_SCENARIO_IDS.filter((scenarioId) => {
   const scenario: PrioritySmokeScenario = PRIORITY_SMOKE_SCENARIOS[scenarioId];
   return Boolean(scenario.closingChoiceId);
+});
+
+export const PRIORITY_SKELETON_SMOKE_SCENARIO_IDS = PRIORITY_SMOKE_SCENARIO_IDS.filter((scenarioId) => {
+  const scenario: PrioritySmokeScenario = PRIORITY_SMOKE_SCENARIOS[scenarioId];
+  return scenario.node === 'N2';
 });
 
 export function prioritySmokeScenarioById(id: string): PrioritySmokeScenario | null {

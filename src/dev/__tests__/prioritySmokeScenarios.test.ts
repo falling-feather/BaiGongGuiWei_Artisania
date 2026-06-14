@@ -25,6 +25,7 @@ import {
 import {
   PRIORITY_SMOKE_SCENARIOS,
   PRIORITY_SMOKE_SCENARIO_IDS,
+  PRIORITY_SKELETON_SMOKE_SCENARIO_IDS,
   PRIORITY_STALL_SMOKE_SCENARIO_IDS,
   buildPrioritySmokeState,
   type PrioritySmokeScenario,
@@ -68,7 +69,7 @@ function placeForActivity(state: GameState, activity: ActivityDef): GameState {
 }
 
 describe('priority smoke scenarios', () => {
-  it.each(PRIORITY_SMOKE_SCENARIO_IDS)('%s starts at a playable N1 browser-smoke state', (scenarioId) => {
+  it.each(PRIORITY_SMOKE_SCENARIO_IDS)('%s starts at a playable priority browser-smoke state', (scenarioId) => {
     const scenario: PrioritySmokeScenario = PRIORITY_SMOKE_SCENARIOS[scenarioId];
     const state = buildPrioritySmokeState(content, scenarioId);
 
@@ -83,6 +84,67 @@ describe('priority smoke scenarios', () => {
       expect(state?.crafts.find((craft) => craft.craftId === craftId)?.produced).toBeGreaterThan(0);
     }
   });
+
+  it.each(PRIORITY_SKELETON_SMOKE_SCENARIO_IDS)(
+    '%s can run its N2 local craft/activity/NPC chain through reducer actions',
+    (scenarioId) => {
+      const scenario: PrioritySmokeScenario = PRIORITY_SMOKE_SCENARIOS[scenarioId];
+      const initial = buildPrioritySmokeState(content, scenarioId);
+      if (!initial) throw new Error(`Missing smoke scenario ${scenarioId}`);
+      expect(scenario.localCraftId).toBeTruthy();
+      expect(scenario.localNpcId).toBeTruthy();
+      expect(scenario.loreEntryId).toBeTruthy();
+      expect(content.loreEntries?.some((entry) => entry.id === scenario.loreEntryId)).toBe(true);
+
+      const craftId = scenario.localCraftId ?? '';
+      const npcId = scenario.localNpcId ?? '';
+      const producedBefore = initial.crafts.find((craft) => craft.craftId === craftId)?.produced ?? 0;
+      const affinityBefore = initial.npcAffinity[npcId] ?? 0;
+
+      let state = gameReducer(initial, { type: 'RUN_PROCESS', craftId, skipStepIds: [] }, content);
+      expect(state.crafts.find((craft) => craft.craftId === craftId)?.produced).toBeGreaterThan(producedBefore);
+      expect(state.currentRegion).toBe(scenario.regionId);
+      expect(state.currentSubregion).toBe(scenario.subregionId);
+
+      state = gameReducer(state, { type: 'PERFORM_ACTIVITY', activityId: scenario.activityId, quality: 0.9 }, content);
+      expect(state.completedActivities).toContain(scenario.activityId);
+      expect(state.npcAffinity[npcId]).toBeGreaterThan(affinityBefore);
+      expect(state.npcStates[npcId]?.knownTopics).toContain(`activity:${scenario.activityId}`);
+
+      if (scenario.localQuestId) {
+        state = gameReducer(state, { type: 'COMPLETE_QUEST', questId: scenario.localQuestId }, content);
+        expect(state.completedQuests).toContain(scenario.localQuestId);
+      }
+    },
+  );
+
+  it.each(PRIORITY_SKELETON_SMOKE_SCENARIO_IDS)(
+    '%s can run its N2 scoped activity or route quest without a map shortcut',
+    (scenarioId) => {
+      const scenario: PrioritySmokeScenario = PRIORITY_SMOKE_SCENARIOS[scenarioId];
+      const requiredActivityId = scenario.requiredActivityId ?? scenario.activityId;
+      const activity = activityDef(requiredActivityId);
+      let state = buildPrioritySmokeState(content, scenarioId);
+      if (!state) throw new Error(`Missing smoke scenario ${scenarioId}`);
+
+      state = {
+        ...state,
+        currentRegion: activity.regionId,
+        currentSubregion: activity.subregionId,
+      };
+      state = gameReducer(state, { type: 'PERFORM_ACTIVITY', activityId: requiredActivityId, quality: 0.9 }, content);
+      expect(state.completedActivities).toContain(requiredActivityId);
+
+      for (const routeId of activity.reward.routeIds ?? []) {
+        expect(state.flags).toContain(`route-known:${routeId}`);
+      }
+
+      if (scenario.requiredQuestId) {
+        state = gameReducer(state, { type: 'COMPLETE_QUEST', questId: scenario.requiredQuestId }, content);
+        expect(state.completedQuests).toContain(scenario.requiredQuestId);
+      }
+    },
+  );
 
   it.each(PRIORITY_STALL_SMOKE_SCENARIO_IDS)('%s can finish its festival chain through reducer actions', (scenarioId) => {
     const scenario: PrioritySmokeScenario = PRIORITY_SMOKE_SCENARIOS[scenarioId];
