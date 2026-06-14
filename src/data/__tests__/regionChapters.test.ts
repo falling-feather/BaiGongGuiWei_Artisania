@@ -12,7 +12,7 @@ import {
   REGION_ROUTES,
   REGIONS,
 } from '../index';
-import { PRIORITY_SMOKE_SCENARIOS } from '../../dev/prioritySmokeScenarios';
+import { REGION_CHAPTER_SMOKE_SCENARIOS } from '../../dev/regionChapterSmokeScenarios';
 
 const regionById = new Map(REGIONS.map((region) => [region.id, region]));
 const craftIds = new Set(CRAFTS.map((craft) => craft.id));
@@ -20,7 +20,7 @@ const npcIds = new Set(ALL_NPCS.map((npc) => npc.id));
 const homeVisitIds = new Set(HOME_VISITS.map((visit) => visit.id));
 const collabIds = new Set(COLLAB_RECIPES.map((recipe) => recipe.id));
 const escortIds = new Set(ESCORT_ENCOUNTERS.map((encounter) => encounter.id));
-const smokeIds = new Set(Object.keys(PRIORITY_SMOKE_SCENARIOS));
+const smokeIds = new Set(Object.keys(REGION_CHAPTER_SMOKE_SCENARIOS));
 
 function subregionIdsFor(regionId: string): Set<string> {
   return new Set(regionById.get(regionId)?.subregions.map((subregion) => subregion.id) ?? []);
@@ -153,8 +153,10 @@ describe('region chapter specs', () => {
 
       for (const smokeScenarioId of chapter.smokeScenarioIds) {
         expect(smokeIds.has(smokeScenarioId)).toBe(true);
-        const smokeScenario = PRIORITY_SMOKE_SCENARIOS[smokeScenarioId as keyof typeof PRIORITY_SMOKE_SCENARIOS];
+        const smokeScenario =
+          REGION_CHAPTER_SMOKE_SCENARIOS[smokeScenarioId as keyof typeof REGION_CHAPTER_SMOKE_SCENARIOS];
         expect(smokeScenario?.regionId).toBe(chapter.regionId);
+        expect(smokeScenario?.chapterId).toBe(chapter.id);
       }
     }
   });

@@ -44,6 +44,7 @@ function GameApp() {
   const loadFromStorage = useGameStore((s) => s.loadFromStorage);
   const newGame = useGameStore((s) => s.newGame);
   const loadPrioritySmokeScenario = useGameStore((s) => s.loadPrioritySmokeScenario);
+  const loadRegionChapterSmokeScenario = useGameStore((s) => s.loadRegionChapterSmokeScenario);
   const refreshSaveSlots = useGameStore((s) => s.refreshSaveSlots);
   const deleteSaveSlot = useGameStore((s) => s.deleteSaveSlot);
   const saveSlots = useGameStore((s) => s.saveSlots);
@@ -74,13 +75,22 @@ function GameApp() {
   const smokeScenarioId = import.meta.env.DEV
     ? new URLSearchParams(window.location.search).get('smoke')
     : null;
+  const chapterSmokeScenarioId = import.meta.env.DEV
+    ? new URLSearchParams(window.location.search).get('chapterSmoke')
+    : null;
   const smokeNpcId = import.meta.env.DEV
     ? new URLSearchParams(window.location.search).get('npc')
     : null;
 
   // 首次挂载：恢复存档并探测是否有可续的存档
   useEffect(() => {
-    if (smokeScenarioId && loadPrioritySmokeScenario(smokeScenarioId)) {
+    const loadedChapterSmoke = Boolean(
+      (chapterSmokeScenarioId && loadRegionChapterSmokeScenario(chapterSmokeScenarioId)) ||
+        (smokeScenarioId && loadRegionChapterSmokeScenario(smokeScenarioId)),
+    );
+    const loadedPrioritySmoke =
+      !loadedChapterSmoke && Boolean(smokeScenarioId && loadPrioritySmokeScenario(smokeScenarioId));
+    if (loadedChapterSmoke || loadedPrioritySmoke) {
       setView('playing');
       if (smokeNpcId) window.setTimeout(() => setActiveNpcId(smokeNpcId), 0);
       lastSigRef.current = '';
@@ -89,7 +99,14 @@ function GameApp() {
       return;
     }
     void loadFromStorage();
-  }, [loadFromStorage, loadPrioritySmokeScenario, smokeScenarioId, smokeNpcId]);
+  }, [
+    loadFromStorage,
+    loadPrioritySmokeScenario,
+    loadRegionChapterSmokeScenario,
+    chapterSmokeScenarioId,
+    smokeScenarioId,
+    smokeNpcId,
+  ]);
 
   // 主菜单入口
   async function startNew(playerName: string, slotId?: string) {

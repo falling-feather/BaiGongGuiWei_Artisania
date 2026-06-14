@@ -39,6 +39,7 @@ import {
 import { localStorageAdapter } from '../storage/localStorageAdapter';
 import type { SaveSlotSummary } from '../storage/StorageAdapter';
 import { buildPrioritySmokeState } from '../dev/prioritySmokeScenarios';
+import { buildRegionChapterSmokeState } from '../dev/regionChapterSmokeScenarios';
 
 const content: GameContent = {
   crafts: CRAFTS,
@@ -78,6 +79,7 @@ interface GameStore {
   /** 开新局并清档 */
   newGame: (seed?: number, playerName?: string, slotId?: string) => Promise<string>;
   loadPrioritySmokeScenario: (scenarioId: string) => boolean;
+  loadRegionChapterSmokeScenario: (scenarioId: string) => boolean;
   /** 删除指定存档槽 */
   deleteSaveSlot: (slotId: string) => Promise<void>;
 }
@@ -141,6 +143,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   loadPrioritySmokeScenario: (scenarioId) => {
     const next = buildPrioritySmokeState(get().content, scenarioId);
+    if (!next) return false;
+    set({ state: next, activeSaveSlotId: null, smokeMode: true });
+    return true;
+  },
+
+  loadRegionChapterSmokeScenario: (scenarioId) => {
+    const next = buildRegionChapterSmokeState(get().content, scenarioId);
     if (!next) return false;
     set({ state: next, activeSaveSlotId: null, smokeMode: true });
     return true;

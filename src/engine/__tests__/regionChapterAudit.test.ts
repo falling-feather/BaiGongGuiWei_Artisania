@@ -15,7 +15,7 @@ import { REGIONS } from '../../data/regions';
 import { RESOURCES } from '../../data/resources';
 import { SUBREGION_CONTENT } from '../../data/subregionContent';
 import { WORKSHOP_UPGRADES } from '../../data/workshopUpgrades';
-import { PRIORITY_SMOKE_SCENARIO_IDS } from '../../dev/prioritySmokeScenarios';
+import { REGION_CHAPTER_SMOKE_SCENARIO_IDS } from '../../dev/regionChapterSmokeScenarios';
 import { buildRegionChapterAudit, type GameContent } from '../';
 
 const content: GameContent = {
@@ -45,7 +45,7 @@ describe('region chapter audit', () => {
   it('audits all M1 chapter rows without unknown references', () => {
     const audit = buildRegionChapterAudit(REGION_CHAPTERS, content, {
       layoutSubregionIds,
-      smokeScenarioIds: PRIORITY_SMOKE_SCENARIO_IDS,
+      smokeScenarioIds: REGION_CHAPTER_SMOKE_SCENARIO_IDS,
     });
 
     expect(audit.totalChapters).toBe(11);
@@ -62,7 +62,7 @@ describe('region chapter audit', () => {
     };
     const audit = buildRegionChapterAudit([brokenChapter], content, {
       layoutSubregionIds,
-      smokeScenarioIds: PRIORITY_SMOKE_SCENARIO_IDS,
+      smokeScenarioIds: REGION_CHAPTER_SMOKE_SCENARIO_IDS,
     });
 
     expect(audit.invalidChapters).toBe(1);
@@ -90,7 +90,7 @@ describe('region chapter audit', () => {
     };
     const audit = buildRegionChapterAudit([REGION_CHAPTERS[0]], brokenContent, {
       layoutSubregionIds,
-      smokeScenarioIds: PRIORITY_SMOKE_SCENARIO_IDS,
+      smokeScenarioIds: REGION_CHAPTER_SMOKE_SCENARIO_IDS,
     });
 
     expect(audit.invalidChapters).toBe(1);
@@ -105,7 +105,7 @@ describe('region chapter audit', () => {
   it('keeps map layout gaps visible without treating them as unknown data', () => {
     const audit = buildRegionChapterAudit(REGION_CHAPTERS, content, {
       layoutSubregionIds,
-      smokeScenarioIds: PRIORITY_SMOKE_SCENARIO_IDS,
+      smokeScenarioIds: REGION_CHAPTER_SMOKE_SCENARIO_IDS,
     });
     const jiangnan = audit.rows.find((row) => row.regionId === 'jiangnan');
     const ganpo = audit.rows.find((row) => row.regionId === 'ganpo');
