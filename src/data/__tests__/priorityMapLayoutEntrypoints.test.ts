@@ -3,6 +3,7 @@ import { ACTIVITY_INDEX, PRIORITY_SCOPE_REQUIREMENTS, RUNTIME_MAP_LAYOUTS } from
 
 interface PriorityMapLayoutCase {
   subregionId: string;
+  industryIds?: string[];
   craftIds?: string[];
   activityIds?: string[];
   npcIds?: string[];
@@ -12,59 +13,204 @@ interface PriorityMapLayoutCase {
 
 const PRIORITY_MAP_LAYOUT_CASES: PriorityMapLayoutCase[] = [
   {
+    subregionId: 'jiangnan-longquan',
+    industryIds: ['harvest-iron-ore', 'harvest-coal', 'smelt-iron', 'harvest-kaolin', 'mine-kaolin', 'forge-sword'],
+    craftIds: ['longquan-sword', 'celadon'],
+    activityIds: ['jn-longquan-sword-forge', 'jn-celadon-kiln'],
+    npcIds: ['jn-lu-hanquan', 'jn-ye-qingzhan'],
+    subregionGateIds: ['jiangnan-suhang', 'jiangnan-linan', 'jiangnan-jinling', 'jiangnan-taihu', 'jiangnan-baigongyuan'],
+    regionGateIds: ['huizhou', 'ganpo'],
+  },
+  {
     subregionId: 'jiangnan-jinling',
+    industryIds: ['harvest-cocoon', 'sericulture', 'weave-brocade'],
     craftIds: ['kesi'],
-    activityIds: ['jn-qinhuai-lantern'],
+    activityIds: ['jn-qinhuai-lantern', 'jn-gold-leaf-shop', 'jn-lanxi-orchid'],
     npcIds: ['jn-qiao-zhaoye', 'jn-ning-ciqiu'],
-    subregionGateIds: ['jiangnan-longquan', 'jiangnan-suhang', 'jiangnan-baigongyuan'],
-    regionGateIds: ['ganpo', 'huizhou', 'jingji'],
+    subregionGateIds: ['jiangnan-longquan', 'jiangnan-suhang', 'jiangnan-taihu', 'jiangnan-baigongyuan'],
+    regionGateIds: ['jingji', 'ganpo', 'huizhou'],
+  },
+  {
+    subregionId: 'bashu-bamboo-sea',
+    industryIds: ['harvest-bamboo', 'split-bamboo', 'harvest-tea-leaf', 'pick-tea'],
+    craftIds: ['qingshen-bamboo'],
+    activityIds: ['bs-bamboo-sea'],
+    npcIds: ['bs-luo-qingmie'],
+    subregionGateIds: ['bashu-jinli', 'bashu-linqiong-iron', 'bashu-tea-horse'],
+    regionGateIds: ['qiandian', 'jingchu', 'xueyu'],
   },
   {
     subregionId: 'bashu-jinli',
-    craftIds: ['shu-brocade', 'shu-embroidery'],
+    industryIds: [],
+    craftIds: ['shu-brocade', 'shu-embroidery', 'chengdu-lacquer'],
     activityIds: ['bs-jinguan-loom'],
     npcIds: ['bs-zhuo-jinniang'],
-    subregionGateIds: ['bashu-bamboo-sea', 'bashu-tea-horse'],
+    subregionGateIds: ['bashu-bamboo-sea', 'bashu-tea-horse', 'bashu-linqiong-iron'],
     regionGateIds: ['qiandian', 'jingchu'],
   },
   {
     subregionId: 'bashu-tea-horse',
+    industryIds: ['harvest-tea-leaf', 'pick-tea'],
     activityIds: ['bs-tea-horse-post'],
     npcIds: ['bs-mabang-ayue'],
-    subregionGateIds: ['bashu-jinli', 'bashu-bamboo-sea'],
+    subregionGateIds: ['bashu-jinli', 'bashu-bamboo-sea', 'bashu-linqiong-iron'],
     regionGateIds: ['qiandian', 'xueyu'],
   },
   {
-    subregionId: 'lingnan-harbor',
-    craftIds: ['canton-embroidery'],
-    activityIds: ['ln-pearl-river-harbor', 'ln-qilou-night-market'],
-    npcIds: ['ln-wu-haichao'],
-    subregionGateIds: ['lingnan-gambiered-yard'],
+    subregionId: 'lingnan-gambiered-yard',
+    industryIds: ['harvest-cocoon', 'sericulture'],
+    craftIds: ['gambiered-silk'],
+    activityIds: ['ln-gambiered-yard'],
+    npcIds: ['ln-he-yunsha'],
+    subregionGateIds: ['lingnan-harbor', 'lingnan-forge', 'lingnan-duan-stone'],
     regionGateIds: ['qiandian'],
   },
   {
+    subregionId: 'lingnan-harbor',
+    industryIds: ['harvest-cocoon', 'sericulture'],
+    craftIds: ['canton-embroidery', 'zhuang-brocade'],
+    activityIds: ['ln-pearl-river-harbor', 'ln-qilou-night-market'],
+    npcIds: ['ln-wu-haichao'],
+    subregionGateIds: ['lingnan-gambiered-yard', 'lingnan-forge', 'lingnan-duan-stone'],
+    regionGateIds: ['qiandian'],
+  },
+  {
+    subregionId: 'qiandian-miao-village',
+    industryIds: ['harvest-silver-ore', 'refine-silver', 'harvest-indigo', 'build-indigo'],
+    craftIds: ['miao-silver', 'batik', 'wutong-silver', 'indigo-dyeing'],
+    activityIds: ['qd-miao-silver-shop', 'qd-batik-yard'],
+    npcIds: ['qd-yinniang-alan', 'qd-danqing-sao'],
+    subregionGateIds: ['qiandian-tea-road', 'qiandian-dongchuan-copper'],
+    regionGateIds: ['bashu', 'lingnan', 'jingchu'],
+  },
+  {
+    subregionId: 'qiandian-tea-road',
+    industryIds: ['harvest-tea-leaf', 'pick-tea'],
+    activityIds: ['qd-tea-horse-road'],
+    npcIds: ['qd-mu-luozi'],
+    subregionGateIds: ['qiandian-miao-village', 'qiandian-dongchuan-copper'],
+    regionGateIds: ['bashu', 'lingnan', 'jingchu'],
+  },
+  {
+    subregionId: 'jingchu-chu-lacquer',
+    industryIds: ['harvest-lacquer', 'tap-lacquer'],
+    craftIds: ['chu-lacquer'],
+    activityIds: ['jc-chu-lacquer-yard'],
+    npcIds: ['jc-xiong-zhuxi'],
+    subregionGateIds: ['jingchu-lake-market', 'jingchu-mine-yard', 'jingchu-xiang-embroidery'],
+    regionGateIds: ['bashu', 'qiandian', 'ganpo'],
+  },
+  {
+    subregionId: 'jingchu-lake-market',
+    craftIds: ['tujia-brocade'],
+    activityIds: ['jc-ferry-market'],
+    npcIds: ['jc-qinglu'],
+    subregionGateIds: ['jingchu-chu-lacquer', 'jingchu-mine-yard', 'jingchu-xiang-embroidery'],
+    regionGateIds: ['bashu', 'qiandian', 'ganpo'],
+  },
+  {
     subregionId: 'ganpo-kiln-town',
+    industryIds: ['harvest-kaolin', 'mine-kaolin'],
     craftIds: ['jingdezhen-porcelain'],
-    activityIds: ['gp-kiln-opening-fair'],
-    npcIds: ['gp-wen-yaotou'],
+    activityIds: ['gp-throwing-room', 'gp-blue-painting-room', 'gp-dragon-kiln', 'gp-kiln-opening-fair'],
+    npcIds: ['gp-tang-pishou', 'gp-lan-yousheng', 'gp-wen-yaotou'],
     subregionGateIds: ['ganpo-kaolin-hill', 'ganpo-river-wood'],
     regionGateIds: ['jiangnan', 'huizhou', 'jingchu'],
   },
   {
+    subregionId: 'huizhou-paper-valley',
+    industryIds: ['harvest-qingtan', 'make-paper', 'harvest-tea-leaf', 'pick-tea'],
+    craftIds: ['xuan-paper'],
+    activityIds: ['hz-paper-valley'],
+    npcIds: ['hz-wang-zhiniang'],
+    subregionGateIds: ['huizhou-ink-alley', 'huizhou-she-stone', 'huizhou-merchant-hall'],
+    regionGateIds: ['jiangnan', 'ganpo'],
+  },
+  {
+    subregionId: 'huizhou-merchant-hall',
+    industryIds: ['harvest-tea-leaf', 'pick-tea'],
+    craftIds: ['hui-carving'],
+    activityIds: ['hz-merchant-hall'],
+    npcIds: ['hz-cheng-yuanzhou'],
+    subregionGateIds: ['huizhou-paper-valley', 'huizhou-ink-alley', 'huizhou-she-stone'],
+    regionGateIds: ['jiangnan', 'ganpo'],
+  },
+  {
+    subregionId: 'jingji-palace-yard',
+    industryIds: ['harvest-iron-ore', 'harvest-pigment', 'smelt-iron'],
+    craftIds: ['cloisonne', 'filigree', 'carved-lacquer'],
+    activityIds: ['jj-cloisonne-yard', 'jj-filigree-shop'],
+    npcIds: ['jj-lan-daqi', 'jj-jin-suoniang'],
+    subregionGateIds: ['jingji-market-gate', 'jingji-official-gate'],
+    regionGateIds: ['sanjin', 'jiangnan'],
+  },
+  {
+    subregionId: 'jingji-official-gate',
+    activityIds: ['jj-official-gate'],
+    npcIds: ['jj-song-yasi'],
+    subregionGateIds: ['jingji-palace-yard', 'jingji-market-gate'],
+    regionGateIds: ['sanjin', 'jiangnan'],
+  },
+  {
+    subregionId: 'sanjin-lacquer-yard',
+    industryIds: ['harvest-lacquer', 'tap-lacquer'],
+    craftIds: ['pingyao-lacquer'],
+    activityIds: ['sj-pingyao-lacquer'],
+    npcIds: ['sj-pingyao-qipo'],
+    subregionGateIds: ['sanjin-piaohao', 'sanjin-coal-yard', 'sanjin-vinegar-yard'],
+    regionGateIds: ['jingji'],
+  },
+  {
+    subregionId: 'sanjin-piaohao',
+    craftIds: ['jin-furniture'],
+    activityIds: ['sj-piaohao'],
+    npcIds: ['sj-lei-zhanggui'],
+    subregionGateIds: ['sanjin-lacquer-yard', 'sanjin-coal-yard', 'sanjin-vinegar-yard'],
+    regionGateIds: ['jingji'],
+  },
+  {
+    subregionId: 'xueyu-thangka-court',
+    industryIds: ['harvest-pigment', 'grind-pigment', 'make-paper'],
+    craftIds: ['thangka', 'tibetan-paper', 'tibetan-incense'],
+    activityIds: ['xy-thangka-court'],
+    npcIds: ['xy-losang'],
+    subregionGateIds: ['xueyu-snow-pass', 'xueyu-pigment-valley', 'xueyu-silver-tent'],
+    regionGateIds: ['bashu', 'xiyu'],
+  },
+  {
+    subregionId: 'xiyu-jade-yard',
+    industryIds: ['harvest-copper-ore', 'smelt-copper'],
+    craftIds: ['jade-carving'],
+    activityIds: ['xiyu-jade-yard'],
+    npcIds: ['xu-a-yue'],
+    subregionGateIds: ['xiyu-bazaar', 'xiyu-caravan-post', 'xiyu-atlas-loom'],
+    regionGateIds: ['xueyu'],
+  },
+  {
     subregionId: 'xiyu-bazaar',
+    industryIds: ['harvest-cocoon', 'sericulture'],
     craftIds: ['carpet', 'copperware'],
     activityIds: ['xiyu-bazaar-trade'],
     npcIds: ['xu-sali'],
-    subregionGateIds: ['xiyu-jade-yard', 'xiyu-caravan-post'],
+    subregionGateIds: ['xiyu-jade-yard', 'xiyu-caravan-post', 'xiyu-atlas-loom'],
     regionGateIds: ['xueyu'],
   },
   {
     subregionId: 'xiyu-caravan-post',
+    industryIds: [],
     activityIds: ['xiyu-caravan-post'],
     npcIds: ['xu-tuoling-shu'],
     subregionGateIds: ['xiyu-bazaar', 'xiyu-jade-yard'],
     regionGateIds: ['xueyu'],
   },
+];
+
+const PRIORITY_N4_ACTIVITY_TARGET_LAYOUT_IDS = [
+  'qiandian-tea-road',
+  'jingchu-lake-market',
+  'huizhou-merchant-hall',
+  'jingji-official-gate',
+  'sanjin-piaohao',
 ];
 
 function layoutFor(subregionId: string) {
@@ -74,9 +220,26 @@ function layoutFor(subregionId: string) {
 }
 
 describe('priority runtime map layout entrypoints', () => {
+  it('tracks every current-priority shipped layout in the N4 matrix', () => {
+    const requiredLayoutIds = new Set(
+      PRIORITY_SCOPE_REQUIREMENTS.flatMap((requirement) => requirement.requiredLayoutSubregionIds).concat(
+        PRIORITY_N4_ACTIVITY_TARGET_LAYOUT_IDS,
+      ),
+    );
+    const matrixLayoutIds = new Set(PRIORITY_MAP_LAYOUT_CASES.map((testCase) => testCase.subregionId));
+
+    expect(matrixLayoutIds).toEqual(requiredLayoutIds);
+  });
+
   it.each(PRIORITY_MAP_LAYOUT_CASES)('keeps $subregionId key interactions shipped', (testCase) => {
     const layout = layoutFor(testCase.subregionId);
     const errors: string[] = [];
+
+    for (const industryId of testCase.industryIds ?? []) {
+      if (!layout.objects.some((object) => object.interaction === 'industry' && object.targetId === industryId)) {
+        errors.push(`${testCase.subregionId}: missing industry ${industryId}`);
+      }
+    }
 
     for (const craftId of testCase.craftIds ?? []) {
       if (!layout.objects.some((object) => object.interaction === 'craft' && object.targetId === craftId)) {

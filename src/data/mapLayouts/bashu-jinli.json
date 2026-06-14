@@ -18,6 +18,7 @@
     { "itemId": "silk-frame-a", "name": "brocade silk reeling frame", "interaction": "decoration", "x": 14, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "craft_textile", "name": "Shu brocade loom", "interaction": "craft", "targetId": "shu-brocade", "x": 23, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "craft_textile", "name": "Shu embroidery frame", "interaction": "craft", "targetId": "shu-embroidery", "x": 32, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_lacquer", "name": "Chengdu lacquer room", "interaction": "craft", "targetId": "chengdu-lacquer", "x": 8, "y": 17, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "activity_loom", "name": "Jinguan loom house", "interaction": "activity", "targetId": "bs-jinguan-loom", "x": 34, "y": 17, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "gate", "name": "to Qingshen bamboo sea", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "bashu-bamboo-sea", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "gate", "name": "to tea horse post", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "bashu-tea-horse", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },

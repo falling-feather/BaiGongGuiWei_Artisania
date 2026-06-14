@@ -6,11 +6,16 @@ import bashuTeaHorseMap from './mapLayouts/bashu-tea-horse.json';
 import lingnanGambieredYardMap from './mapLayouts/lingnan-gambiered-yard.json';
 import lingnanHarborMap from './mapLayouts/lingnan-harbor.json';
 import qiandianMiaoVillageMap from './mapLayouts/qiandian-miao-village.json';
+import qiandianTeaRoadMap from './mapLayouts/qiandian-tea-road.json';
 import jingchuChuLacquerMap from './mapLayouts/jingchu-chu-lacquer.json';
+import jingchuLakeMarketMap from './mapLayouts/jingchu-lake-market.json';
 import ganpoKilnTownMap from './mapLayouts/ganpo-kiln-town.json';
 import huizhouPaperValleyMap from './mapLayouts/huizhou-paper-valley.json';
+import huizhouMerchantHallMap from './mapLayouts/huizhou-merchant-hall.json';
 import jingjiPalaceYardMap from './mapLayouts/jingji-palace-yard.json';
+import jingjiOfficialGateMap from './mapLayouts/jingji-official-gate.json';
 import sanjinLacquerYardMap from './mapLayouts/sanjin-lacquer-yard.json';
+import sanjinPiaohaoMap from './mapLayouts/sanjin-piaohao.json';
 import xueyuThangkaCourtMap from './mapLayouts/xueyu-thangka-court.json';
 import xiyuJadeYardMap from './mapLayouts/xiyu-jade-yard.json';
 import xiyuBazaarMap from './mapLayouts/xiyu-bazaar.json';
@@ -306,11 +311,16 @@ export const RUNTIME_MAP_EDITOR_SNAPSHOTS: RuntimeMapEditorSnapshot[] = [
   lingnanGambieredYardMap,
   lingnanHarborMap,
   qiandianMiaoVillageMap,
+  qiandianTeaRoadMap,
   jingchuChuLacquerMap,
+  jingchuLakeMarketMap,
   ganpoKilnTownMap,
   huizhouPaperValleyMap,
+  huizhouMerchantHallMap,
   jingjiPalaceYardMap,
+  jingjiOfficialGateMap,
   sanjinLacquerYardMap,
+  sanjinPiaohaoMap,
   xueyuThangkaCourtMap,
   xiyuJadeYardMap,
   xiyuBazaarMap,

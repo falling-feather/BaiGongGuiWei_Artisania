@@ -73,7 +73,7 @@ export function WorldMapModal({ open, onClose }: { open: boolean; onClose: () =>
 
   return (
     <div className="modal__backdrop" onClick={onClose}>
-      <div className="modal modal--map" onClick={(e) => e.stopPropagation()}>
+      <div className="modal modal--map" data-smoke="worldmap" onClick={(e) => e.stopPropagation()}>
         <h3 className="modal__title">九州行脚 · 大地图</h3>
         <p className="modal__desc">
           大地图仅作路线总览与调试定位；正式迁移请在当前场景寻找出入口牌坊或商路节点，按 E 开通或前往。
@@ -109,6 +109,7 @@ export function WorldMapModal({ open, onClose }: { open: boolean; onClose: () =>
                 key={r.id}
                 type="button"
                 className={`worldmap__node worldmap__node--${kind}`}
+                data-smoke={`worldmap-node:${r.id}`}
                 style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
                 onClick={() => setSelectedRegionId(r.id)}
                 title={title}
@@ -121,7 +122,7 @@ export function WorldMapModal({ open, onClose }: { open: boolean; onClose: () =>
           })}
         </div>
         {selectedRegion && (
-          <div className="worldmap__detail">
+          <div className="worldmap__detail" data-smoke="worldmap-detail">
             <b>{selectedRegion.name}</b>
             <span>{selectedSummary}</span>
           </div>

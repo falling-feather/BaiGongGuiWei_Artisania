@@ -1,11 +1,32 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { CRAFTS, REGIONS, STARTING_APPRENTICES } from '../../data';
 import { createInitialState } from '../../engine';
 import { currentStreetRegionGate, isCurrentStreetSubregionGate } from '../navigationGuards';
 
+const SRC_ROOT = fileURLToPath(new URL('../../', import.meta.url));
+
 function source(path: string) {
   return readFileSync(new URL(path, import.meta.url), 'utf8');
+}
+
+function sourceFilesUnder(path: string): string[] {
+  const root = fileURLToPath(new URL(path, import.meta.url));
+  const files: string[] = [];
+  const visit = (current: string) => {
+    for (const entry of readdirSync(current)) {
+      const next = `${current}/${entry}`;
+      if (statSync(next).isDirectory()) {
+        visit(next);
+      } else if (/\.(ts|tsx)$/.test(entry)) {
+        files.push(next);
+      }
+    }
+  };
+  visit(root);
+  return files;
 }
 
 describe('navigation entrypoints', () => {
@@ -26,6 +47,8 @@ describe('navigation entrypoints', () => {
     }
 
     expect(worldMap).toContain('setSelectedRegionId(r.id)');
+    expect(worldMap).toContain('data-smoke="worldmap"');
+    expect(worldMap).toContain('data-smoke={`worldmap-node:${r.id}`}');
     expect(regionPanel).toContain('className={`subregion-card');
     expect(regionPanel).toContain('disabled');
 
@@ -33,6 +56,7 @@ describe('navigation entrypoints', () => {
     expect(streetScene).toContain("emitBus({ type: 'interact-gate'");
     expect(app).toContain("payload.type === 'interact-subregion-gate'");
     expect(app).toContain("payload.type === 'interact-gate'");
+    expect(app).toContain('const editorMode = import.meta.env.DEV &&');
     expect(app).toContain('isCurrentStreetSubregionGate');
     expect(app).toContain('currentStreetRegionGate');
     expect(app).not.toContain('if (payload.unlocked)');
@@ -52,6 +76,25 @@ describe('navigation entrypoints', () => {
     expect(streetScene).toContain('goal: Boolean(p.goal)');
     expect(loreModal).not.toContain("emitBus({ type: 'interact-gate'");
     expect(loreModal).not.toContain("emitBus({ type: 'interact-subregion-gate'");
+  });
+
+  it('keeps formal travel actions out of every user-facing component file', () => {
+    const errors: string[] = [];
+    const forbiddenActionPattern = /type:\s*['"](?:TRAVEL|TRAVEL_SUBREGION|UNLOCK_REGION)['"]/;
+    const forbiddenGateEventPattern = /emitBus\(\{\s*type:\s*['"]interact-(?:gate|subregion-gate)['"]/;
+
+    for (const file of sourceFilesUnder('../../components')) {
+      const text = readFileSync(file, 'utf8');
+      const label = relative(SRC_ROOT, file).replace(/\\/g, '/');
+      if (forbiddenActionPattern.test(text)) {
+        errors.push(`${label}: dispatches formal travel action`);
+      }
+      if (forbiddenGateEventPattern.test(text)) {
+        errors.push(`${label}: emits street gate event outside StreetScene`);
+      }
+    }
+
+    expect(errors).toEqual([]);
   });
 
   it('routes HUD interaction through scene-owned nearby target resolution', () => {

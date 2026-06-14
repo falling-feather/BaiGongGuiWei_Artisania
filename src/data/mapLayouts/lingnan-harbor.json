@@ -17,6 +17,7 @@
     { "itemId": "industry_silk", "name": "harbor cocoon store", "interaction": "industry", "targetId": "harvest-cocoon", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "industry_silk", "name": "export silk reeling room", "interaction": "industry", "targetId": "sericulture", "x": 14, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "craft_textile", "name": "Canton embroidery frame", "interaction": "craft", "targetId": "canton-embroidery", "x": 23, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_textile", "name": "Zhuang brocade stall", "interaction": "craft", "targetId": "zhuang-brocade", "x": 8, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "activity_trade", "name": "Pearl River cargo house", "interaction": "activity", "targetId": "ln-pearl-river-harbor", "x": 32, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "activity_market", "name": "qilou night market", "interaction": "activity", "targetId": "ln-qilou-night-market", "x": 41, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "gate", "name": "to gambiered silk yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "lingnan-gambiered-yard", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },

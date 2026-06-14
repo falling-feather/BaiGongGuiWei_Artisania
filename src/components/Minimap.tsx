@@ -34,7 +34,7 @@ export function Minimap({
   const pct = (x: number, span: number) => `${(x / span) * 100}%`;
 
   return (
-    <div className="minimap">
+    <div className="minimap" data-smoke="minimap">
       <div className="minimap__head">
         <span>坐标 ({tx}, {ty})</span>
         <span className="minimap__zoom">
@@ -52,6 +52,7 @@ export function Minimap({
           <span
             key={i}
             className={`minimap__dot${p.goal ? ' minimap__dot--goal' : ''}`}
+            data-smoke={`minimap-point:${p.kind}`}
             title={p.goal ? `行脚目标：${p.label ?? ''}` : p.label}
             aria-label={p.goal ? `行脚目标：${p.label ?? ''}` : p.label}
             style={{

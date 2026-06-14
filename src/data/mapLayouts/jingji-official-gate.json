@@ -1,0 +1,25 @@
+{
+  "schema": "artisania-map-editor/v2",
+  "regionId": "jingji",
+  "subregionId": "jingji-official-gate",
+  "tileSize": 32,
+  "size": { "w": 56, "h": 30 },
+  "roads": [
+    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
+    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
+    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
+    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
+    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
+    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+  ],
+  "objects": [
+    { "itemId": "player_spawn", "x": 28, "y": 15 },
+    { "itemId": "activity_trade", "name": "official procurement gate", "interaction": "activity", "targetId": "jj-official-gate", "x": 28, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to palace yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jingji-palace-yard", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to market gate", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jingji-market-gate", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Sanjin official road", "interaction": "gate", "targetId": "sanjin", "x": 49, "y": 9, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Jiangnan canal road", "interaction": "gate", "targetId": "jiangnan", "x": 49, "y": 19, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "npc-jj-song-yasi", "name": "Song Yasi", "interaction": "npc", "npcId": "jj-song-yasi", "x": 31, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "notice-board-a", "name": "procurement notice board", "interaction": "decoration", "x": 37, "y": 16, "tileW": 4, "tileH": 2, "solid": true }
+  ]
+}

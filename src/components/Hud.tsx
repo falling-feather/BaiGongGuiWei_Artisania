@@ -120,6 +120,7 @@ export function Hud({
       disabled: !playing || hasEvent,
     },
   ];
+  const toolSmokeIds = ['map', 'bag', 'achievements', 'lore', 'region', 'time'] as const;
 
   return (
     <>
@@ -152,7 +153,7 @@ export function Hud({
         </div>
 
         <div className="hud__right">
-          <div className="hud__location-plaque" aria-label="当前位置">
+          <div className="hud__location-plaque" data-smoke="hud-location" aria-label="当前位置">
             <img className="hud__button-frame" src={`${UI_ROOT}/hud_button.png`} alt="" draggable={false} />
             <img className="hud__season-icon" src={`${UI_ROOT}/icon_map.png`} alt="" draggable={false} />
             <span>{region?.name ?? currentRegion} · {subregion?.name ?? currentSubregion}</span>
@@ -163,10 +164,11 @@ export function Hud({
             <span>第 {calendar.day} 日 · {PHASE_LABEL[calendar.phase]} · {WEATHER_LABEL[calendar.weather]}</span>
           </div>
           <div className="hud__tools" aria-label="常用入口">
-            {tools.map((tool) => (
+            {tools.map((tool, index) => (
               <button
                 className="hud__tool"
                 key={tool.label}
+                data-smoke={`hud-tool:${toolSmokeIds[index] ?? index}`}
                 disabled={tool.disabled}
                 onClick={tool.onClick}
                 title={tool.label}

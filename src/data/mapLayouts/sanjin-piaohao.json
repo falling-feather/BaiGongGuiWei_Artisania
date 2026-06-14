@@ -1,0 +1,26 @@
+{
+  "schema": "artisania-map-editor/v2",
+  "regionId": "sanjin",
+  "subregionId": "sanjin-piaohao",
+  "tileSize": 32,
+  "size": { "w": 56, "h": 30 },
+  "roads": [
+    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
+    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
+    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
+    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
+    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
+    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+  ],
+  "objects": [
+    { "itemId": "player_spawn", "x": 28, "y": 15 },
+    { "itemId": "craft_wood", "name": "Jin furniture counter", "interaction": "craft", "targetId": "jin-furniture", "x": 12, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_trade", "name": "Risheng ticket house", "interaction": "activity", "targetId": "sj-piaohao", "x": 28, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to lacquer yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "sanjin-lacquer-yard", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to coal iron yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "sanjin-coal-yard", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to vinegar yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "sanjin-vinegar-yard", "x": 32, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Jingji official road", "interaction": "gate", "targetId": "jingji", "x": 49, "y": 12, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "npc-sj-lei-zhanggui", "name": "Lei Zhanggui", "interaction": "npc", "npcId": "sj-lei-zhanggui", "x": 31, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "ledger-shelf-a", "name": "ticket ledger shelf", "interaction": "decoration", "x": 37, "y": 16, "tileW": 4, "tileH": 2, "solid": true }
+  ]
+}

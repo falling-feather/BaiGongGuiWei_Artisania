@@ -36,7 +36,7 @@ function navigationTargetSignature(target: RegionNavigationTarget | undefined) {
 }
 
 export function App() {
-  const editorMode = new URLSearchParams(window.location.search).get('editor') === '1';
+  const editorMode = import.meta.env.DEV && new URLSearchParams(window.location.search).get('editor') === '1';
   return editorMode ? <MapEditor /> : <GameApp />;
 }
 

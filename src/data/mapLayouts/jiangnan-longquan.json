@@ -21,7 +21,9 @@
     { "itemId": "industry_kiln", "name": "kaolin washing pool", "interaction": "industry", "targetId": "mine-kaolin", "x": 42, "y": 3, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "craft_metal", "name": "sword billet anvil", "interaction": "industry", "targetId": "forge-sword", "x": 49, "y": 10, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "craft_metal", "name": "Longquan sword workshop", "interaction": "craft", "targetId": "longquan-sword", "x": 16, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_forge", "name": "Longquan sword forge lesson", "interaction": "activity", "targetId": "jn-longquan-sword-forge", "x": 24, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "craft_ceramic", "name": "Longquan celadon kiln", "interaction": "craft", "targetId": "celadon", "x": 35, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_kiln", "name": "celadon kiln lesson", "interaction": "activity", "targetId": "jn-celadon-kiln", "x": 43, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "gate", "name": "to Suhang water market", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-suhang", "x": 3, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "gate", "name": "to Linan rain lane", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-linan", "x": 15, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "gate", "name": "to Jinling brocade bureau", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-jinling", "x": 27, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
@@ -29,6 +31,7 @@
     { "itemId": "gate", "name": "to Baigong courtyard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-baigongyuan", "x": 51, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "gate", "name": "Huizhou paper road", "interaction": "gate", "targetId": "huizhou", "x": 53, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "gate", "name": "Ganpo kiln road", "interaction": "gate", "targetId": "ganpo", "x": 53, "y": 13, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "npc-jn-lu-hanquan", "name": "Lu Hanquan", "interaction": "npc", "npcId": "jn-lu-hanquan", "x": 21, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
     { "itemId": "npc-jn-ye-qingzhan", "name": "Ye Qingzhan", "interaction": "npc", "npcId": "jn-ye-qingzhan", "x": 38, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
     { "itemId": "rock-ridge-a", "name": "ore ridge", "interaction": "decoration", "x": 24, "y": 1, "tileW": 3, "tileH": 2, "solid": true },
     { "itemId": "rock-ridge-b", "name": "kaolin ridge", "interaction": "decoration", "x": 31, "y": 1, "tileW": 3, "tileH": 2, "solid": true }

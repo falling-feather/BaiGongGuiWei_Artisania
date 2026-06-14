@@ -4,7 +4,90 @@ import {
   RUNTIME_MAP_LAYOUTS,
   runtimeLayoutFromEditorSnapshot,
   type RuntimeMapEditorSnapshot,
+  type RuntimeMapLayout,
+  type RuntimeMapObject,
 } from '..';
+
+const POINT_INTERACTIONS = new Set<RuntimeMapObject['interaction']>([
+  'industry',
+  'craft',
+  'activity',
+  'gate',
+  'subregionGate',
+]);
+
+function tileKey(x: number, y: number) {
+  return `${x},${y}`;
+}
+
+function pointFootprint(object: RuntimeMapObject) {
+  return {
+    x: object.x,
+    y: object.y,
+    w: object.tileW ?? 3,
+    h: object.tileH ?? 3,
+  };
+}
+
+function blockedPointTiles(layout: RuntimeMapLayout) {
+  const blocked = new Set<string>();
+  for (const object of layout.objects) {
+    if (!POINT_INTERACTIONS.has(object.interaction)) continue;
+    const footprint = pointFootprint(object);
+    for (let y = footprint.y; y < footprint.y + footprint.h; y++) {
+      for (let x = footprint.x; x < footprint.x + footprint.w; x++) {
+        blocked.add(tileKey(x, y));
+      }
+    }
+  }
+  return blocked;
+}
+
+function adjacentWalkableTiles(layout: RuntimeMapLayout, object: RuntimeMapObject, blocked: Set<string>) {
+  const footprint = pointFootprint(object);
+  const tiles: Array<{ x: number; y: number }> = [];
+  for (let x = footprint.x - 1; x <= footprint.x + footprint.w; x++) {
+    for (const y of [footprint.y - 1, footprint.y + footprint.h]) {
+      if (x < 0 || y < 0 || x >= layout.size.w || y >= layout.size.h) continue;
+      if (!blocked.has(tileKey(x, y))) tiles.push({ x, y });
+    }
+  }
+  for (let y = footprint.y; y < footprint.y + footprint.h; y++) {
+    for (const x of [footprint.x - 1, footprint.x + footprint.w]) {
+      if (x < 0 || y < 0 || x >= layout.size.w || y >= layout.size.h) continue;
+      if (!blocked.has(tileKey(x, y))) tiles.push({ x, y });
+    }
+  }
+  return tiles;
+}
+
+function reachableTiles(layout: RuntimeMapLayout, blocked: Set<string>) {
+  const start = layout.playerStart ?? { x: Math.floor(layout.size.w / 2), y: Math.floor(layout.size.h / 2) };
+  const startKey = tileKey(start.x, start.y);
+  const visited = new Set<string>();
+  const queue = blocked.has(startKey) ? [] : [{ x: start.x, y: start.y }];
+  if (queue.length) visited.add(startKey);
+  const dirs = [
+    { x: 1, y: 0 },
+    { x: -1, y: 0 },
+    { x: 0, y: 1 },
+    { x: 0, y: -1 },
+  ];
+
+  while (queue.length) {
+    const current = queue.shift()!;
+    for (const dir of dirs) {
+      const next = { x: current.x + dir.x, y: current.y + dir.y };
+      const key = tileKey(next.x, next.y);
+      if (next.x < 0 || next.y < 0 || next.x >= layout.size.w || next.y >= layout.size.h) continue;
+      if (blocked.has(key) || visited.has(key)) continue;
+      visited.add(key);
+      queue.push(next);
+    }
+  }
+
+  return visited;
+}
 
 describe('runtime map editor adapter', () => {
   it('converts editor snapshots into runtime street layouts', () => {
@@ -94,11 +177,16 @@ describe('runtime map editor adapter', () => {
       'lingnan-gambiered-yard',
       'lingnan-harbor',
       'qiandian-miao-village',
+      'qiandian-tea-road',
       'jingchu-chu-lacquer',
+      'jingchu-lake-market',
       'ganpo-kiln-town',
       'huizhou-paper-valley',
+      'huizhou-merchant-hall',
       'jingji-palace-yard',
+      'jingji-official-gate',
       'sanjin-lacquer-yard',
+      'sanjin-piaohao',
       'xueyu-thangka-court',
       'xiyu-jade-yard',
       'xiyu-bazaar',
@@ -162,5 +250,23 @@ describe('runtime map editor adapter', () => {
     expect(RUNTIME_MAP_LAYOUTS.find((layout) => layout.subregionId === 'xiyu-jade-yard')?.objects).toEqual(
       expect.arrayContaining([expect.objectContaining({ interaction: 'activity', targetId: 'xiyu-jade-yard' })]),
     );
+  });
+
+  it('keeps every shipped interaction point reachable from the player start tile', () => {
+    const errors: string[] = [];
+
+    for (const layout of RUNTIME_MAP_LAYOUTS) {
+      const blocked = blockedPointTiles(layout);
+      const reachable = reachableTiles(layout, blocked);
+      for (const object of layout.objects) {
+        if (!POINT_INTERACTIONS.has(object.interaction)) continue;
+        const nearby = adjacentWalkableTiles(layout, object, blocked);
+        if (!nearby.some((tile) => reachable.has(tileKey(tile.x, tile.y)))) {
+          errors.push(`${layout.subregionId}: ${object.interaction} ${object.targetId ?? object.itemId} is not reachable`);
+        }
+      }
+    }
+
+    expect(errors).toEqual([]);
   });
 });
