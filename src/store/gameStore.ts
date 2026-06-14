@@ -38,6 +38,7 @@ import {
 } from '../data';
 import { localStorageAdapter } from '../storage/localStorageAdapter';
 import type { SaveSlotSummary } from '../storage/StorageAdapter';
+import { buildPrioritySmokeState } from '../dev/prioritySmokeScenarios';
 
 const content: GameContent = {
   crafts: CRAFTS,
@@ -67,6 +68,7 @@ interface GameStore {
   content: GameContent;
   saveSlots: SaveSlotSummary[];
   activeSaveSlotId: string | null;
+  smokeMode: boolean;
   /** 通用派发入口：所有规则变更都经此 */
   dispatch: (action: GameAction) => void;
   /** 从存档恢复；无存档则保持新局 */
@@ -75,6 +77,7 @@ interface GameStore {
   refreshSaveSlots: () => Promise<void>;
   /** 开新局并清档 */
   newGame: (seed?: number, playerName?: string, slotId?: string) => Promise<string>;
+  loadPrioritySmokeScenario: (scenarioId: string) => boolean;
   /** 删除指定存档槽 */
   deleteSaveSlot: (slotId: string) => Promise<void>;
 }
@@ -94,10 +97,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   content,
   saveSlots: [],
   activeSaveSlotId: null,
+  smokeMode: false,
 
   dispatch: (action) => {
+    const smokeMode = get().smokeMode;
     const next = gameReducer(get().state, action, get().content);
     set({ state: next });
+    if (smokeMode) return;
     void localStorageAdapter.save(next, get().activeSaveSlotId ?? undefined).then((slotId) => {
       set({ activeSaveSlotId: slotId });
       void get().refreshSaveSlots();
@@ -111,7 +117,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return false;
     }
     const activeSaveSlotId = await localStorageAdapter.getActiveSlotId();
-    set({ state: saved, activeSaveSlotId });
+    set({ state: saved, activeSaveSlotId, smokeMode: false });
     await get().refreshSaveSlots();
     return true;
   },
@@ -126,11 +132,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   newGame: async (seed, playerName, slotId) => {
     const next = gameReducer(get().state, { type: 'NEW_GAME', seed, playerName }, get().content);
-    set({ state: next });
+    set({ state: next, smokeMode: false });
     const savedSlotId = await localStorageAdapter.save(next, slotId);
     set({ activeSaveSlotId: savedSlotId });
     await get().refreshSaveSlots();
     return savedSlotId;
+  },
+
+  loadPrioritySmokeScenario: (scenarioId) => {
+    const next = buildPrioritySmokeState(get().content, scenarioId);
+    if (!next) return false;
+    set({ state: next, activeSaveSlotId: null, smokeMode: true });
+    return true;
   },
 
   deleteSaveSlot: async (slotId) => {

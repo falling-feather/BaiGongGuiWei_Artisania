@@ -717,6 +717,8 @@ body {
 
 .modal--activity {
   max-width: 560px;
+  max-height: 84vh;
+  overflow-y: auto;
 }
 
 .modal--activity .modal__title {

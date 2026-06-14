@@ -71,6 +71,7 @@ export function ActivityStallClosingModal() {
               return (
                 <button
                   className="activity-choice"
+                  data-smoke={`stall-closing-choice:${pending.activityId}:${choice.id}`}
                   disabled={disabled}
                   key={choice.id}
                   onClick={() => dispatch({ type: 'RESOLVE_ACTIVITY_STALL_CLOSING', choiceId: choice.id })}

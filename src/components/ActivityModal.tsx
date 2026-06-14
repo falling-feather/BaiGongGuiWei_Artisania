@@ -202,6 +202,7 @@ export function ActivityModal({
                       return (
                         <button
                           className={`activity-choice${selected ? ' is-selected' : ''}`}
+                          data-smoke={`activity-choice:${activity.id}:${round.id}:${choice.id}`}
                           key={choice.id}
                           onClick={() =>
                             setSelectedChoiceIds((current) => ({ ...current, [round.id]: choice.id }))
@@ -236,6 +237,7 @@ export function ActivityModal({
               {stallStrategies.map((strategy) => (
                 <button
                   className={`activity-choice${strategy.id === selectedStallStrategyId ? ' is-selected' : ''}`}
+                  data-smoke={`activity-strategy:${activity.id}:${strategy.id}`}
                   key={strategy.id}
                   onClick={() => setSelectedStallStrategyId(strategy.id)}
                   type="button"
@@ -276,7 +278,12 @@ export function ActivityModal({
         )}
 
         <div className="btn-row">
-          <button className="btn btn--bamboo" disabled={!canPerform} onClick={perform}>
+          <button
+            className="btn btn--bamboo"
+            data-smoke={`activity-perform:${activity.id}`}
+            disabled={!canPerform}
+            onClick={perform}
+          >
             完成体验
           </button>
           <button className="btn btn--ghost" onClick={onClose}>

@@ -185,7 +185,7 @@ export function Hud({
         <div className="hud hud--hint">
           <img className="hud__panel-frame" src={`${UI_ROOT}/hud_panel.png`} alt="" draggable={false} />
           <span>{hint}</span>
-          <button className="hud__hint-action" type="button" onClick={onInteractNearby}>
+          <button className="hud__hint-action" data-smoke="hud-interact-nearby" type="button" onClick={onInteractNearby}>
             互动
           </button>
         </div>

@@ -43,6 +43,7 @@ export function App() {
 function GameApp() {
   const loadFromStorage = useGameStore((s) => s.loadFromStorage);
   const newGame = useGameStore((s) => s.newGame);
+  const loadPrioritySmokeScenario = useGameStore((s) => s.loadPrioritySmokeScenario);
   const refreshSaveSlots = useGameStore((s) => s.refreshSaveSlots);
   const deleteSaveSlot = useGameStore((s) => s.deleteSaveSlot);
   const saveSlots = useGameStore((s) => s.saveSlots);
@@ -70,11 +71,21 @@ function GameApp() {
   const lastTargetSigRef = useRef('');
   const knownAchRef = useRef<Set<string>>(new Set());
   const toastTimerRef = useRef<number | null>(null);
+  const smokeScenarioId = import.meta.env.DEV
+    ? new URLSearchParams(window.location.search).get('smoke')
+    : null;
 
   // 首次挂载：恢复存档并探测是否有可续的存档
   useEffect(() => {
+    if (smokeScenarioId && loadPrioritySmokeScenario(smokeScenarioId)) {
+      setView('playing');
+      lastSigRef.current = '';
+      lastTargetSigRef.current = '';
+      syncRegion();
+      return;
+    }
     void loadFromStorage();
-  }, [loadFromStorage]);
+  }, [loadFromStorage, loadPrioritySmokeScenario, smokeScenarioId]);
 
   // 主菜单入口
   async function startNew(playerName: string, slotId?: string) {

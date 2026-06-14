@@ -475,6 +475,7 @@ export function RegionPanel({ open, onClose }: { open: boolean; onClose: () => v
                 </div>
                 <button
                   className="btn btn--sm btn--bamboo"
+                  data-smoke={`region-activity:${activity.id}`}
                   disabled={!playing || !canPerformActivity(activity)}
                   title={activity.availablePhases ? `可用时段：${activity.availablePhases.map((phase) => PHASE_LABEL[phase]).join(' / ')}` : activity.blurb}
                   onClick={() => {
