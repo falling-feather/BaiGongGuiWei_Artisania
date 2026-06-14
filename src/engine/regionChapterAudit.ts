@@ -11,6 +11,7 @@ export interface RegionChapterAuditRow {
   readiness: RegionChapterReadiness;
   unknownReferences: string[];
   layoutGaps: string[];
+  routeLandingGaps: string[];
   proposedHooks: string[];
   counts: {
     playPillars: number;
@@ -47,7 +48,10 @@ export function buildRegionChapterAudit(
   const activityById = new Map((content.activities ?? []).map((activity) => [activity.id, activity]));
   const craftIds = new Set((content.crafts ?? []).map((craft) => craft.id));
   const npcIds = new Set((content.npcs ?? []).map((npc) => npc.id));
-  const routeIds = new Set((content.regionContent ?? []).flatMap((region) => region.routes.map((route) => route.id)));
+  const routesById = new Map(
+    (content.regionContent ?? []).flatMap((region) => region.routes.map((route) => [route.id, route] as const)),
+  );
+  const routeIds = new Set(routesById.keys());
   const homeVisitIds = new Set((content.homeVisits ?? []).map((visit) => visit.id));
   const collabRecipeIds = new Set((content.collabRecipes ?? []).map((recipe) => recipe.id));
   const escortEncounterIds = new Set((content.escortEncounters ?? []).map((encounter) => encounter.id));
@@ -57,6 +61,20 @@ export function buildRegionChapterAudit(
   const rows = chapters.map((chapter) => {
     const region = regionById.get(chapter.regionId);
     const localSubregionIds = new Set(region?.subregions.map((subregion) => subregion.id) ?? []);
+    const routeLandingGaps = chapter.playPillars.flatMap((pillar) =>
+      (pillar.routeIds ?? []).flatMap((routeId) => {
+        const route = routesById.get(routeId);
+        if (!route) return [];
+        if (route.fromRegionId !== chapter.regionId && route.toRegionId !== chapter.regionId) {
+          return [`routeLandingRegion:${routeId}:${chapter.regionId}`];
+        }
+        const landingSubregionId = route.landingSubregionIds?.[chapter.regionId];
+        if (!landingSubregionId) return [`routeLanding:${routeId}:${chapter.regionId}`];
+        return localSubregionIds.has(landingSubregionId)
+          ? []
+          : [`routeLandingSubregion:${routeId}:${landingSubregionId}`];
+      }),
+    );
     const unknownReferences = [
       ...(regionById.has(chapter.regionId) ? [] : [`region:${chapter.regionId}`]),
       ...chapter.entrySubregionIds
@@ -105,6 +123,7 @@ export function buildRegionChapterAudit(
       ...chapter.smokeScenarioIds
         .filter((smokeScenarioId) => smokeScenarioIds.size > 0 && !smokeScenarioIds.has(smokeScenarioId))
         .map((smokeScenarioId) => `smoke:${smokeScenarioId}`),
+      ...routeLandingGaps,
     ];
     const layoutGaps = chapter.entrySubregionIds
       .filter((subregionId) => layoutSubregionIds.size > 0 && !layoutSubregionIds.has(subregionId))
@@ -122,6 +141,7 @@ export function buildRegionChapterAudit(
       readiness,
       unknownReferences,
       layoutGaps,
+      routeLandingGaps,
       proposedHooks,
       counts: {
         playPillars: chapter.playPillars.length,

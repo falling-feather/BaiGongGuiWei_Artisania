@@ -134,10 +134,12 @@ describe('navigation entrypoints', () => {
     expect(currentStreetRegionGate(state, 'huizhou')).toMatchObject({
       regionId: 'huizhou',
       unlocked: true,
+      routeId: 'route-jiangnan-huizhou-paper',
     });
     expect(currentStreetRegionGate(state, 'ganpo')).toMatchObject({
       regionId: 'ganpo',
       unlocked: false,
+      routeId: 'route-jiangnan-ganpo-kiln',
     });
     expect(currentStreetRegionGate(state, 'xueyu')).toBeNull();
   });

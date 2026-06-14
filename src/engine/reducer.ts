@@ -2986,16 +2986,28 @@ function performActivity(
 }
 
 /** 前往一个已解锁的地区 */
-function travel(state: GameState, content: GameContent, regionId: string): GameState {
+function travel(state: GameState, content: GameContent, regionId: string, routeId?: string): GameState {
   if (!state.unlockedRegions.includes(regionId)) {
     return { ...state, log: pushLog(state.log, '该地区尚未解锁，无法前往。') };
   }
   if (state.currentRegion === regionId) return state;
   const region = (content.regions ?? []).find((r) => r.id === regionId);
+  const route = routeId
+    ? allRouteSpecs(content).find(
+        (candidate) =>
+          candidate.id === routeId &&
+          (
+            (candidate.fromRegionId === state.currentRegion && candidate.toRegionId === regionId) ||
+            (candidate.toRegionId === state.currentRegion && candidate.fromRegionId === regionId)
+          ),
+      )
+    : null;
+  const landingSubregionId = route?.landingSubregionIds?.[regionId];
+  const landingSubregion = region?.subregions.find((subregion) => subregion.id === landingSubregionId);
   return {
     ...state,
     currentRegion: regionId,
-    currentSubregion: region?.subregions[0]?.id ?? regionId,
+    currentSubregion: landingSubregion?.id ?? region?.subregions[0]?.id ?? regionId,
     log: pushLog(state.log, `起程前往「${region?.name ?? regionId}」。`),
   };
 }
@@ -3602,7 +3614,7 @@ function reduce(
 
     case 'TRAVEL':
       if (state.status !== 'playing') return state;
-      return travel(state, content, action.regionId);
+      return travel(state, content, action.regionId, action.routeId);
 
     case 'TRAVEL_SUBREGION':
       if (state.status !== 'playing') return state;

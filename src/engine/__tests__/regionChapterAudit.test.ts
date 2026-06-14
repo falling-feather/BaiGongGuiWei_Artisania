@@ -70,6 +70,38 @@ describe('region chapter audit', () => {
     expect(audit.rows[0].unknownReferences).toContain('npc:missing-id');
   });
 
+  it('reports chapter route landings that drift away from real local subregions', () => {
+    const brokenContent: GameContent = {
+      ...content,
+      regionContent: content.regionContent?.map((entry) => ({
+        ...entry,
+        routes: entry.routes.map((route) =>
+          route.id === 'route-jiangnan-huizhou-paper'
+            ? {
+                ...route,
+                landingSubregionIds: {
+                  ...route.landingSubregionIds,
+                  jiangnan: 'missing-subregion',
+                },
+              }
+            : route,
+        ),
+      })),
+    };
+    const audit = buildRegionChapterAudit([REGION_CHAPTERS[0]], brokenContent, {
+      layoutSubregionIds,
+      smokeScenarioIds: PRIORITY_SMOKE_SCENARIO_IDS,
+    });
+
+    expect(audit.invalidChapters).toBe(1);
+    expect(audit.rows[0].routeLandingGaps).toContain(
+      'routeLandingSubregion:route-jiangnan-huizhou-paper:missing-subregion',
+    );
+    expect(audit.rows[0].unknownReferences).toContain(
+      'routeLandingSubregion:route-jiangnan-huizhou-paper:missing-subregion',
+    );
+  });
+
   it('keeps map layout gaps visible without treating them as unknown data', () => {
     const audit = buildRegionChapterAudit(REGION_CHAPTERS, content, {
       layoutSubregionIds,

@@ -167,12 +167,13 @@ function GameApp() {
         const gate = currentStreetRegionGate(useGameStore.getState().state, payload.regionId);
         if (!gate) return;
         setHint(null);
+        const routeId = payload.routeId === gate.routeId ? payload.routeId : gate.routeId;
         if (gate.unlocked) {
-          dispatch({ type: 'TRAVEL', regionId: payload.regionId });
+          dispatch({ type: 'TRAVEL', regionId: payload.regionId, routeId });
         } else {
           dispatch({ type: 'UNLOCK_REGION', regionId: payload.regionId });
           if (useGameStore.getState().state.unlockedRegions.includes(payload.regionId)) {
-            dispatch({ type: 'TRAVEL', regionId: payload.regionId });
+            dispatch({ type: 'TRAVEL', regionId: payload.regionId, routeId });
           }
         }
       } else if (payload.type === 'scene-ready') {

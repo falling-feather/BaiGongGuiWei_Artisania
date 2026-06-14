@@ -9,12 +9,13 @@ export function isCurrentStreetSubregionGate(state: GameState, subregionId: stri
 export function currentStreetRegionGate(
   state: GameState,
   regionId: string,
-): { regionId: string; unlocked: boolean } | null {
+): { regionId: string; unlocked: boolean; routeId?: string } | null {
   const spec = buildRegionSpec(state.currentRegion, state);
   const gate = spec?.gates.find((item) => item.regionId === regionId);
   if (!gate) return null;
   return {
     regionId: gate.regionId,
     unlocked: gate.unlocked && state.unlockedRegions.includes(gate.regionId),
+    routeId: gate.routeId,
   };
 }

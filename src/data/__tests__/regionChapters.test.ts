@@ -83,6 +83,38 @@ describe('region chapter specs', () => {
     }
   });
 
+  it('declares valid bidirectional landing subregions for every formal route', () => {
+    for (const route of REGION_ROUTES) {
+      const fromSubregionIds = subregionIdsFor(route.fromRegionId);
+      const toSubregionIds = subregionIdsFor(route.toRegionId);
+
+      expect(route.landingSubregionIds?.[route.fromRegionId], route.id).toBeTruthy();
+      expect(route.landingSubregionIds?.[route.toRegionId], route.id).toBeTruthy();
+      expect(fromSubregionIds.has(route.landingSubregionIds?.[route.fromRegionId] ?? ''), route.id).toBe(true);
+      expect(toSubregionIds.has(route.landingSubregionIds?.[route.toRegionId] ?? ''), route.id).toBe(true);
+
+      for (const regionId of Object.keys(route.landingSubregionIds ?? {})) {
+        expect([route.fromRegionId, route.toRegionId], `${route.id}:${regionId}`).toContain(regionId);
+      }
+    }
+  });
+
+  it('binds every chapter trade route to a landing inside that chapter entry set', () => {
+    for (const chapter of REGION_CHAPTERS) {
+      const entrySubregionIds = new Set(chapter.entrySubregionIds);
+      const chapterRouteIds = chapter.playPillars.flatMap((pillar) => pillar.routeIds ?? []);
+
+      expect(chapterRouteIds.length, chapter.id).toBeGreaterThan(0);
+      for (const routeId of chapterRouteIds) {
+        const route = REGION_ROUTES.find((entry) => entry.id === routeId);
+        const landingSubregionId = route?.landingSubregionIds?.[chapter.regionId];
+
+        expect(landingSubregionId, `${chapter.id}:${routeId}`).toBeTruthy();
+        expect(entrySubregionIds.has(landingSubregionId ?? ''), `${chapter.id}:${routeId}`).toBe(true);
+      }
+    }
+  });
+
   it('uses real order hook ids or marks proposed hooks only on chapters needing expansion', () => {
     for (const chapter of REGION_CHAPTERS) {
       expect(chapter.orderHooks.length).toBeGreaterThanOrEqual(1);

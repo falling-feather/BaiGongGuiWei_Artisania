@@ -2186,6 +2186,7 @@ export const REGION_ROUTES: RouteSpec[] = [
     unlockCost: 30,
     unlockHint: '先从湖畔茶肆或宁辞秋文房线打听纸谷消息，会更清楚这条路的价值。',
     preview: '徽州纸谷、墨砚深巷已在路引上标出。',
+    landingSubregionIds: { jiangnan: 'jiangnan-suhang', huizhou: 'huizhou-paper-valley' },
   },
   {
     id: 'route-jiangnan-ganpo-kiln',
@@ -2196,6 +2197,7 @@ export const REGION_ROUTES: RouteSpec[] = [
     unlockCost: 30,
     unlockHint: '龙泉山坊和瓷镇都靠柴、土与水路，这条线适合扩展青瓷与瓷器链。',
     preview: '赣鄱高岭矿丘与窑火瓷镇进入可开拓列表。',
+    landingSubregionIds: { jiangnan: 'jiangnan-suhang', ganpo: 'ganpo-kiln-town' },
   },
   {
     id: 'route-jiangnan-jingji-canal',
@@ -2207,6 +2209,7 @@ export const REGION_ROUTES: RouteSpec[] = [
     unlockHint: '商誉越高，越容易拿到北上采办名帖。',
     preview: '京畿宫造大院与都门订单开始向你透风。',
     requirements: { attributes: { commerce: 8 } },
+    landingSubregionIds: { jiangnan: 'jiangnan-jinling', jingji: 'jingji-official-gate' },
   },
   {
     id: 'route-bashu-qiandian-tea-horse',
@@ -2217,6 +2220,7 @@ export const REGION_ROUTES: RouteSpec[] = [
     unlockCost: 32,
     unlockHint: '马帮会先看你是否尊重山路规矩。',
     preview: '黔滇苗寨银巷和东川铜矿有了前置路书。',
+    landingSubregionIds: { bashu: 'bashu-tea-horse', qiandian: 'qiandian-tea-road' },
   },
   {
     id: 'route-bashu-jingchu-river',
@@ -2227,6 +2231,7 @@ export const REGION_ROUTES: RouteSpec[] = [
     unlockCost: 32,
     unlockHint: '沿江行脚要先备稳船脚，巴蜀竹铁与荆楚矿冶会在这条线上接续。',
     preview: '荆楚渡口市集、大冶矿场与楚漆作坊进入可探访范围。',
+    landingSubregionIds: { bashu: 'bashu-tea-horse', jingchu: 'jingchu-lake-market' },
   },
   {
     id: 'route-bashu-xueyu-snow-pass',
@@ -2238,6 +2243,7 @@ export const REGION_ROUTES: RouteSpec[] = [
     unlockHint: '需先听过茶马驿的雪口消息。',
     preview: '雪域唐卡画院、颜料矿谷和雪山驿口被记入远行簿。',
     requirements: { flags: ['heard-snow-pass'] },
+    landingSubregionIds: { bashu: 'bashu-tea-horse', xueyu: 'xueyu-snow-pass' },
   },
   {
     id: 'route-qiandian-lingnan-harbor',
@@ -2248,6 +2254,7 @@ export const REGION_ROUTES: RouteSpec[] = [
     unlockCost: 34,
     unlockHint: '铜银与海贸货栈会在这里接上。',
     preview: '珠江商港和佛山冶坊进入可预告范围。',
+    landingSubregionIds: { qiandian: 'qiandian-tea-road', lingnan: 'lingnan-harbor' },
   },
   {
     id: 'route-qiandian-jingchu-mine',
@@ -2258,6 +2265,7 @@ export const REGION_ROUTES: RouteSpec[] = [
     unlockCost: 32,
     unlockHint: '这条山路连着银铜矿脉与江汉船路，适合先积累一点脚力和人情。',
     preview: '苗银、东川铜与荆楚铜铁开始形成互补支线。',
+    landingSubregionIds: { qiandian: 'qiandian-tea-road', jingchu: 'jingchu-lake-market' },
   },
   {
     id: 'route-jingchu-ganpo-lake',
@@ -2268,6 +2276,7 @@ export const REGION_ROUTES: RouteSpec[] = [
     unlockCost: 30,
     unlockHint: '水路熟客能把矿冶与窑火接到同一条船上。',
     preview: '赣鄱瓷土、窑柴与荆楚矿冶形成支线。',
+    landingSubregionIds: { jingchu: 'jingchu-lake-market', ganpo: 'ganpo-kiln-town' },
   },
   {
     id: 'route-ganpo-huizhou-merchant',
@@ -2278,6 +2287,7 @@ export const REGION_ROUTES: RouteSpec[] = [
     unlockCost: 28,
     unlockHint: '徽商会先问纸墨销路，再看你是否带得动窑柴、茶叶与山货。',
     preview: '徽州纸谷、墨坊与赣鄱窑柴线互相可见。',
+    landingSubregionIds: { ganpo: 'ganpo-kiln-town', huizhou: 'huizhou-merchant-hall' },
   },
   {
     id: 'route-jingji-sanjin-official',
@@ -2288,6 +2298,7 @@ export const REGION_ROUTES: RouteSpec[] = [
     unlockCost: 34,
     unlockHint: '都门名帖和票号信用会互相背书。',
     preview: '三晋票号、煤铁窑塬与推光漆院进入北地网络。',
+    landingSubregionIds: { jingji: 'jingji-official-gate', sanjin: 'sanjin-piaohao' },
   },
   {
     id: 'route-xueyu-xiyu-caravan',
@@ -2298,6 +2309,7 @@ export const REGION_ROUTES: RouteSpec[] = [
     unlockCost: 44,
     unlockHint: '雪山驿口与驼队补给要同时算进路耗。',
     preview: '西域绿洲巴扎、昆仑玉场和驼队驿站露出远景。',
+    landingSubregionIds: { xueyu: 'xueyu-snow-pass', xiyu: 'xiyu-caravan-post' },
   },
 ];
 

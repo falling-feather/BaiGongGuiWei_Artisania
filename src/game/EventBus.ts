@@ -110,7 +110,7 @@ export type GameBusEvent =
   | { type: 'interact-activity'; activityId: string }
   | { type: 'interact-subregion-gate'; subregionId: string }
   /** 玩家走近并触发某个地区出入口 */
-  | { type: 'interact-gate'; regionId: string; unlocked: boolean }
+  | { type: 'interact-gate'; regionId: string; unlocked: boolean; routeId?: string }
   /** 玩家走近并触发某个 NPC */
   | { type: 'interact-npc'; npcId: string }
   /** 玩家进入/离开某交互点的感应范围（用于提示「按 E」） */

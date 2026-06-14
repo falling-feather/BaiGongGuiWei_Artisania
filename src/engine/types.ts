@@ -520,6 +520,7 @@ export interface RouteSpec {
   unlockHint: string;
   unlockCost?: number;
   preview?: string;
+  landingSubregionIds?: Partial<Record<string, string>>;
   requirements?: RouteRequirement;
 }
 
@@ -1262,7 +1263,7 @@ export type GameAction =
   /** 在当前地区运行一项基础产业（手搓原料），quality 0–1 来自微交互 */
   | { type: 'GATHER_RESOURCE'; industryId: string; quality?: number }
   /** 前往一个已解锁的地区 */
-  | { type: 'TRAVEL'; regionId: string }
+  | { type: 'TRAVEL'; regionId: string; routeId?: string }
   /** 在当前大地区内切换小地区 */
   | { type: 'TRAVEL_SUBREGION'; subregionId: string }
   /** 花费解锁一个与已解锁地区相邻的新地区 */

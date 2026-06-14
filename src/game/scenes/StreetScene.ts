@@ -53,6 +53,7 @@ interface MapPoint {
   hint: string;
   /** industry: industryId | craft: craftId | activity: activityId | gate: regionId | subregionGate: subregionId */
   payload: string;
+  routeId?: string;
   unlocked?: boolean;
   goal?: boolean;
   sprite: Phaser.GameObjects.Image;
@@ -200,6 +201,7 @@ interface PointSpec {
   label: string;
   hint: string;
   payload: string;
+  routeId?: string;
   unlocked?: boolean;
   tex: string;
   tileW?: number;
@@ -428,6 +430,7 @@ export class StreetScene extends Phaser.Scene {
           ? `按 E 经「${g.routeName ?? '驿路'}」前往「${g.name}」`
           : `按 E 开通「${g.routeName ?? g.name}」解锁「${g.name}」(${g.unlockCost ?? 30} 文)`,
         payload: g.regionId,
+        routeId: g.routeId,
         unlocked: g.unlocked,
         tex: TEX.gate,
       })),
@@ -501,6 +504,7 @@ export class StreetScene extends Phaser.Scene {
         label: item.label,
         hint: item.hint,
         payload: item.payload,
+        routeId: item.routeId,
         unlocked: item.unlocked,
         sprite: img,
         location,
@@ -1494,7 +1498,7 @@ export class StreetScene extends Phaser.Scene {
     else if (p.kind === 'industry') emitBus({ type: 'interact-industry', industryId: p.payload });
     else if (p.kind === 'activity') emitBus({ type: 'interact-activity', activityId: p.payload });
     else if (p.kind === 'subregionGate') emitBus({ type: 'interact-subregion-gate', subregionId: p.payload });
-    else emitBus({ type: 'interact-gate', regionId: p.payload, unlocked: !!p.unlocked });
+    else emitBus({ type: 'interact-gate', regionId: p.payload, unlocked: !!p.unlocked, routeId: p.routeId });
     return true;
   }
 

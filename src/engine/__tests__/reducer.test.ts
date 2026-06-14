@@ -3334,6 +3334,19 @@ describe('gameReducer', () => {
     expect(s1.currentSubregion).toBe('huizhou-ink-alley');
   });
 
+  it('TRAVEL 通过街景路线时进入该路线声明的小地区落点', () => {
+    let s = freshState();
+    s = { ...s, resources: { ...s.resources, coin: 100 } };
+    s = gameReducer(s, { type: 'UNLOCK_REGION', regionId: 'huizhou' }, content);
+    const s1 = gameReducer(
+      s,
+      { type: 'TRAVEL', regionId: 'huizhou', routeId: 'route-jiangnan-huizhou-paper' },
+      content,
+    );
+    expect(s1.currentRegion).toBe('huizhou');
+    expect(s1.currentSubregion).toBe('huizhou-paper-valley');
+  });
+
   it('TRAVEL_SUBREGION 在当前大地区内切换小地区', () => {
     const s = freshState();
     const s1 = gameReducer(s, { type: 'TRAVEL_SUBREGION', subregionId: 'jiangnan-longquan' }, content);
