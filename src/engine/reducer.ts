@@ -5164,6 +5164,28 @@ function npcOrderTerms(
       creditTrustScore: trust,
     };
   }
+  if (npc.id === 'jj-song-yasi') {
+    const palaceBacker =
+      state.flags.includes('collector-reputation-palace-renewed') ||
+      state.flags.includes('palace-order-ready') ||
+      state.flags.includes('jingji-official-permit');
+    const permitTrust = Math.min(100, trust + (palaceBacker ? 14 : 0));
+    const formalPermit = permitTrust >= 72;
+    const depositCoin = formalPermit ? 0 : permitTrust >= 48 ? 8 : 16;
+    return {
+      orderKind: 'palace',
+      titleSuffix: formalPermit ? '官样采办许可单' : '官样采办预审单',
+      descLead: '官署门房先审名帖、商誉与担保。',
+      creditNote: depositCoin > 0
+        ? `采办商誉 ${permitTrust}，先押 ${depositCoin} 文名帖保金；误期会折损门房担保。`
+        : `采办商誉 ${permitTrust}，宋押司愿免押名帖，只按宫样验收结果结账；误期仍会折损门房担保。`,
+      depositCoin,
+      rewardPremium: depositCoin + (formalPermit ? 18 : 10),
+      minQualityDelta: formalPermit ? 0.08 : 0.12,
+      expiresInDelta: formalPermit ? 0 : -1,
+      creditTrustScore: permitTrust,
+    };
+  }
   if (npc.id === 'jn-fang-jiheng' || tags.has('consignment')) {
     const depositCoin = trust >= 62 ? 0 : trust >= 38 ? 5 : 9;
     return {

@@ -282,8 +282,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-lan-cloisonne-blue'],
     escortEncounterIds: ['escort-jingji-canal-tribute'],
     smokeScenarioIds: ['chapter-jingji-palace-procurement'],
-    nextActions: ['补采办许可读取地区声望和商誉', '补都门市口人工地图与订单入口', '补宫造采办长线分支'],
-    gaps: ['官署门房已有活动即时订单，但仍缺声望/商誉门槛和长线采办分支。', 'jingji-market-gate 仍缺人工 JSON。'],
+    nextActions: ['补都门市口人工地图与订单入口', '补宫样采办后续摊位或漕运复验分支', '补采办许可的过期担保折损与市口背书后日谈'],
+    gaps: ['官署门房已有活动即时订单、宋押司 palace 采办商誉门槛和宫样回访续单；仍缺都门市口人工 JSON 与更长漕运/市口采办分支。', 'jingji-market-gate 仍缺人工 JSON。'],
   },
   {
     id: 'chapter-sanjin-piaohao-lacquer',
