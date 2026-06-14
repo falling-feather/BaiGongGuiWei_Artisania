@@ -46,6 +46,18 @@ export {
   type FullScopeRegionRequirement,
 } from './fullScope';
 export {
+  REGION_CHAPTER_IDS,
+  REGION_CHAPTERS,
+  type RegionChapterHookSource,
+  type RegionChapterNpcRef,
+  type RegionChapterNpcRole,
+  type RegionChapterOrderHook,
+  type RegionChapterPillarKind,
+  type RegionChapterPlayPillar,
+  type RegionChapterSpec,
+  type RegionChapterStatus,
+} from './regionChapters';
+export {
   REGION_MAP_POS,
   RUNTIME_MAP_EDITOR_SNAPSHOTS,
   RUNTIME_MAP_LAYOUTS,

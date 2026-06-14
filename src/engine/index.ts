@@ -17,3 +17,4 @@ export * from './loreGuide';
 export * from './priorityJourney';
 export * from './priorityScopeAudit';
 export * from './fullScopeAudit';
+export * from './regionChapterAudit';
