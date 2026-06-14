@@ -31,8 +31,8 @@
 | 西域 `xiyu` | `xu-a-yue` | 玉师阿月 | 玉雕师 | `npc.xu-a-yue.portrait` | `public/assets/game/characters/xu-a-yue/portrait.png` |
 | 西域 `xiyu` | `xu-tuoling-shu` | 驼铃叔 | 驼队首领 | `npc.xu-tuoling-shu.portrait` | `public/assets/game/characters/xu-tuoling-shu/portrait.png` |
 
-## 剩余缺口
+## 后续状态
 
-- 主轴五区冻结 NPC 仍需 `stand.png` 站姿/半身包。
+- 主轴五区冻结 NPC 的 `stand.png` 站姿包已在 `26_美术组主轴五区NPC站姿包记录.md` 补齐。
 - 主轴五区街景 `street_tiles.png` 与工艺 `craft_tools.png` 仍需按同一命名口径继续补。
 - 六区骨架 NPC 头像暂未进入本包，按 A2 节点处理。
