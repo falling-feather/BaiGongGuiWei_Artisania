@@ -187,6 +187,8 @@ describe('runtime map editor adapter', () => {
       'qiandian-dongchuan-copper',
       'jingchu-chu-lacquer',
       'jingchu-lake-market',
+      'jingchu-mine-yard',
+      'jingchu-xiang-embroidery',
       'ganpo-kaolin-hill',
       'ganpo-kiln-town',
       'ganpo-river-wood',
@@ -318,6 +320,37 @@ describe('runtime map editor adapter', () => {
         expect.objectContaining({ interaction: 'gate', targetId: 'bashu' }),
         expect.objectContaining({ interaction: 'gate', targetId: 'lingnan' }),
         expect.objectContaining({ interaction: 'gate', targetId: 'jingchu' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('jingchu-mine-yard')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-copper-ore' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-iron-ore' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'smelt-copper' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'smelt-iron' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'jc-daye-mine' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jc-yeshu' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jingchu-lake-market' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jingchu-chu-lacquer' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jingchu-xiang-embroidery' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'bashu' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'qiandian' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'ganpo' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('jingchu-xiang-embroidery')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-cocoon' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'sericulture' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'xiang-embroidery' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'jc-xiang-embroidery' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jc-wen-xiuniang' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jingchu-lake-market' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jingchu-chu-lacquer' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jingchu-mine-yard' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'bashu' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'qiandian' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'ganpo' }),
       ]),
     );
     expect(snapshotsBySubregion.get('ganpo-kaolin-hill')?.objects).toEqual(
@@ -470,18 +503,13 @@ describe('runtime map editor adapter', () => {
     expect(errors).toEqual([]);
   });
 
-  it('keeps the remaining unshipped manual map list explicit after M1.22', () => {
+  it('keeps the remaining unshipped manual map list explicit after M1.23', () => {
     const shippedLayoutIds = new Set(RUNTIME_MAP_LAYOUTS.map((layout) => layout.subregionId));
     const missingManualMapIds = REGIONS.flatMap((region) => region.subregions.map((subregion) => subregion.id))
       .filter((subregionId) => !shippedLayoutIds.has(subregionId))
       .sort();
 
-    expect(missingManualMapIds).toEqual([
-      'jiangnan-linan',
-      'jiangnan-taihu',
-      'jingchu-mine-yard',
-      'jingchu-xiang-embroidery',
-    ]);
+    expect(missingManualMapIds).toEqual(['jiangnan-linan', 'jiangnan-taihu']);
   });
 
   it('keeps shipped NPC markers on reachable street tiles', () => {

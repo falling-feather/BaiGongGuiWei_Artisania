@@ -1,0 +1,33 @@
+{
+  "schema": "artisania-map-editor/v2",
+  "regionId": "jingchu",
+  "subregionId": "jingchu-mine-yard",
+  "tileSize": 32,
+  "size": { "w": 56, "h": 30 },
+  "roads": [
+    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
+    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
+    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
+    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
+    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
+    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+  ],
+  "objects": [
+    { "itemId": "player_spawn", "x": 28, "y": 15 },
+    { "itemId": "industry_copper_ore", "name": "copper ore face", "interaction": "industry", "targetId": "harvest-copper-ore", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_iron_ore", "name": "iron ore face", "interaction": "industry", "targetId": "harvest-iron-ore", "x": 14, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_copper_furnace", "name": "copper smelting hearth", "interaction": "industry", "targetId": "smelt-copper", "x": 23, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_iron_furnace", "name": "iron smelting hearth", "interaction": "industry", "targetId": "smelt-iron", "x": 32, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_mine", "name": "Daye ore sorting yard", "interaction": "activity", "targetId": "jc-daye-mine", "x": 36, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to lake market", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jingchu-lake-market", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Chu lacquer yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jingchu-chu-lacquer", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Xiang embroidery tower", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jingchu-xiang-embroidery", "x": 32, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Bashu river gorge", "interaction": "gate", "targetId": "bashu", "x": 49, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Qiandian mine road", "interaction": "gate", "targetId": "qiandian", "x": 49, "y": 13, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Ganpo lake kiln road", "interaction": "gate", "targetId": "ganpo", "x": 49, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "npc-jc-yeshu", "name": "Yeshu", "interaction": "npc", "npcId": "jc-yeshu", "x": 29, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "mine-cart-a", "name": "ore cart siding", "interaction": "decoration", "x": 20, "y": 18, "tileW": 3, "tileH": 2, "solid": true },
+    { "itemId": "timber-trestle-a", "name": "mine timber trestle", "interaction": "decoration", "x": 39, "y": 4, "tileW": 3, "tileH": 2, "solid": true },
+    { "itemId": "slag-wall-a", "name": "slag stone wall", "interaction": "decoration", "x": 7, "y": 17, "tileW": 4, "tileH": 2, "solid": true }
+  ]
+}

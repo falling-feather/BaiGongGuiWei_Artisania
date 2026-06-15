@@ -78,6 +78,22 @@ describe('region chapter map entrypoints', () => {
     expect(gapText).not.toMatch(/qiandian-dongchuan-copper.*人工 JSON|人工 JSON.*qiandian-dongchuan-copper/);
   });
 
+  it('keeps Jingchu M1.23 mine yard and Xiang embroidery layouts closed', () => {
+    const jingchu = REGION_CHAPTERS.find((chapter) => chapter.id === 'chapter-jingchu-ferry-lacquer');
+    const gapText = jingchu?.gaps.join('\n') ?? '';
+
+    expect(jingchu?.entrySubregionIds).toEqual([
+      'jingchu-lake-market',
+      'jingchu-mine-yard',
+      'jingchu-chu-lacquer',
+      'jingchu-xiang-embroidery',
+    ]);
+    expect(layoutSubregionIds.has('jingchu-mine-yard')).toBe(true);
+    expect(layoutSubregionIds.has('jingchu-xiang-embroidery')).toBe(true);
+    expect(gapText).not.toMatch(/jingchu-mine-yard.*仍缺|仍缺.*jingchu-mine-yard/);
+    expect(gapText).not.toMatch(/jingchu-xiang-embroidery.*仍缺|仍缺.*jingchu-xiang-embroidery/);
+  });
+
   it('keeps every missing chapter layout explicit in chapter gaps', () => {
     for (const chapter of REGION_CHAPTERS) {
       const gapText = chapter.gaps.join('\n');
@@ -91,16 +107,11 @@ describe('region chapter map entrypoints', () => {
     }
   });
 
-  it('does not mark chapters with missing layouts as silently complete', () => {
+  it('keeps all M1 chapter entry layouts backed by runtime maps after M1.23', () => {
     const chaptersWithMissingLayouts = REGION_CHAPTERS.filter((chapter) =>
       chapter.entrySubregionIds.some((subregionId) => !layoutSubregionIds.has(subregionId)),
     );
 
-    expect(chaptersWithMissingLayouts.length).toBeGreaterThan(0);
-    expect(
-      chaptersWithMissingLayouts.every((chapter) =>
-        chapter.gaps.some((gap) => gap.includes('人工 JSON')),
-      ),
-    ).toBe(true);
+    expect(chaptersWithMissingLayouts).toEqual([]);
   });
 });

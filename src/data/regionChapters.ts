@@ -193,8 +193,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-xiong-lacquer-cloud'],
     escortEncounterIds: ['escort-ganpo-kiln-firewood'],
     smokeScenarioIds: ['chapter-jingchu-ferry-lacquer'],
-    nextActions: ['补楚漆修复后续追单', '补湘绣楼人物回访', '补渡口水运三阶段摊位收束'],
-    gaps: ['已有活动即时订单与家访/联作组件，但仍缺更长的章节活动收束。', 'jingchu-mine-yard 与 jingchu-xiang-embroidery 仍缺人工 JSON。'],
+    nextActions: ['补大冶矿场铜铁料状态反馈与矿口回访', '补湘绣楼人物回访与绣样订单差异', '补渡口水运三阶段摊位收束'],
+    gaps: ['M1.23 已关闭 jingchu-mine-yard 与 jingchu-xiang-embroidery 人工 JSON 缺口；剩余转向更长的章节活动收束、楚漆修复追单、大冶矿口材料状态反馈、湘绣楼回访和渡口水运三阶段摊位收束。'],
   },
   {
     id: 'chapter-ganpo-kiln-firewood',

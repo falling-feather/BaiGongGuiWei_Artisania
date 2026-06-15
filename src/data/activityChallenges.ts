@@ -487,6 +487,60 @@ export const ACTIVITY_CHALLENGES: ActivityChallengeDef[] = [
     ],
   },
   {
+    id: 'jc-daye-mine-vein',
+    activityId: 'jc-daye-mine',
+    miniGame: 'rhythm',
+    title: '大冶辨矿',
+    prompt: '冶叔把铜矿、铁矿和炉口缺料摆成三堆，等你按成色和火候先分一筐。',
+    choices: [
+      {
+        id: 'sort-ore-then-hearth',
+        label: '先分铜铁矿色，再按炉口缺料配筐',
+        quality: 0.92,
+        feedback: '冶叔点头：矿色、炉口和账面都对上，这一筐才不虚耗。',
+      },
+      {
+        id: 'rich-vein-first',
+        label: '只追最亮的富矿脉，多敲几筐再说',
+        quality: 0.54,
+        feedback: '亮矿诱人，可铜铁混着进炉，后面反要多费一次分料。',
+      },
+      {
+        id: 'rush-cart-load',
+        label: '矿车先装满，缺哪样到炉口再补',
+        quality: 0.42,
+        feedback: '矿车跑得急，筛洗和炉温都乱了，冶叔让你重听矿声。',
+      },
+    ],
+  },
+  {
+    id: 'jc-xiang-embroidery-needle',
+    activityId: 'jc-xiang-embroidery',
+    miniGame: 'drag_path',
+    title: '湘绣掺针',
+    prompt: '文绣娘把明暗线、兽毛针和底稿铺开，问你这幅绣样该先稳哪一处。',
+    choices: [
+      {
+        id: 'shade-before-fur-needle',
+        label: '先定明暗过渡，再用鬅毛针收神',
+        quality: 0.93,
+        feedback: '文绣娘笑道：针脚有了脾气，眼神才会从绣面里醒过来。',
+      },
+      {
+        id: 'bright-thread-first',
+        label: '先挑最亮的丝线，让绣面一眼醒目',
+        quality: 0.57,
+        feedback: '亮色能抓眼，却未必接得住明暗，绣娘让你再看底稿层次。',
+      },
+      {
+        id: 'outline-fast',
+        label: '先快快勾完外形，细针脚后面再补',
+        quality: 0.44,
+        feedback: '外形有了，神气却散了，针脚急处最容易露怯。',
+      },
+    ],
+  },
+  {
     id: 'ln-qilou-night-market-route',
     activityId: 'ln-qilou-night-market',
     miniGame: 'route_plan',

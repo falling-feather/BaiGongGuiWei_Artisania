@@ -317,6 +317,72 @@ describe('runtime map layouts', () => {
     expect(dongchuan?.activities.some((activity) => activity.id === 'qd-dongchuan-mine')).toBe(true);
   });
 
+  it('attaches M1.23 Jingchu mine yard and Xiang embroidery layouts to local street specs', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const unlockedRegions = [...new Set([...base.unlockedRegions, 'jingchu', 'bashu', 'qiandian', 'ganpo'])];
+    const mineYard = buildRegionSpec('jingchu', {
+      ...base,
+      currentRegion: 'jingchu',
+      currentSubregion: 'jingchu-mine-yard',
+      unlockedRegions,
+    });
+    const xiangEmbroidery = buildRegionSpec('jingchu', {
+      ...base,
+      currentRegion: 'jingchu',
+      currentSubregion: 'jingchu-xiang-embroidery',
+      unlockedRegions,
+    });
+
+    expect(mineYard?.layout).toMatchObject({ subregionId: 'jingchu-mine-yard', size: { w: 56, h: 30 } });
+    expect(mineYard?.layout?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-copper-ore' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-iron-ore' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'smelt-copper' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'smelt-iron' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'jc-daye-mine' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jc-yeshu' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'jingchu-lake-market' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'jingchu-chu-lacquer' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'jingchu-xiang-embroidery' }),
+      ]),
+    );
+    expect(mineYard?.industries.map((industry) => industry.id)).toEqual(
+      expect.arrayContaining(['harvest-copper-ore', 'harvest-iron-ore', 'smelt-copper', 'smelt-iron']),
+    );
+    expect(mineYard?.npcs.find((npc) => npc.id === 'jc-yeshu')).toMatchObject({
+      tileX: 29,
+      tileY: 20,
+    });
+    expect(mineYard?.activities.some((activity) => activity.id === 'jc-daye-mine')).toBe(true);
+
+    expect(xiangEmbroidery?.layout).toMatchObject({
+      subregionId: 'jingchu-xiang-embroidery',
+      size: { w: 56, h: 30 },
+    });
+    expect(xiangEmbroidery?.layout?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-cocoon' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'sericulture' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'xiang-embroidery' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'jc-xiang-embroidery' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jc-wen-xiuniang' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'jingchu-lake-market' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'jingchu-chu-lacquer' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'jingchu-mine-yard' }),
+      ]),
+    );
+    expect(xiangEmbroidery?.industries.map((industry) => industry.id)).toEqual(
+      expect.arrayContaining(['harvest-cocoon', 'sericulture']),
+    );
+    expect(xiangEmbroidery?.crafts.some((craft) => craft.id === 'xiang-embroidery')).toBe(true);
+    expect(xiangEmbroidery?.npcs.find((npc) => npc.id === 'jc-wen-xiuniang')).toMatchObject({
+      tileX: 31,
+      tileY: 20,
+    });
+    expect(xiangEmbroidery?.activities.some((activity) => activity.id === 'jc-xiang-embroidery')).toBe(true);
+  });
+
   it('only references live street targets from manual layouts', () => {
     const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
     const errors: string[] = [];

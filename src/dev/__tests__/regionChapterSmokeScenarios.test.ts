@@ -252,6 +252,45 @@ describe('region chapter smoke scenarios', () => {
     expect(spec?.npcs.some((npc) => npc.id === 'qd-tongshan-ke')).toBe(true);
   });
 
+  it('allows DEV Jingchu chapter smoke to start at the M1.23 Daye mine yard for browser QA', () => {
+    const state = buildRegionChapterSmokeState(content, 'chapter-jingchu-ferry-lacquer', {
+      subregionId: 'jingchu-mine-yard',
+    });
+    if (!state) throw new Error('Missing Jingchu chapter smoke state');
+
+    const spec = buildRegionSpec(state.currentRegion, state);
+
+    expect(state.currentRegion).toBe('jingchu');
+    expect(state.currentSubregion).toBe('jingchu-mine-yard');
+    expect(state.trackedLoreEntryId).toBe('subregion-jingchu-mine-yard');
+    expect(spec?.subregionId).toBe('jingchu-mine-yard');
+    expect(spec?.industries.map((industry) => industry.id)).toEqual(
+      expect.arrayContaining(['harvest-copper-ore', 'harvest-iron-ore', 'smelt-copper', 'smelt-iron']),
+    );
+    expect(spec?.activities.some((activity) => activity.id === 'jc-daye-mine')).toBe(true);
+    expect(spec?.npcs.some((npc) => npc.id === 'jc-yeshu')).toBe(true);
+  });
+
+  it('allows DEV Jingchu chapter smoke to start at the M1.23 Xiang embroidery tower for browser QA', () => {
+    const state = buildRegionChapterSmokeState(content, 'chapter-jingchu-ferry-lacquer', {
+      subregionId: 'jingchu-xiang-embroidery',
+    });
+    if (!state) throw new Error('Missing Jingchu chapter smoke state');
+
+    const spec = buildRegionSpec(state.currentRegion, state);
+
+    expect(state.currentRegion).toBe('jingchu');
+    expect(state.currentSubregion).toBe('jingchu-xiang-embroidery');
+    expect(state.trackedLoreEntryId).toBe('subregion-jingchu-xiang-embroidery');
+    expect(spec?.subregionId).toBe('jingchu-xiang-embroidery');
+    expect(spec?.industries.map((industry) => industry.id)).toEqual(
+      expect.arrayContaining(['harvest-cocoon', 'sericulture']),
+    );
+    expect(spec?.crafts.some((craft) => craft.id === 'xiang-embroidery')).toBe(true);
+    expect(spec?.activities.some((activity) => activity.id === 'jc-xiang-embroidery')).toBe(true);
+    expect(spec?.npcs.some((npc) => npc.id === 'jc-wen-xiuniang')).toBe(true);
+  });
+
   it('ignores chapter smoke subregion overrides outside the scenario region', () => {
     const state = buildRegionChapterSmokeState(content, 'chapter-xueyu-thangka-snowpass', {
       subregionId: 'xiyu-caravan-post',

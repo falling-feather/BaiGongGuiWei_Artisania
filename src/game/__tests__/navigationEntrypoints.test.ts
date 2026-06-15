@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { CRAFTS, REGIONS, STARTING_APPRENTICES } from '../../data';
+import { CRAFTS, REGION_ROUTES, REGIONS, STARTING_APPRENTICES } from '../../data';
 import { createInitialState } from '../../engine';
 import { currentStreetRegionGate, isCurrentStreetSubregionGate } from '../navigationGuards';
 
@@ -273,5 +273,68 @@ describe('navigation entrypoints', () => {
       routeId: 'route-qiandian-jingchu-mine',
     });
     expect(currentStreetRegionGate(dongchuan, 'huizhou')).toBeNull();
+  });
+
+  it('validates Jingchu mine and Xiang embroidery gates without changing route landings', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const jingchuBase = {
+      ...base,
+      currentRegion: 'jingchu',
+      unlockedRegions: [...new Set([...base.unlockedRegions, 'jingchu', 'bashu', 'qiandian', 'ganpo'])],
+    };
+    const mineYard = {
+      ...jingchuBase,
+      currentSubregion: 'jingchu-mine-yard',
+    };
+    const xiangEmbroidery = {
+      ...jingchuBase,
+      currentSubregion: 'jingchu-xiang-embroidery',
+    };
+
+    expect(isCurrentStreetSubregionGate(mineYard, 'jingchu-lake-market')).toBe(true);
+    expect(isCurrentStreetSubregionGate(mineYard, 'jingchu-chu-lacquer')).toBe(true);
+    expect(isCurrentStreetSubregionGate(mineYard, 'jingchu-xiang-embroidery')).toBe(true);
+    expect(isCurrentStreetSubregionGate(mineYard, 'jingchu-mine-yard')).toBe(false);
+    expect(isCurrentStreetSubregionGate(mineYard, 'qiandian-miao-village')).toBe(false);
+    expect(currentStreetRegionGate(mineYard, 'bashu')).toMatchObject({
+      regionId: 'bashu',
+      routeId: 'route-bashu-jingchu-river',
+    });
+    expect(currentStreetRegionGate(mineYard, 'qiandian')).toMatchObject({
+      regionId: 'qiandian',
+      routeId: 'route-qiandian-jingchu-mine',
+    });
+    expect(currentStreetRegionGate(mineYard, 'ganpo')).toMatchObject({
+      regionId: 'ganpo',
+      routeId: 'route-jingchu-ganpo-lake',
+    });
+
+    expect(isCurrentStreetSubregionGate(xiangEmbroidery, 'jingchu-lake-market')).toBe(true);
+    expect(isCurrentStreetSubregionGate(xiangEmbroidery, 'jingchu-chu-lacquer')).toBe(true);
+    expect(isCurrentStreetSubregionGate(xiangEmbroidery, 'jingchu-mine-yard')).toBe(true);
+    expect(isCurrentStreetSubregionGate(xiangEmbroidery, 'jingchu-xiang-embroidery')).toBe(false);
+    expect(currentStreetRegionGate(xiangEmbroidery, 'bashu')).toMatchObject({
+      regionId: 'bashu',
+      routeId: 'route-bashu-jingchu-river',
+    });
+    expect(currentStreetRegionGate(xiangEmbroidery, 'qiandian')).toMatchObject({
+      regionId: 'qiandian',
+      routeId: 'route-qiandian-jingchu-mine',
+    });
+    expect(currentStreetRegionGate(xiangEmbroidery, 'ganpo')).toMatchObject({
+      regionId: 'ganpo',
+      routeId: 'route-jingchu-ganpo-lake',
+    });
+    expect(currentStreetRegionGate(xiangEmbroidery, 'huizhou')).toBeNull();
+
+    expect(
+      REGION_ROUTES.find((route) => route.id === 'route-bashu-jingchu-river')?.landingSubregionIds?.jingchu,
+    ).toBe('jingchu-lake-market');
+    expect(
+      REGION_ROUTES.find((route) => route.id === 'route-qiandian-jingchu-mine')?.landingSubregionIds?.jingchu,
+    ).toBe('jingchu-lake-market');
+    expect(
+      REGION_ROUTES.find((route) => route.id === 'route-jingchu-ganpo-lake')?.landingSubregionIds?.jingchu,
+    ).toBe('jingchu-lake-market');
   });
 });

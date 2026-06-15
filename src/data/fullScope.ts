@@ -91,9 +91,9 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     m1Group: 'jingchu-ganpo-huizhou',
     chapterGoal: '把江湖渡市、楚漆坊、湘绣楼和铜铁矿场推进为水路修复和漆绣章节。',
     playPillars: ['楚漆修复', '渡口水路', '湘绣与矿冶供料'],
-    targetMinimums: DEFAULT_MINIMUMS,
+    targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 4 },
     m1Actions: [
-      '补湘绣楼或矿冶外场的运行入口',
+      '补大冶矿场铜铁料状态反馈与矿口回访',
       '补楚漆修复订单与水路活动后续',
       '让荆楚路线影响赣鄱/徽州材料流动',
     ],
