@@ -49,6 +49,22 @@ describe('region chapter map entrypoints', () => {
     expect(gapText).not.toMatch(/bashu-linqiong-iron.*人工 JSON|人工 JSON.*bashu-linqiong-iron/);
   });
 
+  it('keeps Lingnan M1.21 forge and Duan stone layouts closed', () => {
+    const lingnan = REGION_CHAPTERS.find((chapter) => chapter.id === 'chapter-lingnan-harbor-gambiered');
+    const gapText = lingnan?.gaps.join('\n') ?? '';
+
+    expect(lingnan?.entrySubregionIds).toEqual([
+      'lingnan-harbor',
+      'lingnan-gambiered-yard',
+      'lingnan-forge',
+      'lingnan-duan-stone',
+    ]);
+    expect(layoutSubregionIds.has('lingnan-forge')).toBe(true);
+    expect(layoutSubregionIds.has('lingnan-duan-stone')).toBe(true);
+    expect(gapText).not.toMatch(/lingnan-forge.*人工 JSON|人工 JSON.*lingnan-forge/);
+    expect(gapText).not.toMatch(/lingnan-duan-stone.*人工 JSON|人工 JSON.*lingnan-duan-stone/);
+  });
+
   it('keeps every missing chapter layout explicit in chapter gaps', () => {
     for (const chapter of REGION_CHAPTERS) {
       const gapText = chapter.gaps.join('\n');

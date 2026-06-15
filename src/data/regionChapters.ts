@@ -129,8 +129,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-yunsha-sun-cure'],
     escortEncounterIds: [],
     smokeScenarioIds: ['chapter-lingnan-harbor-gambiered'],
-    nextActions: ['补佛山冶坊或端石坑口人工地图', '补端砚或石湾陶读取缺陷的订单'],
-    gaps: ['港口章节较完整，但端砚和石湾陶仍缺长线订单。', 'lingnan-forge 与 lingnan-duan-stone 仍缺人工 JSON。'],
+    nextActions: ['补佛山冶坊铁器修造回流到海贸订单', '补端砚或石湾陶读取缺陷的订单', '把骑楼夜市船期回访接到伍海潮后日谈'],
+    gaps: ['M1.21 已关闭佛山冶坊与端石坑口街景入口；剩余转向端砚/石湾陶长线订单、佛山铁器修造回流和骑楼夜市船期后日谈。'],
   },
   {
     id: 'chapter-qiandian-silver-tea-road',

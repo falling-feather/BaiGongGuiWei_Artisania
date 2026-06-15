@@ -6,6 +6,8 @@ import bashuBambooSeaMap from './mapLayouts/bashu-bamboo-sea.json';
 import bashuJinliMap from './mapLayouts/bashu-jinli.json';
 import bashuLinqiongIronMap from './mapLayouts/bashu-linqiong-iron.json';
 import bashuTeaHorseMap from './mapLayouts/bashu-tea-horse.json';
+import lingnanDuanStoneMap from './mapLayouts/lingnan-duan-stone.json';
+import lingnanForgeMap from './mapLayouts/lingnan-forge.json';
 import lingnanGambieredYardMap from './mapLayouts/lingnan-gambiered-yard.json';
 import lingnanHarborMap from './mapLayouts/lingnan-harbor.json';
 import qiandianMiaoVillageMap from './mapLayouts/qiandian-miao-village.json';
@@ -327,6 +329,8 @@ export const RUNTIME_MAP_EDITOR_SNAPSHOTS: RuntimeMapEditorSnapshot[] = [
   bashuTeaHorseMap,
   lingnanGambieredYardMap,
   lingnanHarborMap,
+  lingnanForgeMap,
+  lingnanDuanStoneMap,
   qiandianMiaoVillageMap,
   qiandianTeaRoadMap,
   jingchuChuLacquerMap,

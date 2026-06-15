@@ -179,6 +179,8 @@ describe('runtime map editor adapter', () => {
       'bashu-tea-horse',
       'lingnan-gambiered-yard',
       'lingnan-harbor',
+      'lingnan-forge',
+      'lingnan-duan-stone',
       'qiandian-miao-village',
       'qiandian-tea-road',
       'jingchu-chu-lacquer',
@@ -276,6 +278,30 @@ describe('runtime map editor adapter', () => {
       expect.arrayContaining([
         expect.objectContaining({ interaction: 'activity', targetId: 'ln-qilou-night-market' }),
         expect.objectContaining({ interaction: 'npc', npcId: 'ln-wu-haichao' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('lingnan-forge')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-iron-ore' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'smelt-iron' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'ln-foshan-forge' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'ln-liang-tiexian' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'lingnan-harbor' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'lingnan-gambiered-yard' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'lingnan-duan-stone' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'qiandian' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('lingnan-duan-stone')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'craft', targetId: 'duan-inkstone' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'shiwan-pottery' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'ln-duan-inkstone-pit' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'ln-tan-yanbo' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'lingnan-harbor' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'lingnan-forge' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'lingnan-gambiered-yard' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'qiandian' }),
       ]),
     );
     expect(snapshotsBySubregion.get('ganpo-kaolin-hill')?.objects).toEqual(

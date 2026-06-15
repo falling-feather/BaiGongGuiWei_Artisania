@@ -209,4 +209,41 @@ describe('navigation entrypoints', () => {
     });
     expect(currentStreetRegionGate(linqiong, 'huizhou')).toBeNull();
   });
+
+  it('validates Lingnan forge and Duan stone gates from the current street spec', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const lingnanBase = {
+      ...base,
+      currentRegion: 'lingnan',
+      unlockedRegions: [...new Set([...base.unlockedRegions, 'lingnan', 'qiandian'])],
+    };
+    const forge = {
+      ...lingnanBase,
+      currentSubregion: 'lingnan-forge',
+    };
+    const duanStone = {
+      ...lingnanBase,
+      currentSubregion: 'lingnan-duan-stone',
+    };
+
+    expect(isCurrentStreetSubregionGate(forge, 'lingnan-harbor')).toBe(true);
+    expect(isCurrentStreetSubregionGate(forge, 'lingnan-gambiered-yard')).toBe(true);
+    expect(isCurrentStreetSubregionGate(forge, 'lingnan-duan-stone')).toBe(true);
+    expect(isCurrentStreetSubregionGate(forge, 'lingnan-forge')).toBe(false);
+    expect(isCurrentStreetSubregionGate(forge, 'qiandian-miao-village')).toBe(false);
+    expect(currentStreetRegionGate(forge, 'qiandian')).toMatchObject({
+      regionId: 'qiandian',
+      routeId: 'route-qiandian-lingnan-harbor',
+    });
+
+    expect(isCurrentStreetSubregionGate(duanStone, 'lingnan-harbor')).toBe(true);
+    expect(isCurrentStreetSubregionGate(duanStone, 'lingnan-forge')).toBe(true);
+    expect(isCurrentStreetSubregionGate(duanStone, 'lingnan-gambiered-yard')).toBe(true);
+    expect(isCurrentStreetSubregionGate(duanStone, 'lingnan-duan-stone')).toBe(false);
+    expect(currentStreetRegionGate(duanStone, 'qiandian')).toMatchObject({
+      regionId: 'qiandian',
+      routeId: 'route-qiandian-lingnan-harbor',
+    });
+    expect(currentStreetRegionGate(duanStone, 'bashu')).toBeNull();
+  });
 });

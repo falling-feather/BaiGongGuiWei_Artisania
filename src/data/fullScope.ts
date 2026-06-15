@@ -65,9 +65,9 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     m1Group: 'lingnan-qiandian',
     chapterGoal: '让珠江商港、莨绸晒场、佛山冶坊与端石坑口形成海贸和晒染章节。',
     playPillars: ['骑楼夜市', '香云纱晒染', '海贸船期与文房货'],
-    targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 3, orderHookCount: 2 },
+    targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 4, orderHookCount: 2 },
     m1Actions: [
-      '补佛山冶坊或端石坑口的可运行街景入口',
+      '补佛山冶坊铁器修造回流到海贸订单',
       '把骑楼夜市后续单接到船期与商港 NPC 回访',
       '补端砚或石湾陶的订单读取作品缺陷',
     ],

@@ -194,6 +194,44 @@ describe('region chapter smoke scenarios', () => {
     expect(spec?.npcs.some((npc) => npc.id === 'bs-deng-lusheng')).toBe(true);
   });
 
+  it('allows DEV Lingnan chapter smoke to start at the M1.21 Foshan forge for browser QA', () => {
+    const state = buildRegionChapterSmokeState(content, 'chapter-lingnan-harbor-gambiered', {
+      subregionId: 'lingnan-forge',
+    });
+    if (!state) throw new Error('Missing Lingnan chapter smoke state');
+
+    const spec = buildRegionSpec(state.currentRegion, state);
+
+    expect(state.currentRegion).toBe('lingnan');
+    expect(state.currentSubregion).toBe('lingnan-forge');
+    expect(state.trackedLoreEntryId).toBe('subregion-lingnan-forge');
+    expect(spec?.subregionId).toBe('lingnan-forge');
+    expect(spec?.industries.map((industry) => industry.id)).toEqual(
+      expect.arrayContaining(['harvest-iron-ore', 'smelt-iron']),
+    );
+    expect(spec?.activities.some((activity) => activity.id === 'ln-foshan-forge')).toBe(true);
+    expect(spec?.npcs.some((npc) => npc.id === 'ln-liang-tiexian')).toBe(true);
+  });
+
+  it('allows DEV Lingnan chapter smoke to start at the M1.21 Duan stone pit for browser QA', () => {
+    const state = buildRegionChapterSmokeState(content, 'chapter-lingnan-harbor-gambiered', {
+      subregionId: 'lingnan-duan-stone',
+    });
+    if (!state) throw new Error('Missing Lingnan chapter smoke state');
+
+    const spec = buildRegionSpec(state.currentRegion, state);
+
+    expect(state.currentRegion).toBe('lingnan');
+    expect(state.currentSubregion).toBe('lingnan-duan-stone');
+    expect(state.trackedLoreEntryId).toBe('subregion-lingnan-duan-stone');
+    expect(spec?.subregionId).toBe('lingnan-duan-stone');
+    expect(spec?.crafts.map((craft) => craft.id)).toEqual(
+      expect.arrayContaining(['duan-inkstone', 'shiwan-pottery']),
+    );
+    expect(spec?.activities.some((activity) => activity.id === 'ln-duan-inkstone-pit')).toBe(true);
+    expect(spec?.npcs.some((npc) => npc.id === 'ln-tan-yanbo')).toBe(true);
+  });
+
   it('ignores chapter smoke subregion overrides outside the scenario region', () => {
     const state = buildRegionChapterSmokeState(content, 'chapter-xueyu-thangka-snowpass', {
       subregionId: 'xiyu-caravan-post',

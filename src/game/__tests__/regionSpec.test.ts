@@ -226,6 +226,65 @@ describe('runtime map layouts', () => {
     expect(linqiong?.activities.some((activity) => activity.id === 'bs-linqiong-forge')).toBe(true);
   });
 
+  it('attaches M1.21 Lingnan forge and Duan stone layouts to the local street specs', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const unlockedRegions = [...new Set([...base.unlockedRegions, 'lingnan', 'qiandian'])];
+    const forge = buildRegionSpec('lingnan', {
+      ...base,
+      currentRegion: 'lingnan',
+      currentSubregion: 'lingnan-forge',
+      unlockedRegions,
+    });
+    const duanStone = buildRegionSpec('lingnan', {
+      ...base,
+      currentRegion: 'lingnan',
+      currentSubregion: 'lingnan-duan-stone',
+      unlockedRegions,
+    });
+
+    expect(forge?.layout).toMatchObject({ subregionId: 'lingnan-forge', size: { w: 56, h: 30 } });
+    expect(forge?.layout?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-iron-ore' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'smelt-iron' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'ln-foshan-forge' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'ln-liang-tiexian' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'lingnan-harbor' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'lingnan-gambiered-yard' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'lingnan-duan-stone' }),
+      ]),
+    );
+    expect(forge?.industries.map((industry) => industry.id)).toEqual(
+      expect.arrayContaining(['harvest-iron-ore', 'smelt-iron']),
+    );
+    expect(forge?.npcs.find((npc) => npc.id === 'ln-liang-tiexian')).toMatchObject({
+      tileX: 29,
+      tileY: 20,
+    });
+    expect(forge?.activities.some((activity) => activity.id === 'ln-foshan-forge')).toBe(true);
+
+    expect(duanStone?.layout).toMatchObject({ subregionId: 'lingnan-duan-stone', size: { w: 56, h: 30 } });
+    expect(duanStone?.layout?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'craft', targetId: 'duan-inkstone' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'shiwan-pottery' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'ln-duan-inkstone-pit' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'ln-tan-yanbo' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'lingnan-harbor' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'lingnan-forge' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'lingnan-gambiered-yard' }),
+      ]),
+    );
+    expect(duanStone?.crafts.map((craft) => craft.id)).toEqual(
+      expect.arrayContaining(['duan-inkstone', 'shiwan-pottery']),
+    );
+    expect(duanStone?.npcs.find((npc) => npc.id === 'ln-tan-yanbo')).toMatchObject({
+      tileX: 30,
+      tileY: 20,
+    });
+    expect(duanStone?.activities.some((activity) => activity.id === 'ln-duan-inkstone-pit')).toBe(true);
+  });
+
   it('only references live street targets from manual layouts', () => {
     const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
     const errors: string[] = [];

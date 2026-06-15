@@ -433,6 +433,33 @@ export const ACTIVITY_CHALLENGES: ActivityChallengeDef[] = [
     ],
   },
   {
+    id: 'ln-foshan-forge-fire',
+    activityId: 'ln-foshan-forge',
+    miniGame: 'timing_hold',
+    title: '佛山看炉',
+    prompt: '梁铁线把铁料、炉口和锤案排成一线，问你这一件旧铁器该先稳哪一手。',
+    choices: [
+      {
+        id: 'slow-heat-steady-hammer',
+        label: '先稳炉温，再按旧器裂口轻锤续韧',
+        quality: 0.91,
+        feedback: '梁铁线说：火不躁，锤不乱，旧铁器才接得住新韧劲。',
+      },
+      {
+        id: 'heavy-hammer-first',
+        label: '趁铁红先重锤定形，裂口后面再补',
+        quality: 0.55,
+        feedback: '形是压住了，可旧裂口也被锤得更亮，师傅让你回看火色。',
+      },
+      {
+        id: 'rush-hot-sale',
+        label: '按买主催期快烧快打，先赶出货',
+        quality: 0.43,
+        feedback: '火候和锤路都急了，祠堂前的订单牌反倒被梁铁线翻到背面。',
+      },
+    ],
+  },
+  {
     id: 'ln-qilou-night-market-route',
     activityId: 'ln-qilou-night-market',
     miniGame: 'route_plan',
