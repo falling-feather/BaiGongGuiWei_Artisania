@@ -1,0 +1,29 @@
+{
+  "schema": "artisania-map-editor/v2",
+  "regionId": "xiyu",
+  "subregionId": "xiyu-atlas-loom",
+  "tileSize": 32,
+  "size": { "w": 52, "h": 28 },
+  "roads": [
+    { "points": [{ "x": 2, "y": 8 }, { "x": 49, "y": 8 }] },
+    { "points": [{ "x": 2, "y": 15 }, { "x": 49, "y": 15 }] },
+    { "points": [{ "x": 2, "y": 21 }, { "x": 49, "y": 21 }] },
+    { "points": [{ "x": 9, "y": 4 }, { "x": 9, "y": 24 }] },
+    { "points": [{ "x": 26, "y": 4 }, { "x": 26, "y": 24 }] },
+    { "points": [{ "x": 43, "y": 4 }, { "x": 43, "y": 24 }] }
+  ],
+  "objects": [
+    { "itemId": "player_spawn", "x": 26, "y": 14 },
+    { "itemId": "industry_cocoon", "name": "oasis cocoon baskets", "interaction": "industry", "targetId": "harvest-cocoon", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_sericulture", "name": "silk reeling frame", "interaction": "industry", "targetId": "sericulture", "x": 14, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_textile", "name": "atlas silk loom", "interaction": "craft", "targetId": "atlas-silk", "x": 23, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_loom", "name": "atlas dye and loom table", "interaction": "activity", "targetId": "xiyu-atlas-loom", "x": 35, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to oasis bazaar", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xiyu-bazaar", "x": 4, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Kunlun jade yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xiyu-jade-yard", "x": 20, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to caravan post", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xiyu-caravan-post", "x": 36, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Xueyu plateau silk road", "interaction": "gate", "targetId": "xueyu", "x": 46, "y": 13, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "npc-xu-guli", "name": "Xu Guli", "interaction": "npc", "npcId": "xu-guli", "x": 27, "y": 9, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "silk-bales-a", "name": "dyed silk bales", "interaction": "decoration", "x": 18, "y": 16, "tileW": 3, "tileH": 2, "solid": true },
+    { "itemId": "loom-awning-a", "name": "striped loom awning", "interaction": "decoration", "x": 34, "y": 16, "tileW": 4, "tileH": 2, "solid": true }
+  ]
+}

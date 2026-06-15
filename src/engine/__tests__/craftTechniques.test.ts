@@ -43,6 +43,26 @@ function latestSword(state: GameState) {
   return state.itemInstances.find((item) => item.resourceId === 'treasureSword');
 }
 
+function readyAtlasState() {
+  const state = createInitialState(content.crafts, content.apprentices, 24681, undefined, content.regions);
+  return {
+    ...state,
+    currentRegion: 'xiyu',
+    currentSubregion: 'xiyu-atlas-loom',
+    unlockedRegions: [...new Set([...state.unlockedRegions, 'xiyu'])],
+    resources: {
+      ...state.resources,
+      rawSilkThread: 4,
+      indigoVat: 4,
+      labor: 20,
+    },
+  };
+}
+
+function latestAtlasSilk(state: GameState) {
+  return state.itemInstances.find((item) => item.resourceId === 'atlasSilk');
+}
+
 describe('craft technique choices', () => {
   it('lets careful technique spend labor for higher sword quality dimensions', () => {
     const balanced = gameReducer(
@@ -183,6 +203,64 @@ describe('craft technique choices', () => {
       riskScore: 0.34,
     });
     expect(plan.stageOutcomes.some((outcome) => outcome.stageId === 'sword-quench-polish')).toBe(false);
+  });
+
+  it('runs Atlas silk through its own interaction stages and repair loop', () => {
+    const atlasSpec = CRAFT_INTERACTIONS.find((spec) => spec.craftId === 'atlas-silk')!;
+    const plan = craftTechniquePlan(
+      atlasSpec,
+      [
+        { stageId: 'atlas-tie-dye-warp', choiceId: 'careful' },
+        { stageId: 'atlas-weave-finish', choiceId: 'balanced' },
+      ],
+      ['atlas-silk-a', 'atlas-silk-b'],
+    );
+
+    expect(plan.stageOutcomes.map((outcome) => outcome.stageId)).toEqual([
+      'atlas-tie-dye-warp',
+      'atlas-weave-finish',
+    ]);
+    expect(plan.stageOutcomes[0]).toMatchObject({ choiceId: 'careful', sourceStepIds: ['atlas-silk-a'] });
+
+    let state = gameReducer(
+      readyAtlasState(),
+      {
+        type: 'RUN_PROCESS',
+        craftId: 'atlas-silk',
+        skipStepIds: ['atlas-silk-prep'],
+        techniqueChoices: [
+          { stageId: 'atlas-tie-dye-warp', choiceId: 'rushed' },
+          { stageId: 'atlas-weave-finish', choiceId: 'rushed' },
+        ],
+      },
+      content,
+    );
+    const flawed = latestAtlasSilk(state)!;
+    const defect = flawed.defects?.find((entry) => entry.id === 'atlas-muddy-dye');
+
+    expect(flawed.originSubregionId).toBe('xiyu-atlas-loom');
+    expect(defect).toMatchObject({
+      id: 'atlas-muddy-dye',
+      sourceStageId: 'atlas-prepare-warp',
+      sourceStageName: '缫丝牵经备染',
+    });
+
+    state = gameReducer(
+      state,
+      {
+        type: 'REPAIR_ITEM',
+        itemId: flawed.id,
+        defectId: 'atlas-muddy-dye',
+        repairOptionId: 'atlas-rinse-redye',
+      },
+      content,
+    );
+    const repaired = state.itemInstances.find((item) => item.id === flawed.id)!;
+    expect(repaired.defects?.some((entry) => entry.id === 'atlas-muddy-dye')).toBe(false);
+    expect(repaired.repairHistory?.[0]).toMatchObject({
+      defectId: 'atlas-muddy-dye',
+      optionId: 'atlas-rinse-redye',
+    });
   });
 
   it('plans focus checks only for active stages and falls back unknown choices to observe', () => {

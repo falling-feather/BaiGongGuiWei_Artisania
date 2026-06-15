@@ -387,8 +387,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-ayue-follow-vein'],
     escortEncounterIds: ['escort-caravan-water-ledger', 'escort-caravan-night-watch'],
     smokeScenarioIds: ['chapter-xiyu-bazaar-caravan'],
-    nextActions: ['补艾德莱斯织坊更深作品反馈', '补巴扎后续单与长线商路风险联动'],
-    gaps: ['艾德莱斯织坊已有入口，但缺专属工艺交互规格。', 'xiyu-atlas-loom 仍缺人工 JSON。'],
+    nextActions: ['补巴扎后续单与长线商路风险联动', '补玉作与织坊作品的藏客和订单差异'],
+    gaps: ['艾德莱斯织坊已补人工地图和专属工艺交互；仍缺巴扎长线商路风险、织坊藏客回访与订单差异。'],
   },
 ];
 

@@ -26,6 +26,7 @@ import xueyuSilverTentMap from './mapLayouts/xueyu-silver-tent.json';
 import xiyuJadeYardMap from './mapLayouts/xiyu-jade-yard.json';
 import xiyuBazaarMap from './mapLayouts/xiyu-bazaar.json';
 import xiyuCaravanPostMap from './mapLayouts/xiyu-caravan-post.json';
+import xiyuAtlasLoomMap from './mapLayouts/xiyu-atlas-loom.json';
 
 /**
  * 大地图布局 —— 各地区在全国地图上的近似坐标（百分比，0–100）。
@@ -337,6 +338,7 @@ export const RUNTIME_MAP_EDITOR_SNAPSHOTS: RuntimeMapEditorSnapshot[] = [
   xiyuJadeYardMap,
   xiyuBazaarMap,
   xiyuCaravanPostMap,
+  xiyuAtlasLoomMap,
 ];
 
 /** Runtime layouts consumed by StreetScene. Keep sources above editor-compatible. */

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CRAFTS, REGIONS, RUNTIME_MAP_LAYOUTS, STARTING_APPRENTICES } from '../../data';
 import { createInitialState } from '../../engine';
 import { buildRegionSpec } from '../regionSpec';
+import { isCurrentStreetSubregionGate } from '../navigationGuards';
 
 function longquanWorkshopState() {
   const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
@@ -264,6 +265,27 @@ describe('subregion street coverage', () => {
           id: 'ln-qilou-night-market',
           kind: 'festival',
           name: '骑楼夜市',
+        }),
+      ]),
+    );
+  });
+
+  it('keeps the Xiyu Atlas loom connected to the caravan post by a street gate', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const state = {
+      ...base,
+      currentRegion: 'xiyu',
+      currentSubregion: 'xiyu-atlas-loom',
+      unlockedRegions: [...new Set([...base.unlockedRegions, 'xiyu', 'xueyu'])],
+    };
+    const spec = buildRegionSpec('xiyu', state);
+
+    expect(isCurrentStreetSubregionGate(state, 'xiyu-caravan-post')).toBe(true);
+    expect(spec?.layout?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          interaction: 'subregionGate',
+          targetId: 'xiyu-caravan-post',
         }),
       ]),
     );

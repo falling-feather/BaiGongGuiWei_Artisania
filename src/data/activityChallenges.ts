@@ -820,6 +820,33 @@ export const ACTIVITY_CHALLENGES: ActivityChallengeDef[] = [
       },
     ],
   },
+  {
+    id: 'xiyu-atlas-loom-tie-dye',
+    activityId: 'xiyu-atlas-loom',
+    miniGame: 'aim_place',
+    title: '艾德莱斯扎经',
+    prompt: '丝娘古丽把三束经线摊开，要你先决定云霞色从哪里跳起。',
+    choices: [
+      {
+        id: 'mark-warp-before-dye',
+        label: '先按色档标经位，再分段入染',
+        quality: 0.9,
+        feedback: '古丽点头：经位先稳，颜色跳起来才不乱。',
+      },
+      {
+        id: 'bright-color-first',
+        label: '先染最鲜亮的一束，把客人眼神抓住',
+        quality: 0.54,
+        feedback: '颜色亮了，纹路却没接上，古丽把色档又摊开一遍。',
+      },
+      {
+        id: 'weave-before-set',
+        label: '先上机试织，染色细节等成匹后再补',
+        quality: 0.42,
+        feedback: '织机声急，经线却还没说清楚要往哪儿走。',
+      },
+    ],
+  },
   ...routeChallengeSpecs.map((spec) => challengeFromSpec(spec, routeChoices)),
   ...appraiseChallengeSpecs.map((spec) => challengeFromSpec(spec, appraiseChoices)),
 ];

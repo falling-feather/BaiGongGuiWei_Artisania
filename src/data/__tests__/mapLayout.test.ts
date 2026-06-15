@@ -197,6 +197,7 @@ describe('runtime map editor adapter', () => {
       'xiyu-jade-yard',
       'xiyu-bazaar',
       'xiyu-caravan-post',
+      'xiyu-atlas-loom',
     ]);
     expect(new Set(RUNTIME_MAP_EDITOR_SNAPSHOTS.map((snapshot) => snapshot.regionId))).toEqual(
       new Set(['jiangnan', 'bashu', 'lingnan', 'qiandian', 'jingchu', 'ganpo', 'huizhou', 'jingji', 'sanjin', 'xueyu', 'xiyu']),
@@ -250,6 +251,17 @@ describe('runtime map editor adapter', () => {
       expect.arrayContaining([
         expect.objectContaining({ interaction: 'activity', targetId: 'xiyu-caravan-post' }),
         expect.objectContaining({ interaction: 'npc', npcId: 'xu-tuoling-shu' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'xiyu-atlas-loom' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('xiyu-atlas-loom')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-cocoon' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'sericulture' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'atlas-silk' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'xiyu-atlas-loom' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'xu-guli' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'xiyu-caravan-post' }),
       ]),
     );
     expect(snapshotsBySubregion.get('sanjin-coal-yard')?.objects).toEqual(

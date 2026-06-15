@@ -19,6 +19,7 @@
     { "itemId": "activity_route", "name": "caravan route table", "interaction": "activity", "targetId": "xiyu-caravan-post", "x": 25, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "gate", "name": "to oasis bazaar", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xiyu-bazaar", "x": 4, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "gate", "name": "to Kunlun jade yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xiyu-jade-yard", "x": 20, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Atlas loom", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xiyu-atlas-loom", "x": 36, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "gate", "name": "Xueyu plateau caravan road", "interaction": "gate", "targetId": "xueyu", "x": 46, "y": 13, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "npc-xu-tuoling-shu", "name": "Tuoling Shu", "interaction": "npc", "npcId": "xu-tuoling-shu", "x": 27, "y": 9, "tileW": 1, "tileH": 1, "solid": false },
     { "itemId": "camel-pack-a", "name": "camel pack frame", "interaction": "decoration", "x": 34, "y": 16, "tileW": 4, "tileH": 2, "solid": true },

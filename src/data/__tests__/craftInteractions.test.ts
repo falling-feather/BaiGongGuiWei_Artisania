@@ -35,6 +35,37 @@ describe('工艺交互规格数据', () => {
     expect(errors).toEqual([]);
   });
 
+  it('西域艾德莱斯绸拥有独立织坊工艺规格', () => {
+    const spec = CRAFT_INTERACTIONS.find((entry) => entry.craftId === 'atlas-silk');
+    const processStepIds = new Set(craftById.get('atlas-silk')?.processChain.map((step) => step.id) ?? []);
+
+    expect(spec).toMatchObject({
+      id: 'interaction-atlas-silk',
+      regionId: 'xiyu',
+      workshopSubregionId: 'xiyu-atlas-loom',
+      mentorNpcIds: ['xu-guli'],
+    });
+    expect(spec?.stages.map((stage) => stage.id)).toEqual([
+      'atlas-prepare-warp',
+      'atlas-tie-dye-warp',
+      'atlas-weave-finish',
+    ]);
+    expect(spec?.stages.flatMap((stage) => stage.processStepIds).every((stepId) => processStepIds.has(stepId))).toBe(
+      true,
+    );
+    expect(spec?.defects.map((defect) => defect.id)).toEqual([
+      'atlas-muddy-dye',
+      'atlas-broken-pattern',
+      'atlas-loose-selvedge',
+    ]);
+    expect(spec?.repairOptions.map((option) => option.id)).toEqual([
+      'atlas-rinse-redye',
+      'atlas-retie-warp',
+      'atlas-tighten-selvedge',
+    ]);
+    expect(spec?.orderHooks?.join('')).toContain('巴扎织物复单');
+  });
+
   it('缺陷都能找到对应返修方案', () => {
     const errors: string[] = [];
 
