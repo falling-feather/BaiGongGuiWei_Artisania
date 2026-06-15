@@ -291,6 +291,48 @@ describe('region chapter smoke scenarios', () => {
     expect(spec?.npcs.some((npc) => npc.id === 'jc-wen-xiuniang')).toBe(true);
   });
 
+  it('allows DEV Jiangnan chapter smoke to start at the M1.24 Linan tea and umbrella market for browser QA', () => {
+    const state = buildRegionChapterSmokeState(content, 'chapter-jiangnan-baigong-homecoming', {
+      subregionId: 'jiangnan-linan',
+    });
+    if (!state) throw new Error('Missing Jiangnan chapter smoke state');
+
+    const spec = buildRegionSpec(state.currentRegion, state);
+
+    expect(state.currentRegion).toBe('jiangnan');
+    expect(state.currentSubregion).toBe('jiangnan-linan');
+    expect(state.trackedLoreEntryId).toBe('subregion-jiangnan-linan');
+    expect(spec?.subregionId).toBe('jiangnan-linan');
+    expect(spec?.industries.map((industry) => industry.id)).toEqual(
+      expect.arrayContaining(['harvest-tea-leaf', 'pick-tea', 'harvest-bamboo', 'split-bamboo']),
+    );
+    expect(spec?.crafts.some((craft) => craft.id === 'oilpaper-umbrella')).toBe(true);
+    expect(spec?.activities.map((activity) => activity.id)).toEqual(
+      expect.arrayContaining(['jn-lake-tea-house', 'jn-paper-umbrella-shop']),
+    );
+    expect(spec?.npcs.map((npc) => npc.id)).toEqual(expect.arrayContaining(['jn-su-xiaocha', 'jn-lin-yuqiao']));
+  });
+
+  it('allows DEV Jiangnan chapter smoke to start at the M1.24 Taihu weaving dock for browser QA', () => {
+    const state = buildRegionChapterSmokeState(content, 'chapter-jiangnan-baigong-homecoming', {
+      subregionId: 'jiangnan-taihu',
+    });
+    if (!state) throw new Error('Missing Jiangnan chapter smoke state');
+
+    const spec = buildRegionSpec(state.currentRegion, state);
+
+    expect(state.currentRegion).toBe('jiangnan');
+    expect(state.currentSubregion).toBe('jiangnan-taihu');
+    expect(state.trackedLoreEntryId).toBe('subregion-jiangnan-taihu');
+    expect(spec?.subregionId).toBe('jiangnan-taihu');
+    expect(spec?.industries.map((industry) => industry.id)).toEqual(
+      expect.arrayContaining(['harvest-cocoon', 'sericulture', 'weave-brocade']),
+    );
+    expect(spec?.crafts.map((craft) => craft.id)).toEqual(expect.arrayContaining(['kesi', 'oilpaper-umbrella']));
+    expect(spec?.activities.some((activity) => activity.id === 'jn-cloud-brocade-office')).toBe(true);
+    expect(spec?.npcs.some((npc) => npc.id === 'jn-shen-yunsuo')).toBe(true);
+  });
+
   it('ignores chapter smoke subregion overrides outside the scenario region', () => {
     const state = buildRegionChapterSmokeState(content, 'chapter-xueyu-thangka-snowpass', {
       subregionId: 'xiyu-caravan-post',

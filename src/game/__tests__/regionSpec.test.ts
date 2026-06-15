@@ -383,6 +383,68 @@ describe('runtime map layouts', () => {
     expect(xiangEmbroidery?.activities.some((activity) => activity.id === 'jc-xiang-embroidery')).toBe(true);
   });
 
+  it('attaches M1.24 Jiangnan Linan and Taihu layouts to local street specs', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const unlockedRegions = [...new Set([...base.unlockedRegions, 'jiangnan', 'huizhou', 'ganpo', 'jingji'])];
+    const linan = buildRegionSpec('jiangnan', {
+      ...base,
+      currentRegion: 'jiangnan',
+      currentSubregion: 'jiangnan-linan',
+      unlockedRegions,
+    });
+    const taihu = buildRegionSpec('jiangnan', {
+      ...base,
+      currentRegion: 'jiangnan',
+      currentSubregion: 'jiangnan-taihu',
+      unlockedRegions,
+    });
+
+    expect(linan?.layout).toMatchObject({ subregionId: 'jiangnan-linan', size: { w: 58, h: 28 } });
+    expect(linan?.layout?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-tea-leaf' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'pick-tea' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-bamboo' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'split-bamboo' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'oilpaper-umbrella', x: 12, y: 16 }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'jn-lake-tea-house', x: 24, y: 16 }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'jn-paper-umbrella-shop', x: 36, y: 16 }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jn-su-xiaocha', x: 24, y: 20 }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jn-lin-yuqiao', x: 36, y: 20 }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'jiangnan-taihu' }),
+      ]),
+    );
+    expect(linan?.industries.map((industry) => industry.id)).toEqual(
+      expect.arrayContaining(['harvest-tea-leaf', 'pick-tea', 'harvest-bamboo', 'split-bamboo']),
+    );
+    expect(linan?.crafts.some((craft) => craft.id === 'oilpaper-umbrella')).toBe(true);
+    expect(linan?.activities.map((activity) => activity.id)).toEqual(
+      expect.arrayContaining(['jn-lake-tea-house', 'jn-paper-umbrella-shop']),
+    );
+    expect(linan?.npcs.find((npc) => npc.id === 'jn-su-xiaocha')).toMatchObject({ tileX: 24, tileY: 20 });
+    expect(linan?.npcs.find((npc) => npc.id === 'jn-lin-yuqiao')).toMatchObject({ tileX: 36, tileY: 20 });
+
+    expect(taihu?.layout).toMatchObject({ subregionId: 'jiangnan-taihu', size: { w: 58, h: 28 } });
+    expect(taihu?.layout?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-cocoon' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'sericulture' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'weave-brocade' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'kesi', x: 12, y: 16 }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'oilpaper-umbrella', x: 24, y: 16 }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'jn-cloud-brocade-office', x: 36, y: 16 }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jn-shen-yunsuo', x: 36, y: 20 }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'jiangnan-linan' }),
+      ]),
+    );
+    expect(taihu?.industries.map((industry) => industry.id)).toEqual(
+      expect.arrayContaining(['harvest-cocoon', 'sericulture', 'weave-brocade']),
+    );
+    expect(taihu?.crafts.map((craft) => craft.id)).toEqual(expect.arrayContaining(['kesi', 'oilpaper-umbrella']));
+    expect(taihu?.activities.some((activity) => activity.id === 'jn-cloud-brocade-office')).toBe(true);
+    expect(taihu?.npcs.find((npc) => npc.id === 'jn-shen-yunsuo')).toMatchObject({ tileX: 36, tileY: 20 });
+  });
+
   it('only references live street targets from manual layouts', () => {
     const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
     const errors: string[] = [];

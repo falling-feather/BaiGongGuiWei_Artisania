@@ -23,7 +23,7 @@ npm run build      # 生产构建
 开放世界扩展素材：`tools/slice_open_world_expansion_assets.py` 会从 `public/assets/art_sources/open_world_expansion/2026-06-04/` 切出剑馆、静修堂、农家、书院等建筑，练剑/种地/打坐等互动道具和行为图标，以及 24 张新地块，并生成拼接验收图。
 编辑器挂载验收：`?editor=1` 已验证可摆放开放世界地块、剑馆、木人桩和练剑行为图标，并导出 `artisania-map-editor/v2` JSON；验收截图见 `editor_mount_verification.png`。
 西域地区素材：`tools/slice_western_region_assets.py` 会从 `public/assets/art_sources/western_region/2026-06-05/` 切出西域驿馆、绿洲茶肆、胡商市铺、夯土关楼等 12 张建筑，24 张沙漠/绿洲/驼道/水岸地块，以及第一版西域道具 PNG。地图编辑器已新增「江南 / 西域」导出地区选择，西域导出使用运行时地区 id `xiyu`。
-运行时人工布局 JSON：`src/data/mapLayouts/*.json` 已接入 41 个小地区的 `artisania-map-editor/v2` 资产，经 `runtimeLayoutFromEditorSnapshot` 生成 `RUNTIME_MAP_LAYOUTS` 后把道路、交互点、通道、NPC 站位和玩家起点下发到 `StreetScene`；剩余 2 个小地区（`jiangnan-linan`、`jiangnan-taihu`）仍待人工 JSON，全部 43 个小地区的瓦片图层、季节图层和最终点位美化仍在后续收口。
+运行时人工布局 JSON：`src/data/mapLayouts/*.json` 已接入全部 43 个小地区的 `artisania-map-editor/v2` 资产，经 `runtimeLayoutFromEditorSnapshot` 生成 `RUNTIME_MAP_LAYOUTS` 后把道路、交互点、通道、NPC 站位和玩家起点下发到 `StreetScene`；瓦片图层、季节图层和最终点位美化仍在后续收口。
 
 封面与多存档：主菜单使用多张写实宣传封面轮换（江南晨雾 / 雪域山寺 / 江南水岸 / 江南夜景）。启动首屏只在左侧留白区显示极简题字与「点击以开始游戏」，最大限度展示背景图；点击空白区域后才展开轻量水墨菜单，支持最多 5 个本地存档槽，旧版 `artisania:save` 会自动迁入第一个槽位。
 

@@ -51,15 +51,25 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     summary: '用百工院、龙泉剑瓷、秦淮灯市和临安茶伞支撑长期回访样板。',
     status: 'chapter-ready',
     m1Package: 'jiangnan-bashu',
-    entrySubregionIds: ['jiangnan-suhang', 'jiangnan-jinling', 'jiangnan-longquan', 'jiangnan-baigongyuan'],
+    entrySubregionIds: [
+      'jiangnan-suhang',
+      'jiangnan-jinling',
+      'jiangnan-linan',
+      'jiangnan-longquan',
+      'jiangnan-taihu',
+      'jiangnan-baigongyuan',
+    ],
     playPillars: [
-      { kind: 'craft', label: '龙泉剑瓷与云锦伞作', activityIds: ['jn-longquan-sword-forge', 'jn-celadon-kiln', 'jn-cloud-brocade-office'], craftIds: ['longquan-sword', 'celadon', 'kesi', 'oilpaper-umbrella'] },
+      { kind: 'craft', label: '龙泉剑瓷与云锦伞作', activityIds: ['jn-longquan-sword-forge', 'jn-celadon-kiln', 'jn-cloud-brocade-office', 'jn-paper-umbrella-shop'], craftIds: ['longquan-sword', 'celadon', 'kesi', 'oilpaper-umbrella'] },
       { kind: 'life', label: '百工院田圃与湖畔茶肆', activityIds: ['jn-yard-fields', 'jn-lake-tea-house'] },
       { kind: 'tradeRoute', label: '秦淮灯市与纸墨商路', activityIds: ['jn-qinhuai-lantern'], routeIds: ['route-jiangnan-huizhou-paper', 'route-jiangnan-ganpo-kiln', 'route-jiangnan-jingji-canal'] },
     ],
     characterNpcIds: [
       { npcId: 'jn-lu-hanquan', role: 'artisan', note: '龙泉剑匠，承接剑炉工艺。' },
       { npcId: 'jn-fang-jiheng', role: 'trade', note: '码头商人，承接跨区物流。' },
+      { npcId: 'jn-lin-yuqiao', role: 'artisan', note: '临安油纸伞师，承接雨季伞单。' },
+      { npcId: 'jn-shen-yunsuo', role: 'artisan', note: '太湖织造师，承接缂丝与云锦织埠。' },
+      { npcId: 'jn-su-xiaocha', role: 'lifeCulture', note: '湖畔茶师，承接临安茶肆与纸路消息。' },
       { npcId: 'jn-xiaoman', role: 'lifeCulture', note: '百工院田圃与生活教学入口。' },
     ],
     orderHooks: [
@@ -70,8 +80,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-yunjin-pick-weft'],
     escortEncounterIds: ['escort-jingji-canal-tribute'],
     smokeScenarioIds: ['chapter-jiangnan-baigong-homecoming'],
-    nextActions: ['把临安水市、太湖织埠纳入主轴外回访链', '补蓝染/竹编基础工艺的专属交互深度'],
-    gaps: ['M1.17 已关闭 jiangnan-suhang 与 jiangnan-baigongyuan 人工 JSON 缺口；剩余转向临安/太湖回访、蓝染/竹编专属工艺深度与多入口 smokeBindings。'],
+    nextActions: ['补临安茶肆/伞铺雨季回访链', '补太湖织埠缂丝/云锦藏客订单差异', '补蓝染/竹编基础工艺的专属交互深度与多入口 smokeBindings'],
+    gaps: ['M1.24 已关闭 jiangnan-linan 与 jiangnan-taihu 人工 JSON 缺口，江南 6 张小地区运行地图全量入轨；剩余转向临安雨季伞单、太湖缂丝/云锦订单差异、蓝染/竹编专属工艺深度与多入口 smokeBindings。'],
   },
   {
     id: 'chapter-bashu-tea-horse-brocade',

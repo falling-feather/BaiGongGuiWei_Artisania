@@ -731,6 +731,33 @@ export const ACTIVITY_CHALLENGES: ActivityChallengeDef[] = [
     ],
   },
   {
+    id: 'jn-cloud-brocade-office-shuttle',
+    activityId: 'jn-cloud-brocade-office',
+    miniGame: 'rhythm',
+    title: '云锦投梭',
+    prompt: '沈云梭把花本、经线和纬梭排开，让你跟着织机节律先稳一段。',
+    choices: [
+      {
+        id: 'match-loom-then-pattern',
+        label: '先听织机节律，再按花本投梭',
+        quality: 0.91,
+        feedback: '沈云梭点头：节律稳了，纹样才不会在半路散线。',
+      },
+      {
+        id: 'pattern-first-fast',
+        label: '先抢花纹轮廓，节律乱了再补',
+        quality: 0.51,
+        feedback: '花纹先出形，却有几处断纬，沈云梭让你重新听梭声。',
+      },
+      {
+        id: 'heavy-shuttle',
+        label: '加重梭子压线，求织面平整',
+        quality: 0.43,
+        feedback: '线被压得太死，绒面失了活气，织埠老师傅都皱了眉。',
+      },
+    ],
+  },
+  {
     id: 'hz-ink-workshop-rhythm',
     activityId: 'hz-ink-workshop',
     miniGame: 'rhythm',

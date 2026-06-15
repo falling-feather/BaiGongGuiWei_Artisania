@@ -1,7 +1,9 @@
 import jiangnanBaigongyuanMap from './mapLayouts/jiangnan-baigongyuan.json';
 import jiangnanLongquanMap from './mapLayouts/jiangnan-longquan.json';
 import jiangnanJinlingMap from './mapLayouts/jiangnan-jinling.json';
+import jiangnanLinanMap from './mapLayouts/jiangnan-linan.json';
 import jiangnanSuhangMap from './mapLayouts/jiangnan-suhang.json';
+import jiangnanTaihuMap from './mapLayouts/jiangnan-taihu.json';
 import bashuBambooSeaMap from './mapLayouts/bashu-bamboo-sea.json';
 import bashuJinliMap from './mapLayouts/bashu-jinli.json';
 import bashuLinqiongIronMap from './mapLayouts/bashu-linqiong-iron.json';
@@ -325,6 +327,8 @@ export const RUNTIME_MAP_EDITOR_SNAPSHOTS: RuntimeMapEditorSnapshot[] = [
   jiangnanSuhangMap,
   jiangnanLongquanMap,
   jiangnanJinlingMap,
+  jiangnanLinanMap,
+  jiangnanTaihuMap,
   jiangnanBaigongyuanMap,
   bashuBambooSeaMap,
   bashuJinliMap,

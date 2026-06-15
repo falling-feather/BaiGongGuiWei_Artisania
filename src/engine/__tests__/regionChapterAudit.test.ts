@@ -120,6 +120,8 @@ describe('region chapter audit', () => {
     expect(lingnan?.unknownReferences).toEqual([]);
     expect(jiangnan?.layoutGaps).not.toContain('layout-subregion:jiangnan-suhang');
     expect(jiangnan?.layoutGaps).not.toContain('layout-subregion:jiangnan-baigongyuan');
+    expect(jiangnan?.layoutGaps).not.toContain('layout-subregion:jiangnan-linan');
+    expect(jiangnan?.layoutGaps).not.toContain('layout-subregion:jiangnan-taihu');
     expect(bashu?.layoutGaps).not.toContain('layout-subregion:bashu-linqiong-iron');
     expect(lingnan?.layoutGaps).not.toContain('layout-subregion:lingnan-forge');
     expect(lingnan?.layoutGaps).not.toContain('layout-subregion:lingnan-duan-stone');

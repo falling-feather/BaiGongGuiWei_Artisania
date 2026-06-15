@@ -1,0 +1,35 @@
+{
+  "schema": "artisania-map-editor/v2",
+  "regionId": "jiangnan",
+  "subregionId": "jiangnan-taihu",
+  "tileSize": 32,
+  "size": { "w": 58, "h": 28 },
+  "roads": [
+    { "points": [{ "x": 2, "y": 7 }, { "x": 55, "y": 7 }] },
+    { "points": [{ "x": 2, "y": 14 }, { "x": 55, "y": 14 }] },
+    { "points": [{ "x": 2, "y": 21 }, { "x": 55, "y": 21 }] },
+    { "points": [{ "x": 8, "y": 3 }, { "x": 8, "y": 24 }] },
+    { "points": [{ "x": 28, "y": 3 }, { "x": 28, "y": 24 }] },
+    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 24 }] }
+  ],
+  "objects": [
+    { "itemId": "player_spawn", "x": 29, "y": 14 },
+    { "itemId": "industry_silk", "name": "Taihu cocoon baskets", "interaction": "industry", "targetId": "harvest-cocoon", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_silk", "name": "lake silk reeling room", "interaction": "industry", "targetId": "sericulture", "x": 14, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_silk", "name": "brocade weaving frame", "interaction": "industry", "targetId": "weave-brocade", "x": 23, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_textile", "name": "Taihu kesi loom", "interaction": "craft", "targetId": "kesi", "x": 12, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_bamboo", "name": "umbrella rib finishing bench", "interaction": "craft", "targetId": "oilpaper-umbrella", "x": 24, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_brocade", "name": "cloud brocade office", "interaction": "activity", "targetId": "jn-cloud-brocade-office", "x": 36, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Suhang water market", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-suhang", "x": 3, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Jinling lantern market", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-jinling", "x": 15, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Linan rain lane", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-linan", "x": 27, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Longquan mountain forge", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-longquan", "x": 39, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Baigong courtyard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-baigongyuan", "x": 51, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Jingji canal road", "interaction": "gate", "targetId": "jingji", "x": 52, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Ganpo kiln river road", "interaction": "gate", "targetId": "ganpo", "x": 52, "y": 13, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Huizhou paper road", "interaction": "gate", "targetId": "huizhou", "x": 43, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "npc-jn-shen-yunsuo", "name": "Shen Yunshuo", "interaction": "npc", "npcId": "jn-shen-yunsuo", "x": 36, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "loom-row-a", "name": "lake loom row", "interaction": "decoration", "x": 16, "y": 17, "tileW": 4, "tileH": 2, "solid": true },
+    { "itemId": "silk-rack-a", "name": "silk thread drying rack", "interaction": "decoration", "x": 41, "y": 17, "tileW": 4, "tileH": 2, "solid": true }
+  ]
+}

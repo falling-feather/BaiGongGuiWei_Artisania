@@ -5,18 +5,25 @@ import { RUNTIME_MAP_LAYOUTS } from '../mapLayout';
 const layoutSubregionIds = new Set(RUNTIME_MAP_LAYOUTS.map((layout) => layout.subregionId));
 
 describe('region chapter map entrypoints', () => {
-  it('keeps Jiangnan M1.17 chapter entry layouts backed by runtime maps', () => {
+  it('keeps Jiangnan M1.24 all six chapter entry layouts backed by runtime maps', () => {
     const jiangnan = REGION_CHAPTERS.find((chapter) => chapter.id === 'chapter-jiangnan-baigong-homecoming');
+    const gapText = jiangnan?.gaps.join('\n') ?? '';
 
     expect(jiangnan?.entrySubregionIds).toEqual([
       'jiangnan-suhang',
       'jiangnan-jinling',
+      'jiangnan-linan',
       'jiangnan-longquan',
+      'jiangnan-taihu',
       'jiangnan-baigongyuan',
     ]);
     expect(jiangnan?.entrySubregionIds.every((subregionId) => layoutSubregionIds.has(subregionId))).toBe(true);
-    expect(jiangnan?.gaps.join('\n')).not.toMatch(/jiangnan-suhang.*仍缺|仍缺.*jiangnan-suhang/);
-    expect(jiangnan?.gaps.join('\n')).not.toMatch(/jiangnan-baigongyuan.*仍缺|仍缺.*jiangnan-baigongyuan/);
+    expect(gapText).not.toMatch(/jiangnan-suhang.*仍缺|仍缺.*jiangnan-suhang/);
+    expect(gapText).not.toMatch(/jiangnan-baigongyuan.*仍缺|仍缺.*jiangnan-baigongyuan/);
+    expect(gapText).not.toMatch(/jiangnan-linan.*仍缺|仍缺.*jiangnan-linan/);
+    expect(gapText).not.toMatch(/jiangnan-taihu.*仍缺|仍缺.*jiangnan-taihu/);
+    expect(gapText).not.toMatch(/jiangnan-linan.*待补|待补.*jiangnan-linan/);
+    expect(gapText).not.toMatch(/jiangnan-taihu.*待补|待补.*jiangnan-taihu/);
   });
 
   it('keeps Huizhou M1.19 paper, ink, She stone, and merchant layouts closed', () => {
@@ -107,7 +114,7 @@ describe('region chapter map entrypoints', () => {
     }
   });
 
-  it('keeps all M1 chapter entry layouts backed by runtime maps after M1.23', () => {
+  it('keeps all M1 chapter entry layouts backed by runtime maps after M1.24', () => {
     const chaptersWithMissingLayouts = REGION_CHAPTERS.filter((chapter) =>
       chapter.entrySubregionIds.some((subregionId) => !layoutSubregionIds.has(subregionId)),
     );

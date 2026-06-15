@@ -173,6 +173,8 @@ describe('runtime map editor adapter', () => {
       'jiangnan-suhang',
       'jiangnan-longquan',
       'jiangnan-jinling',
+      'jiangnan-linan',
+      'jiangnan-taihu',
       'jiangnan-baigongyuan',
       'bashu-bamboo-sea',
       'bashu-jinli',
@@ -246,6 +248,41 @@ describe('runtime map editor adapter', () => {
       expect.arrayContaining([
         expect.objectContaining({ interaction: 'activity', targetId: 'jn-qinhuai-lantern' }),
         expect.objectContaining({ interaction: 'npc', npcId: 'jn-qiao-zhaoye' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('jiangnan-linan')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-tea-leaf' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'pick-tea' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-bamboo' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'split-bamboo' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'oilpaper-umbrella' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'jn-lake-tea-house' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'jn-paper-umbrella-shop' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jn-su-xiaocha' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jn-lin-yuqiao' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jiangnan-suhang' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jiangnan-taihu' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'huizhou' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'ganpo' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'jingji' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('jiangnan-taihu')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-cocoon' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'sericulture' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'weave-brocade' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'kesi' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'oilpaper-umbrella' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'jn-cloud-brocade-office' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jn-shen-yunsuo' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jiangnan-suhang' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jiangnan-linan' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jiangnan-baigongyuan' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'jingji' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'ganpo' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'huizhou' }),
       ]),
     );
     expect(snapshotsBySubregion.get('jiangnan-baigongyuan')?.objects).toEqual(
@@ -503,13 +540,13 @@ describe('runtime map editor adapter', () => {
     expect(errors).toEqual([]);
   });
 
-  it('keeps the remaining unshipped manual map list explicit after M1.23', () => {
+  it('keeps the manual map list fully shipped after M1.24', () => {
     const shippedLayoutIds = new Set(RUNTIME_MAP_LAYOUTS.map((layout) => layout.subregionId));
     const missingManualMapIds = REGIONS.flatMap((region) => region.subregions.map((subregion) => subregion.id))
       .filter((subregionId) => !shippedLayoutIds.has(subregionId))
       .sort();
 
-    expect(missingManualMapIds).toEqual(['jiangnan-linan', 'jiangnan-taihu']);
+    expect(missingManualMapIds).toEqual([]);
   });
 
   it('keeps shipped NPC markers on reachable street tiles', () => {

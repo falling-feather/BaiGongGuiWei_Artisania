@@ -69,8 +69,11 @@ describe('full scope audit', () => {
     const huizhou = audit.rows.find((row) => row.regionId === 'huizhou');
     const xiyu = audit.rows.find((row) => row.regionId === 'xiyu');
 
-    expect(jiangnan?.gaps).not.toContain('layout-subregion:2/4');
-    expect(jiangnan?.m1Actions).toContain('补临安水市与太湖织埠回访链');
+    expect(jiangnan?.counts.layoutSubregions).toBe(6);
+    expect(jiangnan?.gaps.some((gap) => gap.startsWith('layout-subregion:'))).toBe(false);
+    expect(jiangnan?.m1Actions).toContain('补临安茶肆/伞铺雨季回访链');
+    expect(jiangnan?.m1Actions).toContain('补太湖织埠缂丝/云锦藏客订单差异');
+    expect(jiangnan?.m1Actions).not.toContain('补临安水市与太湖织埠回访链');
     expect(bashu?.counts.layoutSubregions).toBe(4);
     expect(bashu?.gaps).not.toContain('layout-subregion:3/4');
     expect(bashu?.m1Actions).toContain('补临邛铁炉订单回流与铁锭供应读数');

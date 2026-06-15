@@ -39,10 +39,10 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     m1Group: 'jiangnan-bashu',
     chapterGoal: '把百工院、龙泉、金陵灯市、临安茶伞与太湖织埠连成可回访的江南长期样板。',
     playPillars: ['百工院家园', '龙泉剑瓷工艺', '秦淮灯市与文房社交'],
-    targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 4, orderHookCount: 2 },
+    targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 6, orderHookCount: 2 },
     m1Actions: [
-      '补临安水市与太湖织埠回访链',
-      '把临安水市与太湖织埠纳入主轴外回访链',
+      '补临安茶肆/伞铺雨季回访链',
+      '补太湖织埠缂丝/云锦藏客订单差异',
       '让灯市后续单继续读取作品与 NPC 关系',
     ],
   },

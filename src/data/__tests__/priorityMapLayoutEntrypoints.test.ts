@@ -39,6 +39,30 @@ const PRIORITY_MAP_LAYOUT_CASES: PriorityMapLayoutCase[] = [
     regionGateIds: ['jingji', 'ganpo', 'huizhou'],
   },
   {
+    subregionId: 'jiangnan-linan',
+    industryIds: ['harvest-tea-leaf', 'pick-tea', 'harvest-bamboo', 'split-bamboo'],
+    craftIds: ['oilpaper-umbrella'],
+    activityIds: ['jn-lake-tea-house', 'jn-paper-umbrella-shop'],
+    npcIds: ['jn-su-xiaocha', 'jn-lin-yuqiao'],
+    subregionGateIds: ['jiangnan-suhang', 'jiangnan-longquan', 'jiangnan-taihu', 'jiangnan-baigongyuan'],
+    regionGateIds: ['huizhou', 'ganpo', 'jingji'],
+  },
+  {
+    subregionId: 'jiangnan-taihu',
+    industryIds: ['harvest-cocoon', 'sericulture', 'weave-brocade'],
+    craftIds: ['kesi', 'oilpaper-umbrella'],
+    activityIds: ['jn-cloud-brocade-office'],
+    npcIds: ['jn-shen-yunsuo'],
+    subregionGateIds: [
+      'jiangnan-suhang',
+      'jiangnan-jinling',
+      'jiangnan-linan',
+      'jiangnan-longquan',
+      'jiangnan-baigongyuan',
+    ],
+    regionGateIds: ['jingji', 'ganpo', 'huizhou'],
+  },
+  {
     subregionId: 'jiangnan-baigongyuan',
     craftIds: ['indigo-dyeing', 'bamboo-weaving'],
     activityIds: ['jn-yard-fields'],
@@ -372,6 +396,8 @@ const PRIORITY_N4_ACTIVITY_TARGET_LAYOUT_IDS = [
 
 const M1_ADDITIONAL_SHIPPED_LAYOUT_IDS = [
   'jiangnan-suhang',
+  'jiangnan-linan',
+  'jiangnan-taihu',
   'jiangnan-baigongyuan',
   'ganpo-kaolin-hill',
   'ganpo-river-wood',
