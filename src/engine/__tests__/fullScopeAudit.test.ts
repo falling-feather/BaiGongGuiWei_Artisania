@@ -61,12 +61,17 @@ describe('full scope audit', () => {
   it('reports stable M1 action gaps for maps and flagship craft depth', () => {
     const audit = buildFullScopeAudit(FULL_SCOPE_REGION_REQUIREMENTS, content, { layoutSubregionIds });
     const jiangnan = audit.rows.find((row) => row.regionId === 'jiangnan');
+    const bashu = audit.rows.find((row) => row.regionId === 'bashu');
     const ganpo = audit.rows.find((row) => row.regionId === 'ganpo');
     const huizhou = audit.rows.find((row) => row.regionId === 'huizhou');
     const xiyu = audit.rows.find((row) => row.regionId === 'xiyu');
 
     expect(jiangnan?.gaps).not.toContain('layout-subregion:2/4');
     expect(jiangnan?.m1Actions).toContain('补临安水市与太湖织埠回访链');
+    expect(bashu?.counts.layoutSubregions).toBe(4);
+    expect(bashu?.gaps).not.toContain('layout-subregion:3/4');
+    expect(bashu?.m1Actions).toContain('补临邛铁炉订单回流与铁锭供应读数');
+    expect(bashu?.m1Actions).not.toContain('补临邛铁炉可运行入口');
     expect(ganpo?.gaps).not.toContain('layout-subregion:1/3');
     expect(ganpo?.signatureCraftsWithoutInteraction).toContain('xiabu');
     expect(ganpo?.m1Actions).toContain('补河运柴场长线风险与高岭瓷土读数');

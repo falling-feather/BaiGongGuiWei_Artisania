@@ -108,12 +108,15 @@ describe('region chapter audit', () => {
       smokeScenarioIds: REGION_CHAPTER_SMOKE_SCENARIO_IDS,
     });
     const jiangnan = audit.rows.find((row) => row.regionId === 'jiangnan');
+    const bashu = audit.rows.find((row) => row.regionId === 'bashu');
     const ganpo = audit.rows.find((row) => row.regionId === 'ganpo');
     const huizhou = audit.rows.find((row) => row.regionId === 'huizhou');
 
     expect(jiangnan?.unknownReferences).toEqual([]);
+    expect(bashu?.unknownReferences).toEqual([]);
     expect(jiangnan?.layoutGaps).not.toContain('layout-subregion:jiangnan-suhang');
     expect(jiangnan?.layoutGaps).not.toContain('layout-subregion:jiangnan-baigongyuan');
+    expect(bashu?.layoutGaps).not.toContain('layout-subregion:bashu-linqiong-iron');
     expect(ganpo?.layoutGaps).not.toContain('layout-subregion:ganpo-kaolin-hill');
     expect(ganpo?.layoutGaps).not.toContain('layout-subregion:ganpo-river-wood');
     expect(huizhou?.layoutGaps).not.toContain('layout-subregion:huizhou-ink-alley');

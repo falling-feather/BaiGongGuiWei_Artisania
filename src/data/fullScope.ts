@@ -52,9 +52,9 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     m1Group: 'jiangnan-bashu',
     chapterGoal: '把锦里、青神竹海、临邛铁炉与茶马驿合成山路运输和蜀锦竹编章节。',
     playPillars: ['蜀锦/竹编工艺', '茶马驿路线', '山路采料与铁炉'],
-    targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 3, orderHookCount: 2 },
+    targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 4, orderHookCount: 2 },
     m1Actions: [
-      '补临邛铁炉可运行入口',
+      '补临邛铁炉订单回流与铁锭供应读数',
       '把茶马会后续单接到路线声望和马帮 NPC 回访',
       '补蜀锦与青神竹编的章节级订单差异',
     ],

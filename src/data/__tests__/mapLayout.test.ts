@@ -175,6 +175,7 @@ describe('runtime map editor adapter', () => {
       'jiangnan-baigongyuan',
       'bashu-bamboo-sea',
       'bashu-jinli',
+      'bashu-linqiong-iron',
       'bashu-tea-horse',
       'lingnan-gambiered-yard',
       'lingnan-harbor',
@@ -255,6 +256,20 @@ describe('runtime map editor adapter', () => {
       expect.arrayContaining([
         expect.objectContaining({ interaction: 'activity', targetId: 'bs-tea-horse-post' }),
         expect.objectContaining({ interaction: 'npc', npcId: 'bs-mabang-ayue' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('bashu-linqiong-iron')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-iron-ore' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'smelt-iron' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'bs-linqiong-forge' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'bs-deng-lusheng' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'bashu-jinli' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'bashu-bamboo-sea' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'bashu-tea-horse' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'qiandian' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'jingchu' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'xueyu' }),
       ]),
     );
     expect(snapshotsBySubregion.get('lingnan-harbor')?.objects).toEqual(

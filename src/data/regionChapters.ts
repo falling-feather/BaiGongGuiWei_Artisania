@@ -88,6 +88,7 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     ],
     characterNpcIds: [
       { npcId: 'bs-zhuo-jinniang', role: 'artisan', note: '蜀锦织造师。' },
+      { npcId: 'bs-deng-lusheng', role: 'artisan', note: '临邛铁炉火候与铁料入口。' },
       { npcId: 'bs-mabang-ayue', role: 'trade', note: '茶马驿领路人。' },
       { npcId: 'bs-luo-qingmie', role: 'lifeCulture', note: '青神竹编与竹海生活入口。' },
     ],
@@ -99,8 +100,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-luo-bamboo-split-thread'],
     escortEncounterIds: ['escort-tea-horse-load-ledger', 'escort-tea-horse-night-bell', 'escort-tea-horse-fog-debt'],
     smokeScenarioIds: ['chapter-bashu-tea-horse-brocade'],
-    nextActions: ['补临邛铁炉更明确的订单回流', '把茶马会路线回访接到马帮 NPC 后日谈'],
-    gaps: ['日常生活面仍偏茶马和工艺，缺更多城镇生活事件。', 'bashu-linqiong-iron 仍缺人工 JSON。'],
+    nextActions: ['把临邛铁炉订单回流接到铁锭与龙泉剑材料账', '把茶马会路线回访接到马帮 NPC 后日谈'],
+    gaps: ['M1.20 已关闭临邛铁炉街景入口；剩余转向临邛铁料订单回流、茶马会后日谈和更多城镇生活事件。'],
   },
   {
     id: 'chapter-lingnan-harbor-gambiered',

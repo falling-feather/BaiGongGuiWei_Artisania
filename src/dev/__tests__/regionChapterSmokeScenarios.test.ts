@@ -175,6 +175,25 @@ describe('region chapter smoke scenarios', () => {
     expect(spec?.npcs.some((npc) => npc.id === 'hz-xu-yanshi')).toBe(true);
   });
 
+  it('allows DEV Bashu chapter smoke to start at the M1.20 Linqiong iron furnace for browser QA', () => {
+    const state = buildRegionChapterSmokeState(content, 'chapter-bashu-tea-horse-brocade', {
+      subregionId: 'bashu-linqiong-iron',
+    });
+    if (!state) throw new Error('Missing Bashu chapter smoke state');
+
+    const spec = buildRegionSpec(state.currentRegion, state);
+
+    expect(state.currentRegion).toBe('bashu');
+    expect(state.currentSubregion).toBe('bashu-linqiong-iron');
+    expect(state.trackedLoreEntryId).toBe('subregion-bashu-linqiong-iron');
+    expect(spec?.subregionId).toBe('bashu-linqiong-iron');
+    expect(spec?.industries.map((industry) => industry.id)).toEqual(
+      expect.arrayContaining(['harvest-iron-ore', 'smelt-iron']),
+    );
+    expect(spec?.activities.some((activity) => activity.id === 'bs-linqiong-forge')).toBe(true);
+    expect(spec?.npcs.some((npc) => npc.id === 'bs-deng-lusheng')).toBe(true);
+  });
+
   it('ignores chapter smoke subregion overrides outside the scenario region', () => {
     const state = buildRegionChapterSmokeState(content, 'chapter-xueyu-thangka-snowpass', {
       subregionId: 'xiyu-caravan-post',

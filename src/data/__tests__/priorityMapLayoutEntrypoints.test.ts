@@ -64,6 +64,14 @@ const PRIORITY_MAP_LAYOUT_CASES: PriorityMapLayoutCase[] = [
     regionGateIds: ['qiandian', 'jingchu'],
   },
   {
+    subregionId: 'bashu-linqiong-iron',
+    industryIds: ['harvest-iron-ore', 'smelt-iron'],
+    activityIds: ['bs-linqiong-forge'],
+    npcIds: ['bs-deng-lusheng'],
+    subregionGateIds: ['bashu-jinli', 'bashu-bamboo-sea', 'bashu-tea-horse'],
+    regionGateIds: ['qiandian', 'jingchu', 'xueyu'],
+  },
+  {
     subregionId: 'bashu-tea-horse',
     industryIds: ['harvest-tea-leaf', 'pick-tea'],
     activityIds: ['bs-tea-horse-post'],
@@ -327,6 +335,7 @@ const M1_ADDITIONAL_SHIPPED_LAYOUT_IDS = [
   'ganpo-river-wood',
   'huizhou-ink-alley',
   'huizhou-she-stone',
+  'bashu-linqiong-iron',
   'jingji-market-gate',
   'sanjin-coal-yard',
   'sanjin-vinegar-yard',

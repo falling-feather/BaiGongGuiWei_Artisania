@@ -195,6 +195,37 @@ describe('runtime map layouts', () => {
     expect(sheStone?.crafts.some((craft) => craft.id === 'she-inkstone')).toBe(true);
   });
 
+  it('attaches M1.20 Bashu Linqiong iron layout to the local street spec', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const linqiong = buildRegionSpec('bashu', {
+      ...base,
+      currentRegion: 'bashu',
+      currentSubregion: 'bashu-linqiong-iron',
+      unlockedRegions: [...new Set([...base.unlockedRegions, 'bashu', 'qiandian', 'jingchu', 'xueyu'])],
+    });
+
+    expect(linqiong?.layout).toMatchObject({ subregionId: 'bashu-linqiong-iron', size: { w: 56, h: 30 } });
+    expect(linqiong?.layout?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-iron-ore' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'smelt-iron' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'bs-linqiong-forge' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'bs-deng-lusheng' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'bashu-jinli' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'bashu-bamboo-sea' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'bashu-tea-horse' }),
+      ]),
+    );
+    expect(linqiong?.industries.map((industry) => industry.id)).toEqual(
+      expect.arrayContaining(['harvest-iron-ore', 'smelt-iron']),
+    );
+    expect(linqiong?.npcs.find((npc) => npc.id === 'bs-deng-lusheng')).toMatchObject({
+      tileX: 30,
+      tileY: 20,
+    });
+    expect(linqiong?.activities.some((activity) => activity.id === 'bs-linqiong-forge')).toBe(true);
+  });
+
   it('only references live street targets from manual layouts', () => {
     const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
     const errors: string[] = [];

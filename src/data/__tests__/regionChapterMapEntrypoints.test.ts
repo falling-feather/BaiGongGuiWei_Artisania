@@ -35,6 +35,20 @@ describe('region chapter map entrypoints', () => {
     expect(gapText).not.toMatch(/huizhou-she-stone.*人工 JSON|人工 JSON.*huizhou-she-stone/);
   });
 
+  it('keeps Bashu M1.20 Linqiong iron layout closed without changing route landings', () => {
+    const bashu = REGION_CHAPTERS.find((chapter) => chapter.id === 'chapter-bashu-tea-horse-brocade');
+    const gapText = bashu?.gaps.join('\n') ?? '';
+
+    expect(bashu?.entrySubregionIds).toEqual([
+      'bashu-jinli',
+      'bashu-bamboo-sea',
+      'bashu-tea-horse',
+      'bashu-linqiong-iron',
+    ]);
+    expect(layoutSubregionIds.has('bashu-linqiong-iron')).toBe(true);
+    expect(gapText).not.toMatch(/bashu-linqiong-iron.*人工 JSON|人工 JSON.*bashu-linqiong-iron/);
+  });
+
   it('keeps every missing chapter layout explicit in chapter gaps', () => {
     for (const chapter of REGION_CHAPTERS) {
       const gapText = chapter.gaps.join('\n');

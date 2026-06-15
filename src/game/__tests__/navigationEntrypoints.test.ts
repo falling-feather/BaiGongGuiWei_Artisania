@@ -181,4 +181,32 @@ describe('navigation entrypoints', () => {
     });
     expect(currentStreetRegionGate(sheStone, 'bashu')).toBeNull();
   });
+
+  it('validates Bashu Linqiong iron gates from the current street spec without changing route landings', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const linqiong = {
+      ...base,
+      currentRegion: 'bashu',
+      currentSubregion: 'bashu-linqiong-iron',
+      unlockedRegions: [...new Set([...base.unlockedRegions, 'bashu', 'qiandian', 'jingchu', 'xueyu'])],
+    };
+
+    expect(isCurrentStreetSubregionGate(linqiong, 'bashu-jinli')).toBe(true);
+    expect(isCurrentStreetSubregionGate(linqiong, 'bashu-bamboo-sea')).toBe(true);
+    expect(isCurrentStreetSubregionGate(linqiong, 'bashu-tea-horse')).toBe(true);
+    expect(isCurrentStreetSubregionGate(linqiong, 'bashu-linqiong-iron')).toBe(false);
+    expect(currentStreetRegionGate(linqiong, 'qiandian')).toMatchObject({
+      regionId: 'qiandian',
+      routeId: 'route-bashu-qiandian-tea-horse',
+    });
+    expect(currentStreetRegionGate(linqiong, 'jingchu')).toMatchObject({
+      regionId: 'jingchu',
+      routeId: 'route-bashu-jingchu-river',
+    });
+    expect(currentStreetRegionGate(linqiong, 'xueyu')).toMatchObject({
+      regionId: 'xueyu',
+      routeId: 'route-bashu-xueyu-snow-pass',
+    });
+    expect(currentStreetRegionGate(linqiong, 'huizhou')).toBeNull();
+  });
 });

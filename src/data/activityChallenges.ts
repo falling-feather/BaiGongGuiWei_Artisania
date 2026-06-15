@@ -406,6 +406,33 @@ export const ACTIVITY_CHALLENGES: ActivityChallengeDef[] = [
     ],
   },
   {
+    id: 'bs-linqiong-forge-fire',
+    activityId: 'bs-linqiong-forge',
+    miniGame: 'timing_hold',
+    title: '临邛看火',
+    prompt: '邓炉生把矿石、炭仓和炉口火色摊给你看，先问这一炉该稳住哪一处。',
+    choices: [
+      {
+        id: 'coal-then-white-heat',
+        label: '先筛干炭，再等火色将白未白时出铁',
+        quality: 0.92,
+        feedback: '邓炉生点头：炭稳、火净，铁性才不会散。',
+      },
+      {
+        id: 'ore-heavy-first',
+        label: '只挑最重的矿料，火候后面再补',
+        quality: 0.56,
+        feedback: '矿重未必铁净，炉口一急，铁锭里会带脆性。',
+      },
+      {
+        id: 'blast-fast',
+        label: '猛添风火，赶在山雾起来前出炉',
+        quality: 0.42,
+        feedback: '火势起得太躁，邓炉生把铁钳按回架上，叫你重看火舌。',
+      },
+    ],
+  },
+  {
     id: 'ln-qilou-night-market-route',
     activityId: 'ln-qilou-night-market',
     miniGame: 'route_plan',
