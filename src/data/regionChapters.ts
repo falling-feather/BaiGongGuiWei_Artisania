@@ -324,8 +324,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-pingyao-hand-polish'],
     escortEncounterIds: ['escort-jingji-canal-tribute'],
     smokeScenarioIds: ['chapter-sanjin-piaohao-lacquer'],
-    nextActions: ['补煤铁窑塬与清徐醋坊人工地图', '扩展多轮本金/利钱统计到 M3 长线经济'],
-    gaps: ['已有票号活动即时订单、雷掌柜信用单违约、推光样柜回访、票号漆档续单回本修复、复违约利钱挂账、票号账本后日谈、煤铁保票账线和醋坊民生日用账线；仍缺 M3 级多轮本金/利钱统计。', 'sanjin-coal-yard 与 sanjin-vinegar-yard 仍缺人工 JSON。'],
+    nextActions: ['持续用内置浏览器复验煤铁窑塬与清徐醋坊街景 gate', '扩展多轮本金/利钱统计到 M3 长线经济'],
+    gaps: ['已有票号活动即时订单、雷掌柜信用单违约、推光样柜回访、票号漆档续单回本修复、复违约利钱挂账、票号账本后日谈、煤铁保票账线、醋坊民生日用账线、煤铁窑塬与清徐醋坊人工 JSON；仍缺 M3 级多轮本金/利钱统计。'],
   },
   {
     id: 'chapter-xueyu-thangka-snowpass',

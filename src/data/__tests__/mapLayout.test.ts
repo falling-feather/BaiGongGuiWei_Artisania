@@ -185,8 +185,10 @@ describe('runtime map editor adapter', () => {
       'huizhou-merchant-hall',
       'jingji-palace-yard',
       'jingji-official-gate',
+      'sanjin-coal-yard',
       'sanjin-lacquer-yard',
       'sanjin-piaohao',
+      'sanjin-vinegar-yard',
       'xueyu-thangka-court',
       'xiyu-jade-yard',
       'xiyu-bazaar',
@@ -246,6 +248,22 @@ describe('runtime map editor adapter', () => {
         expect.objectContaining({ interaction: 'npc', npcId: 'xu-tuoling-shu' }),
       ]),
     );
+    expect(snapshotsBySubregion.get('sanjin-coal-yard')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-coal' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-iron-ore' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'smelt-iron' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'sj-coal-iron-yard' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'sj-yaoyuan-han' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('sanjin-vinegar-yard')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'craft', targetId: 'aged-vinegar' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'sj-vinegar-yard' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'sj-cu-langzhong' }),
+      ]),
+    );
 
     expect(RUNTIME_MAP_LAYOUTS.find((layout) => layout.subregionId === 'xiyu-jade-yard')?.objects).toEqual(
       expect.arrayContaining([expect.objectContaining({ interaction: 'activity', targetId: 'xiyu-jade-yard' })]),
@@ -264,6 +282,55 @@ describe('runtime map editor adapter', () => {
         if (!nearby.some((tile) => reachable.has(tileKey(tile.x, tile.y)))) {
           errors.push(`${layout.subregionId}: ${object.interaction} ${object.targetId ?? object.itemId} is not reachable`);
         }
+      }
+    }
+
+    expect(errors).toEqual([]);
+  });
+
+  it('keeps shipped NPC markers on reachable street tiles', () => {
+    const errors: string[] = [];
+
+    for (const layout of RUNTIME_MAP_LAYOUTS) {
+      const blocked = blockedPointTiles(layout);
+      const reachable = reachableTiles(layout, blocked);
+      for (const object of layout.objects) {
+        if (object.interaction !== 'npc') continue;
+        const key = tileKey(object.x, object.y);
+        if (object.x < 0 || object.y < 0 || object.x >= layout.size.w || object.y >= layout.size.h) {
+          errors.push(`${layout.subregionId}: NPC ${object.npcId ?? object.itemId} is out of bounds`);
+          continue;
+        }
+        if (blocked.has(key)) {
+          errors.push(`${layout.subregionId}: NPC ${object.npcId ?? object.itemId} overlaps an interaction point`);
+          continue;
+        }
+        if (!reachable.has(key)) {
+          errors.push(`${layout.subregionId}: NPC ${object.npcId ?? object.itemId} is not on a reachable tile`);
+        }
+      }
+    }
+
+    expect(errors).toEqual([]);
+  });
+
+  it('keeps the four Sanjin street layouts mutually connected by subregion gates', () => {
+    const sanjinSubregions = ['sanjin-piaohao', 'sanjin-coal-yard', 'sanjin-lacquer-yard', 'sanjin-vinegar-yard'];
+    const errors: string[] = [];
+
+    for (const subregionId of sanjinSubregions) {
+      const layout = RUNTIME_MAP_LAYOUTS.find((item) => item.subregionId === subregionId);
+      if (!layout) {
+        errors.push(`${subregionId}: missing layout`);
+        continue;
+      }
+      const gateTargets = new Set(
+        layout.objects
+          .filter((object) => object.interaction === 'subregionGate')
+          .map((object) => object.targetId),
+      );
+      for (const targetId of sanjinSubregions.filter((item) => item !== subregionId)) {
+        if (!gateTargets.has(targetId)) errors.push(`${subregionId}: missing Sanjin gate to ${targetId}`);
       }
     }
 

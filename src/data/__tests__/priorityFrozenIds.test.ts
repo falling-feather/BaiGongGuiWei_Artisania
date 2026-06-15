@@ -160,8 +160,10 @@ const FROZEN_LAYOUT_SUBREGION_IDS = [
   'jingchu-chu-lacquer',
   'huizhou-paper-valley',
   'jingji-palace-yard',
+  'sanjin-coal-yard',
   'sanjin-piaohao',
   'sanjin-lacquer-yard',
+  'sanjin-vinegar-yard',
   'xueyu-thangka-court',
 ];
 

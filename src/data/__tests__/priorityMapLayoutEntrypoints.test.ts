@@ -169,6 +169,22 @@ const PRIORITY_MAP_LAYOUT_CASES: PriorityMapLayoutCase[] = [
     regionGateIds: ['jingji'],
   },
   {
+    subregionId: 'sanjin-coal-yard',
+    industryIds: ['harvest-coal', 'harvest-iron-ore', 'smelt-iron'],
+    activityIds: ['sj-coal-iron-yard'],
+    npcIds: ['sj-yaoyuan-han'],
+    subregionGateIds: ['sanjin-piaohao', 'sanjin-lacquer-yard', 'sanjin-vinegar-yard'],
+    regionGateIds: ['jingji'],
+  },
+  {
+    subregionId: 'sanjin-vinegar-yard',
+    craftIds: ['aged-vinegar'],
+    activityIds: ['sj-vinegar-yard'],
+    npcIds: ['sj-cu-langzhong'],
+    subregionGateIds: ['sanjin-piaohao', 'sanjin-coal-yard', 'sanjin-lacquer-yard'],
+    regionGateIds: ['jingji'],
+  },
+  {
     subregionId: 'xueyu-thangka-court',
     industryIds: ['harvest-pigment', 'grind-pigment', 'make-paper'],
     craftIds: ['thangka', 'tibetan-paper', 'tibetan-incense'],
@@ -213,6 +229,8 @@ const PRIORITY_N4_ACTIVITY_TARGET_LAYOUT_IDS = [
   'sanjin-piaohao',
 ];
 
+const M1_ADDITIONAL_SHIPPED_LAYOUT_IDS = ['sanjin-coal-yard', 'sanjin-vinegar-yard'];
+
 function layoutFor(subregionId: string) {
   const layout = RUNTIME_MAP_LAYOUTS.find((item) => item.subregionId === subregionId);
   if (!layout) throw new Error(`Missing runtime map layout ${subregionId}`);
@@ -224,6 +242,7 @@ describe('priority runtime map layout entrypoints', () => {
     const requiredLayoutIds = new Set(
       PRIORITY_SCOPE_REQUIREMENTS.flatMap((requirement) => requirement.requiredLayoutSubregionIds).concat(
         PRIORITY_N4_ACTIVITY_TARGET_LAYOUT_IDS,
+        M1_ADDITIONAL_SHIPPED_LAYOUT_IDS,
       ),
     );
     const matrixLayoutIds = new Set(PRIORITY_MAP_LAYOUT_CASES.map((testCase) => testCase.subregionId));
