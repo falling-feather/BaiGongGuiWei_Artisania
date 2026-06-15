@@ -187,6 +187,7 @@ describe('runtime map editor adapter', () => {
       'ganpo-river-wood',
       'huizhou-paper-valley',
       'huizhou-ink-alley',
+      'huizhou-she-stone',
       'huizhou-merchant-hall',
       'jingji-palace-yard',
       'jingji-official-gate',
@@ -291,6 +292,19 @@ describe('runtime map editor adapter', () => {
         expect.objectContaining({ interaction: 'npc', npcId: 'hz-cheng-moshou' }),
         expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'huizhou-paper-valley' }),
         expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'huizhou-she-stone' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'huizhou-merchant-hall' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'jiangnan' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'ganpo' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('huizhou-she-stone')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-she-stone' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'she-inkstone' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'hz-she-stone-pit' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'hz-xu-yanshi' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'huizhou-paper-valley' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'huizhou-ink-alley' }),
         expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'huizhou-merchant-hall' }),
         expect.objectContaining({ interaction: 'gate', targetId: 'jiangnan' }),
         expect.objectContaining({ interaction: 'gate', targetId: 'ganpo' }),

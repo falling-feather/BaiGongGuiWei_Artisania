@@ -251,8 +251,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-wang-paper-mount'],
     escortEncounterIds: ['escort-ganpo-kiln-firewood'],
     smokeScenarioIds: ['chapter-huizhou-paper-merchant'],
-    nextActions: ['补徽商会馆荐藏回访订单链', '补歙石山坑人工地图', '补商会信用风险分支'],
-    gaps: ['商会已有活动即时订单，但仍缺长线信用风险和荐藏回访分支。', 'huizhou-she-stone 仍缺人工 JSON；墨砚深巷已由 M1.18 接入。'],
+    nextActions: ['补徽商会馆荐藏回访订单链', '补商会信用风险分支', '补宣纸、徽墨、歙砚订单差异'],
+    gaps: ['商会已有活动即时订单，但仍缺长线信用风险和荐藏回访分支。', '徽州纸谷、墨巷、歙石山坑与商会馆人工 JSON 已由 M1.19 收束；剩余转向文房订单差异与信用长线。'],
   },
   {
     id: 'chapter-jingji-palace-procurement',

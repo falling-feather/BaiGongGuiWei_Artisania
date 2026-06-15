@@ -44,7 +44,7 @@ export const SUBREGION_CONTENT: SubregionContentSpec[] = [
 
   sub('huizhou', 'huizhou-ink-alley', ['harvest-pine-soot', 'make-ink'], ['hui-ink']),
   sub('huizhou', 'huizhou-paper-valley', ['harvest-qingtan', 'make-paper', 'harvest-tea-leaf', 'pick-tea'], ['xuan-paper']),
-  sub('huizhou', 'huizhou-she-stone', [], ['she-inkstone']),
+  sub('huizhou', 'huizhou-she-stone', ['harvest-she-stone'], ['she-inkstone']),
   sub('huizhou', 'huizhou-merchant-hall', ['harvest-tea-leaf', 'pick-tea'], ['hui-carving']),
 
   sub('jingji', 'jingji-palace-yard', ['harvest-iron-ore', 'harvest-pigment', 'smelt-iron'], ['cloisonne', 'filigree', 'carved-lacquer']),

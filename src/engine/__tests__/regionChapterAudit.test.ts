@@ -117,6 +117,6 @@ describe('region chapter audit', () => {
     expect(ganpo?.layoutGaps).not.toContain('layout-subregion:ganpo-kaolin-hill');
     expect(ganpo?.layoutGaps).not.toContain('layout-subregion:ganpo-river-wood');
     expect(huizhou?.layoutGaps).not.toContain('layout-subregion:huizhou-ink-alley');
-    expect(huizhou?.layoutGaps).toContain('layout-subregion:huizhou-she-stone');
+    expect(huizhou?.layoutGaps).not.toContain('layout-subregion:huizhou-she-stone');
   });
 });

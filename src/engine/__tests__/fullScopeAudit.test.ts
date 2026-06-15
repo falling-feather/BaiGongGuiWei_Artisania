@@ -70,7 +70,8 @@ describe('full scope audit', () => {
     expect(ganpo?.gaps).not.toContain('layout-subregion:1/3');
     expect(ganpo?.signatureCraftsWithoutInteraction).toContain('xiabu');
     expect(ganpo?.m1Actions).toContain('补河运柴场长线风险与高岭瓷土读数');
-    expect(huizhou?.m1Actions).toContain('补歙石山坑运行入口');
+    expect(huizhou?.m1Actions).toContain('补宣纸、徽墨、歙砚的订单差异');
+    expect(huizhou?.m1Actions).not.toContain('补歙石山坑运行入口');
     expect(huizhou?.m1Actions).not.toContain('补墨砚深巷或歙石山坑运行入口');
     expect(xiyu?.gaps).not.toContain('layout-subregion:3/4');
     expect(xiyu?.signatureCraftsWithoutInteraction).not.toContain('atlas-silk');

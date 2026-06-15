@@ -20,6 +20,7 @@ export const INDUSTRIES: IndustryDef[] = [
   { id: 'harvest-pine-soot', name: '烧松取烟', blurb: '燃松枝收松烟，制墨之本。', miniGame: 'timing_hold', input: {}, output: 'pineSoot', yield: 2, laborCost: 1 },
   { id: 'harvest-qingtan', name: '剥青檀皮', blurb: '剥取青檀树皮，捞纸的纤维原料。', miniGame: 'drag_path', input: {}, output: 'qingtanBark', yield: 2, laborCost: 1 },
   { id: 'harvest-pigment', name: '采矿物颜料', blurb: '采凿矿石以备研磨成颜料。', miniGame: 'rhythm', input: {}, output: 'mineralPigment', yield: 2, laborCost: 1 },
+  { id: 'harvest-she-stone', name: '采歙石', blurb: '入溪谷石脉辨纹取料，制砚先得好石。', miniGame: 'rhythm', input: {}, output: 'sheStone', yield: 2, laborCost: 1 },
 
   // —— 二层 · 精炼（原料 → 半成品/材料）——
   { id: 'smelt-iron', name: '冶铁', blurb: '铁矿入炉，控火出铁锭。', miniGame: 'timing_hold', input: { ironOre: 2, coal: 1 }, output: 'ironIngot', yield: 1, laborCost: 2 },

@@ -157,6 +157,24 @@ describe('region chapter smoke scenarios', () => {
     expect(spec?.npcs.some((npc) => npc.id === 'hz-cheng-moshou')).toBe(true);
   });
 
+  it('allows DEV Huizhou chapter smoke to start at the M1.19 She stone pit for browser QA', () => {
+    const state = buildRegionChapterSmokeState(content, 'chapter-huizhou-paper-merchant', {
+      subregionId: 'huizhou-she-stone',
+    });
+    if (!state) throw new Error('Missing Huizhou chapter smoke state');
+
+    const spec = buildRegionSpec(state.currentRegion, state);
+
+    expect(state.currentRegion).toBe('huizhou');
+    expect(state.currentSubregion).toBe('huizhou-she-stone');
+    expect(state.trackedLoreEntryId).toBe('subregion-huizhou-she-stone');
+    expect(spec?.subregionId).toBe('huizhou-she-stone');
+    expect(spec?.industries.some((industry) => industry.id === 'harvest-she-stone')).toBe(true);
+    expect(spec?.activities.some((activity) => activity.id === 'hz-she-stone-pit')).toBe(true);
+    expect(spec?.crafts.some((craft) => craft.id === 'she-inkstone')).toBe(true);
+    expect(spec?.npcs.some((npc) => npc.id === 'hz-xu-yanshi')).toBe(true);
+  });
+
   it('ignores chapter smoke subregion overrides outside the scenario region', () => {
     const state = buildRegionChapterSmokeState(content, 'chapter-xueyu-thangka-snowpass', {
       subregionId: 'xiyu-caravan-post',

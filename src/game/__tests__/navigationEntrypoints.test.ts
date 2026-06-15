@@ -156,20 +156,29 @@ describe('navigation entrypoints', () => {
       ...paperValley,
       currentSubregion: 'huizhou-ink-alley',
     };
+    const sheStone = {
+      ...paperValley,
+      currentSubregion: 'huizhou-she-stone',
+    };
 
     expect(isCurrentStreetSubregionGate(paperValley, 'huizhou-ink-alley')).toBe(true);
     expect(isCurrentStreetSubregionGate(inkAlley, 'huizhou-paper-valley')).toBe(true);
     expect(isCurrentStreetSubregionGate(inkAlley, 'huizhou-merchant-hall')).toBe(true);
+    expect(isCurrentStreetSubregionGate(inkAlley, 'huizhou-she-stone')).toBe(true);
+    expect(isCurrentStreetSubregionGate(sheStone, 'huizhou-paper-valley')).toBe(true);
+    expect(isCurrentStreetSubregionGate(sheStone, 'huizhou-ink-alley')).toBe(true);
+    expect(isCurrentStreetSubregionGate(sheStone, 'huizhou-merchant-hall')).toBe(true);
+    expect(isCurrentStreetSubregionGate(sheStone, 'huizhou-she-stone')).toBe(false);
     expect(isCurrentStreetSubregionGate(inkAlley, 'huizhou-ink-alley')).toBe(false);
     expect(isCurrentStreetSubregionGate(inkAlley, 'jiangnan-suhang')).toBe(false);
-    expect(currentStreetRegionGate(inkAlley, 'jiangnan')).toMatchObject({
+    expect(currentStreetRegionGate(sheStone, 'jiangnan')).toMatchObject({
       regionId: 'jiangnan',
       routeId: 'route-jiangnan-huizhou-paper',
     });
-    expect(currentStreetRegionGate(inkAlley, 'ganpo')).toMatchObject({
+    expect(currentStreetRegionGate(sheStone, 'ganpo')).toMatchObject({
       regionId: 'ganpo',
       routeId: 'route-ganpo-huizhou-merchant',
     });
-    expect(currentStreetRegionGate(inkAlley, 'bashu')).toBeNull();
+    expect(currentStreetRegionGate(sheStone, 'bashu')).toBeNull();
   });
 });

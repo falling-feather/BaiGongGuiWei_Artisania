@@ -16,6 +16,7 @@ import ganpoKilnTownMap from './mapLayouts/ganpo-kiln-town.json';
 import ganpoRiverWoodMap from './mapLayouts/ganpo-river-wood.json';
 import huizhouInkAlleyMap from './mapLayouts/huizhou-ink-alley.json';
 import huizhouPaperValleyMap from './mapLayouts/huizhou-paper-valley.json';
+import huizhouSheStoneMap from './mapLayouts/huizhou-she-stone.json';
 import huizhouMerchantHallMap from './mapLayouts/huizhou-merchant-hall.json';
 import jingjiPalaceYardMap from './mapLayouts/jingji-palace-yard.json';
 import jingjiOfficialGateMap from './mapLayouts/jingji-official-gate.json';
@@ -333,6 +334,7 @@ export const RUNTIME_MAP_EDITOR_SNAPSHOTS: RuntimeMapEditorSnapshot[] = [
   ganpoRiverWoodMap,
   huizhouPaperValleyMap,
   huizhouInkAlleyMap,
+  huizhouSheStoneMap,
   huizhouMerchantHallMap,
   jingjiPalaceYardMap,
   jingjiOfficialGateMap,

@@ -165,6 +165,36 @@ describe('runtime map layouts', () => {
     expect(inkAlley?.crafts.some((craft) => craft.id === 'hui-ink')).toBe(true);
   });
 
+  it('attaches M1.19 Huizhou She stone layout to the local street spec', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const sheStone = buildRegionSpec('huizhou', {
+      ...base,
+      currentRegion: 'huizhou',
+      currentSubregion: 'huizhou-she-stone',
+      unlockedRegions: [...new Set([...base.unlockedRegions, 'huizhou', 'jiangnan', 'ganpo'])],
+    });
+
+    expect(sheStone?.layout).toMatchObject({ subregionId: 'huizhou-she-stone', size: { w: 56, h: 30 } });
+    expect(sheStone?.layout?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-she-stone' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'she-inkstone' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'hz-she-stone-pit' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'hz-xu-yanshi' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'huizhou-paper-valley' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'huizhou-ink-alley' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'huizhou-merchant-hall' }),
+      ]),
+    );
+    expect(sheStone?.industries.some((industry) => industry.id === 'harvest-she-stone')).toBe(true);
+    expect(sheStone?.npcs.find((npc) => npc.id === 'hz-xu-yanshi')).toMatchObject({
+      tileX: 30,
+      tileY: 20,
+    });
+    expect(sheStone?.activities.some((activity) => activity.id === 'hz-she-stone-pit')).toBe(true);
+    expect(sheStone?.crafts.some((craft) => craft.id === 'she-inkstone')).toBe(true);
+  });
+
   it('only references live street targets from manual layouts', () => {
     const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
     const errors: string[] = [];
