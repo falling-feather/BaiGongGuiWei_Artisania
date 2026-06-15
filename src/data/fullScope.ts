@@ -158,9 +158,9 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['唐卡绘制', '雪山补给', '矿彩与银器'],
     targetMinimums: DEFAULT_MINIMUMS,
     m1Actions: [
-      '补雪山驿口或颜料矿谷运行入口',
-      '让唐卡净室订单读取礼法、颜料和缺陷',
-      '补高原补给与茶马/西域路线联动',
+      '补颜料矿谷/银器帐房人物回访与材料状态反馈',
+      '让唐卡净室订单继续读取礼法、颜料和缺陷',
+      '补雪山驿路护商结果接入供展续单后日谈',
     ],
   },
   {

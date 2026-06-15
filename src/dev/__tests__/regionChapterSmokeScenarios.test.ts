@@ -125,6 +125,31 @@ describe('region chapter smoke scenarios', () => {
     expect(state?.resources.labor).toBeGreaterThan(10);
   });
 
+  it('allows DEV chapter smoke to start at another local subregion for browser QA', () => {
+    const state = buildRegionChapterSmokeState(content, 'chapter-xueyu-thangka-snowpass', {
+      subregionId: 'xueyu-pigment-valley',
+    });
+    if (!state) throw new Error('Missing Xueyu chapter smoke state');
+
+    const spec = buildRegionSpec(state.currentRegion, state);
+
+    expect(state.currentRegion).toBe('xueyu');
+    expect(state.currentSubregion).toBe('xueyu-pigment-valley');
+    expect(state.trackedLoreEntryId).toBe('subregion-xueyu-pigment-valley');
+    expect(spec?.subregionId).toBe('xueyu-pigment-valley');
+    expect(spec?.activities.some((activity) => activity.id === 'xy-pigment-valley')).toBe(true);
+  });
+
+  it('ignores chapter smoke subregion overrides outside the scenario region', () => {
+    const state = buildRegionChapterSmokeState(content, 'chapter-xueyu-thangka-snowpass', {
+      subregionId: 'xiyu-caravan-post',
+    });
+
+    expect(state?.currentRegion).toBe('xueyu');
+    expect(state?.currentSubregion).toBe('xueyu-snow-pass');
+    expect(state?.trackedLoreEntryId).toBe('subregion-xueyu-snow-pass');
+  });
+
   it.each(REGION_CHAPTER_SMOKE_SCENARIO_IDS)(
     '%s can run chapter craft/activity/NPC reducers from the smoke state',
     (scenarioId) => {

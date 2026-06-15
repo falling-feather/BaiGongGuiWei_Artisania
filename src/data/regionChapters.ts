@@ -345,6 +345,7 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
       { npcId: 'xy-losang', role: 'artisan', note: '唐卡画师。' },
       { npcId: 'xy-yak-captain', role: 'trade', note: '雪山驿口向导。' },
       { npcId: 'xy-shicai-tong', role: 'lifeCulture', note: '矿彩采集与高原材料入口。' },
+      { npcId: 'xy-baiyinshu', role: 'artisan', note: '银器帐房匠人。' },
     ],
     orderHooks: [
       { source: 'activity', id: 'xy-snow-pass', note: '雪山驿口活动生成唐卡供展补给单，并读取唐卡作品质量。', readsItemState: true },
@@ -356,8 +357,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-losang-mineral-layer'],
     escortEncounterIds: ['escort-snow-pass-windbreak', 'escort-caravan-water-ledger'],
     smokeScenarioIds: ['chapter-xueyu-thangka-snowpass'],
-    nextActions: ['内置浏览器复验雪山驿口、雪山驿口到唐卡画院与西域/巴蜀 gate', '补颜料矿谷/银器帐房人物回访', '补雪山驿路护商结果接入供展续单后日谈'],
-    gaps: ['已有雪口活动即时订单、唐卡失败分支、净室供展回访续单与雪山驿口人工 JSON；仍缺颜料矿谷/银器帐房人物回访与雪山驿路后日谈。', 'xueyu-pigment-valley 与 xueyu-silver-tent 仍缺人工 JSON。'],
+    nextActions: ['补颜料矿谷/银器帐房人物回访与材料状态反馈', '补雪山驿路护商结果接入供展续单后日谈', '扩展雪域多入口章节 smokeBindings'],
+    gaps: ['已有雪口活动即时订单、唐卡失败分支、净室供展回访续单与雪域四张核心人工 JSON；仍缺颜料矿谷/银器帐房人物回访、材料状态反馈与雪山驿路后日谈。'],
   },
   {
     id: 'chapter-xiyu-bazaar-caravan',

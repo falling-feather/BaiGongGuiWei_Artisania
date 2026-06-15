@@ -25,6 +25,10 @@ export interface RegionChapterSmokeScenario {
   priorProducedCraftIds?: string[];
 }
 
+export interface RegionChapterSmokeStateOptions {
+  subregionId?: string;
+}
+
 export const REGION_CHAPTER_SMOKE_SCENARIOS = {
   'chapter-jiangnan-baigong-homecoming': {
     id: 'chapter-jiangnan-baigong-homecoming',
@@ -243,10 +247,27 @@ function priorFlags(activityIds: readonly string[]): string[] {
   ]);
 }
 
-export function buildRegionChapterSmokeState(content: GameContent, scenarioId: string): GameState | null {
+function smokeStartSubregionId(
+  content: GameContent,
+  scenario: RegionChapterSmokeScenario,
+  requestedSubregionId?: string,
+): string {
+  if (!requestedSubregionId) return scenario.subregionId;
+  const region = (content.regions ?? []).find((entry) => entry.id === scenario.regionId);
+  return region?.subregions.some((subregion) => subregion.id === requestedSubregionId)
+    ? requestedSubregionId
+    : scenario.subregionId;
+}
+
+export function buildRegionChapterSmokeState(
+  content: GameContent,
+  scenarioId: string,
+  options: RegionChapterSmokeStateOptions = {},
+): GameState | null {
   const scenario = regionChapterSmokeScenarioById(scenarioId);
   const activity = (content.activities ?? []).find((item) => item.id === scenario?.activityId);
   if (!scenario || !activity) return null;
+  const startSubregionId = smokeStartSubregionId(content, scenario, options.subregionId);
 
   const base = createInitialState(
     content.crafts,
@@ -271,7 +292,7 @@ export function buildRegionChapterSmokeState(content: GameContent, scenarioId: s
     ...base,
     seed: 20260614,
     currentRegion: scenario.regionId,
-    currentSubregion: scenario.subregionId,
+    currentSubregion: startSubregionId,
     unlockedRegions: regionIds,
     calendar: createCalendar(1, scenario.phase),
     resources: buildChapterSmokeResources(content),
@@ -308,7 +329,7 @@ export function buildRegionChapterSmokeState(content: GameContent, scenarioId: s
       ...npcAffinity,
       [scenario.npcId]: 36,
     },
-    trackedLoreEntryId: scenario.loreEntryId ?? `subregion-${scenario.subregionId}`,
+    trackedLoreEntryId: scenario.loreEntryId ?? `subregion-${startSubregionId}`,
     log: [`M1 chapter smoke scenario loaded: ${scenario.label}`],
     playerName: DEV_NAME,
     devMode: true,

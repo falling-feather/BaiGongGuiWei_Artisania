@@ -793,6 +793,33 @@ export const ACTIVITY_CHALLENGES: ActivityChallengeDef[] = [
       },
     ],
   },
+  {
+    id: 'xy-silver-tent-inlay',
+    activityId: 'xy-silver-tent',
+    miniGame: 'aim_place',
+    title: '银帐嵌石',
+    prompt: '白银叔把银片、松石和经幡纹样摊开，要你先定哪一处能压住祝祷。',
+    choices: [
+      {
+        id: 'fit-stone-to-prayer',
+        label: '先按祝祷纹样定嵌石位置，再收银边',
+        quality: 0.9,
+        feedback: '白银叔点头：石位稳，纹样才不会只是好看。',
+      },
+      {
+        id: 'bright-stone-first',
+        label: '先挑最亮的松石放在正中',
+        quality: 0.55,
+        feedback: '松石抢眼，却未必合佩戴位置，银边还要重收。',
+      },
+      {
+        id: 'hammer-fast',
+        label: '先把银片锤薄，嵌石后面再说',
+        quality: 0.42,
+        feedback: '锤得快，银片却硬，嵌口会跟着虚。',
+      },
+    ],
+  },
   ...routeChallengeSpecs.map((spec) => challengeFromSpec(spec, routeChoices)),
   ...appraiseChallengeSpecs.map((spec) => challengeFromSpec(spec, appraiseChoices)),
 ];

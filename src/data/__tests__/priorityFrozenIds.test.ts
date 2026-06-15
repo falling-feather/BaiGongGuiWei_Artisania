@@ -47,6 +47,8 @@ const FROZEN_SUBREGION_IDS = [
   'sanjin-vinegar-yard',
   'xueyu-thangka-court',
   'xueyu-snow-pass',
+  'xueyu-pigment-valley',
+  'xueyu-silver-tent',
 ];
 
 const FROZEN_CRAFT_IDS = [
@@ -65,6 +67,7 @@ const FROZEN_CRAFT_IDS = [
   'cloisonne',
   'pingyao-lacquer',
   'thangka',
+  'tibetan-silver',
 ];
 
 const FROZEN_ACTIVITY_IDS = [
@@ -84,6 +87,8 @@ const FROZEN_ACTIVITY_IDS = [
   'sj-vinegar-yard',
   'xy-thangka-court',
   'xy-snow-pass',
+  'xy-pigment-valley',
+  'xy-silver-tent',
 ];
 
 const FROZEN_NPC_IDS = [
@@ -115,6 +120,8 @@ const FROZEN_NPC_IDS = [
   'sj-cu-langzhong',
   'xy-losang',
   'xy-yak-captain',
+  'xy-shicai-tong',
+  'xy-baiyinshu',
 ];
 
 const FROZEN_ROUTE_IDS = [
@@ -174,6 +181,8 @@ const FROZEN_LAYOUT_SUBREGION_IDS = [
   'sanjin-vinegar-yard',
   'xueyu-thangka-court',
   'xueyu-snow-pass',
+  'xueyu-pigment-valley',
+  'xueyu-silver-tent',
 ];
 
 function expectFrozenIds(

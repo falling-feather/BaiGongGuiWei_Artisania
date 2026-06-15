@@ -1,0 +1,30 @@
+{
+  "schema": "artisania-map-editor/v2",
+  "regionId": "xueyu",
+  "subregionId": "xueyu-silver-tent",
+  "tileSize": 32,
+  "size": { "w": 56, "h": 30 },
+  "roads": [
+    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
+    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
+    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
+    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
+    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
+    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+  ],
+  "objects": [
+    { "itemId": "player_spawn", "x": 28, "y": 15 },
+    { "itemId": "industry_harvest_silver", "name": "silver ore assay", "interaction": "industry", "targetId": "harvest-silver-ore", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_refine_silver", "name": "silver refining hearth", "interaction": "industry", "targetId": "refine-silver", "x": 15, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_tibetan_silver", "name": "tibetan silver bench", "interaction": "craft", "targetId": "tibetan-silver", "x": 25, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_silver", "name": "silver tent workshop", "interaction": "activity", "targetId": "xy-silver-tent", "x": 28, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to snow pass", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xueyu-snow-pass", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to thangka court", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xueyu-thangka-court", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to pigment valley", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xueyu-pigment-valley", "x": 32, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Bashu snow road", "interaction": "gate", "targetId": "bashu", "x": 49, "y": 9, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Xiyu caravan road", "interaction": "gate", "targetId": "xiyu", "x": 49, "y": 19, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "npc-xy-baiyinshu", "name": "Silver uncle", "interaction": "npc", "npcId": "xy-baiyinshu", "x": 31, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "turquoise-inlay-a", "name": "turquoise inlay tray", "interaction": "decoration", "x": 36, "y": 16, "tileW": 4, "tileH": 2, "solid": true },
+    { "itemId": "prayer-flag-line-a", "name": "prayer flag line", "interaction": "decoration", "x": 34, "y": 4, "tileW": 4, "tileH": 2, "solid": true }
+  ]
+}

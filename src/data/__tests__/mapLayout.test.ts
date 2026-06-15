@@ -192,6 +192,8 @@ describe('runtime map editor adapter', () => {
       'sanjin-vinegar-yard',
       'xueyu-thangka-court',
       'xueyu-snow-pass',
+      'xueyu-pigment-valley',
+      'xueyu-silver-tent',
       'xiyu-jade-yard',
       'xiyu-bazaar',
       'xiyu-caravan-post',
@@ -278,6 +280,25 @@ describe('runtime map editor adapter', () => {
         expect.objectContaining({ interaction: 'activity', targetId: 'xy-snow-pass' }),
         expect.objectContaining({ interaction: 'npc', npcId: 'xy-yak-captain' }),
         expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'xueyu-thangka-court' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('xueyu-pigment-valley')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-pigment' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'grind-pigment' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'xy-pigment-valley' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'xy-shicai-tong' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'xueyu-snow-pass' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('xueyu-silver-tent')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-silver-ore' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'refine-silver' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'tibetan-silver' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'xy-silver-tent' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'xy-baiyinshu' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'xueyu-snow-pass' }),
       ]),
     );
 

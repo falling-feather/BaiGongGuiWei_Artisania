@@ -209,6 +209,23 @@ const PRIORITY_MAP_LAYOUT_CASES: PriorityMapLayoutCase[] = [
     regionGateIds: ['bashu', 'xiyu'],
   },
   {
+    subregionId: 'xueyu-pigment-valley',
+    industryIds: ['harvest-pigment', 'grind-pigment'],
+    activityIds: ['xy-pigment-valley'],
+    npcIds: ['xy-shicai-tong'],
+    subregionGateIds: ['xueyu-snow-pass', 'xueyu-thangka-court', 'xueyu-silver-tent'],
+    regionGateIds: ['bashu', 'xiyu'],
+  },
+  {
+    subregionId: 'xueyu-silver-tent',
+    industryIds: ['harvest-silver-ore', 'refine-silver'],
+    craftIds: ['tibetan-silver'],
+    activityIds: ['xy-silver-tent'],
+    npcIds: ['xy-baiyinshu'],
+    subregionGateIds: ['xueyu-snow-pass', 'xueyu-thangka-court', 'xueyu-pigment-valley'],
+    regionGateIds: ['bashu', 'xiyu'],
+  },
+  {
     subregionId: 'xiyu-jade-yard',
     industryIds: ['harvest-copper-ore', 'smelt-copper'],
     craftIds: ['jade-carving'],
@@ -249,6 +266,8 @@ const M1_ADDITIONAL_SHIPPED_LAYOUT_IDS = [
   'sanjin-coal-yard',
   'sanjin-vinegar-yard',
   'xueyu-snow-pass',
+  'xueyu-pigment-valley',
+  'xueyu-silver-tent',
 ];
 
 function layoutFor(subregionId: string) {

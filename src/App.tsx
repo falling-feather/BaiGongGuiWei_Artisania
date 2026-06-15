@@ -78,15 +78,19 @@ function GameApp() {
   const chapterSmokeScenarioId = import.meta.env.DEV
     ? new URLSearchParams(window.location.search).get('chapterSmoke')
     : null;
+  const smokeSubregionId = import.meta.env.DEV
+    ? new URLSearchParams(window.location.search).get('smokeSubregion')
+    : null;
   const smokeNpcId = import.meta.env.DEV
     ? new URLSearchParams(window.location.search).get('npc')
     : null;
 
   // 首次挂载：恢复存档并探测是否有可续的存档
   useEffect(() => {
+    // DEV-only QA start override; formal region movement still goes through street gates.
     const loadedChapterSmoke = Boolean(
-      (chapterSmokeScenarioId && loadRegionChapterSmokeScenario(chapterSmokeScenarioId)) ||
-        (smokeScenarioId && loadRegionChapterSmokeScenario(smokeScenarioId)),
+      (chapterSmokeScenarioId && loadRegionChapterSmokeScenario(chapterSmokeScenarioId, smokeSubregionId ?? undefined)) ||
+        (smokeScenarioId && loadRegionChapterSmokeScenario(smokeScenarioId, smokeSubregionId ?? undefined)),
     );
     const loadedPrioritySmoke =
       !loadedChapterSmoke && Boolean(smokeScenarioId && loadPrioritySmokeScenario(smokeScenarioId));
@@ -105,6 +109,7 @@ function GameApp() {
     loadRegionChapterSmokeScenario,
     chapterSmokeScenarioId,
     smokeScenarioId,
+    smokeSubregionId,
     smokeNpcId,
   ]);
 

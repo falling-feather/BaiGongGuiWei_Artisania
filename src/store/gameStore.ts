@@ -79,7 +79,7 @@ interface GameStore {
   /** 开新局并清档 */
   newGame: (seed?: number, playerName?: string, slotId?: string) => Promise<string>;
   loadPrioritySmokeScenario: (scenarioId: string) => boolean;
-  loadRegionChapterSmokeScenario: (scenarioId: string) => boolean;
+  loadRegionChapterSmokeScenario: (scenarioId: string, subregionId?: string) => boolean;
   /** 删除指定存档槽 */
   deleteSaveSlot: (slotId: string) => Promise<void>;
 }
@@ -148,8 +148,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return true;
   },
 
-  loadRegionChapterSmokeScenario: (scenarioId) => {
-    const next = buildRegionChapterSmokeState(get().content, scenarioId);
+  loadRegionChapterSmokeScenario: (scenarioId, subregionId) => {
+    const next = buildRegionChapterSmokeState(get().content, scenarioId, { subregionId });
     if (!next) return false;
     set({ state: next, activeSaveSlotId: null, smokeMode: true });
     return true;
