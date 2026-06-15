@@ -159,6 +159,15 @@ const PRIORITY_MAP_LAYOUT_CASES: PriorityMapLayoutCase[] = [
     regionGateIds: ['jiangnan', 'ganpo'],
   },
   {
+    subregionId: 'huizhou-ink-alley',
+    industryIds: ['harvest-pine-soot', 'make-ink'],
+    craftIds: ['hui-ink'],
+    activityIds: ['hz-ink-workshop'],
+    npcIds: ['hz-cheng-moshou'],
+    subregionGateIds: ['huizhou-paper-valley', 'huizhou-she-stone', 'huizhou-merchant-hall'],
+    regionGateIds: ['jiangnan', 'ganpo'],
+  },
+  {
     subregionId: 'huizhou-merchant-hall',
     industryIds: ['harvest-tea-leaf', 'pick-tea'],
     craftIds: ['hui-carving'],
@@ -307,6 +316,7 @@ const M1_ADDITIONAL_SHIPPED_LAYOUT_IDS = [
   'jiangnan-baigongyuan',
   'ganpo-kaolin-hill',
   'ganpo-river-wood',
+  'huizhou-ink-alley',
   'jingji-market-gate',
   'sanjin-coal-yard',
   'sanjin-vinegar-yard',

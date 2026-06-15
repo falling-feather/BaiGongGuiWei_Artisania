@@ -596,6 +596,33 @@ export const ACTIVITY_CHALLENGES: ActivityChallengeDef[] = [
     ],
   },
   {
+    id: 'hz-ink-workshop-rhythm',
+    activityId: 'hz-ink-workshop',
+    miniGame: 'rhythm',
+    title: '松烟捶墨',
+    prompt: '程墨守把松烟、胶料和墨模排开，要你先稳哪一道劲。',
+    choices: [
+      {
+        id: 'soot-glue-rhythm',
+        label: '先分松烟细度，再按锤声和胶性入模',
+        quality: 0.9,
+        feedback: '墨锤落得稳，程墨守说这锭墨有骨也有润。',
+      },
+      {
+        id: 'heavy-hammer-fast',
+        label: '加重锤头赶快成型',
+        quality: 0.46,
+        feedback: '墨锭成得快，浮气却没散，落纸时容易发灰。',
+      },
+      {
+        id: 'gold-pattern-first',
+        label: '先描金纹样，墨性后面再补',
+        quality: 0.58,
+        feedback: '纹样显眼，但程墨守提醒：墨先要能写，再谈好看。',
+      },
+    ],
+  },
+  {
     id: 'jj-official-gate-dialogue',
     activityId: 'jj-official-gate',
     miniGame: 'dialogue_check',

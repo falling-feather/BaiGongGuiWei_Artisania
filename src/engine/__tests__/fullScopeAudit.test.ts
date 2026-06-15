@@ -62,6 +62,7 @@ describe('full scope audit', () => {
     const audit = buildFullScopeAudit(FULL_SCOPE_REGION_REQUIREMENTS, content, { layoutSubregionIds });
     const jiangnan = audit.rows.find((row) => row.regionId === 'jiangnan');
     const ganpo = audit.rows.find((row) => row.regionId === 'ganpo');
+    const huizhou = audit.rows.find((row) => row.regionId === 'huizhou');
     const xiyu = audit.rows.find((row) => row.regionId === 'xiyu');
 
     expect(jiangnan?.gaps).not.toContain('layout-subregion:2/4');
@@ -69,6 +70,8 @@ describe('full scope audit', () => {
     expect(ganpo?.gaps).not.toContain('layout-subregion:1/3');
     expect(ganpo?.signatureCraftsWithoutInteraction).toContain('xiabu');
     expect(ganpo?.m1Actions).toContain('补河运柴场长线风险与高岭瓷土读数');
+    expect(huizhou?.m1Actions).toContain('补歙石山坑运行入口');
+    expect(huizhou?.m1Actions).not.toContain('补墨砚深巷或歙石山坑运行入口');
     expect(xiyu?.gaps).not.toContain('layout-subregion:3/4');
     expect(xiyu?.signatureCraftsWithoutInteraction).not.toContain('atlas-silk');
     expect(xiyu?.signatureCraftsWithoutInteraction).toEqual(expect.arrayContaining(['carpet', 'copperware']));

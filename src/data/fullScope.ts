@@ -119,7 +119,7 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['宣纸/徽墨/歙砚', '徽商信用', '文房荐藏'],
     targetMinimums: DEFAULT_MINIMUMS,
     m1Actions: [
-      '补墨砚深巷或歙石山坑运行入口',
+      '补歙石山坑运行入口',
       '把文房荐藏续单接入徽商会馆信用',
       '补宣纸、徽墨、歙砚的订单差异',
     ],

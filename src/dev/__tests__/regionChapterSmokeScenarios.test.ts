@@ -140,6 +140,23 @@ describe('region chapter smoke scenarios', () => {
     expect(spec?.activities.some((activity) => activity.id === 'xy-pigment-valley')).toBe(true);
   });
 
+  it('allows DEV Huizhou chapter smoke to start at the M1.18 ink alley for browser QA', () => {
+    const state = buildRegionChapterSmokeState(content, 'chapter-huizhou-paper-merchant', {
+      subregionId: 'huizhou-ink-alley',
+    });
+    if (!state) throw new Error('Missing Huizhou chapter smoke state');
+
+    const spec = buildRegionSpec(state.currentRegion, state);
+
+    expect(state.currentRegion).toBe('huizhou');
+    expect(state.currentSubregion).toBe('huizhou-ink-alley');
+    expect(state.trackedLoreEntryId).toBe('subregion-huizhou-ink-alley');
+    expect(spec?.subregionId).toBe('huizhou-ink-alley');
+    expect(spec?.activities.some((activity) => activity.id === 'hz-ink-workshop')).toBe(true);
+    expect(spec?.crafts.some((craft) => craft.id === 'hui-ink')).toBe(true);
+    expect(spec?.npcs.some((npc) => npc.id === 'hz-cheng-moshou')).toBe(true);
+  });
+
   it('ignores chapter smoke subregion overrides outside the scenario region', () => {
     const state = buildRegionChapterSmokeState(content, 'chapter-xueyu-thangka-snowpass', {
       subregionId: 'xiyu-caravan-post',

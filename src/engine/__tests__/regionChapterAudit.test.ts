@@ -109,11 +109,14 @@ describe('region chapter audit', () => {
     });
     const jiangnan = audit.rows.find((row) => row.regionId === 'jiangnan');
     const ganpo = audit.rows.find((row) => row.regionId === 'ganpo');
+    const huizhou = audit.rows.find((row) => row.regionId === 'huizhou');
 
     expect(jiangnan?.unknownReferences).toEqual([]);
     expect(jiangnan?.layoutGaps).not.toContain('layout-subregion:jiangnan-suhang');
     expect(jiangnan?.layoutGaps).not.toContain('layout-subregion:jiangnan-baigongyuan');
     expect(ganpo?.layoutGaps).not.toContain('layout-subregion:ganpo-kaolin-hill');
     expect(ganpo?.layoutGaps).not.toContain('layout-subregion:ganpo-river-wood');
+    expect(huizhou?.layoutGaps).not.toContain('layout-subregion:huizhou-ink-alley');
+    expect(huizhou?.layoutGaps).toContain('layout-subregion:huizhou-she-stone');
   });
 });

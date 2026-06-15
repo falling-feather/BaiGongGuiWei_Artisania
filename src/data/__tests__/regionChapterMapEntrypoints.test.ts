@@ -19,6 +19,21 @@ describe('region chapter map entrypoints', () => {
     expect(jiangnan?.gaps.join('\n')).not.toMatch(/jiangnan-baigongyuan.*仍缺|仍缺.*jiangnan-baigongyuan/);
   });
 
+  it('keeps Huizhou M1.18 ink alley layout closed while retaining the She stone map gap', () => {
+    const huizhou = REGION_CHAPTERS.find((chapter) => chapter.id === 'chapter-huizhou-paper-merchant');
+    const gapText = huizhou?.gaps.join('\n') ?? '';
+
+    expect(huizhou?.entrySubregionIds).toEqual([
+      'huizhou-paper-valley',
+      'huizhou-ink-alley',
+      'huizhou-she-stone',
+      'huizhou-merchant-hall',
+    ]);
+    expect(layoutSubregionIds.has('huizhou-ink-alley')).toBe(true);
+    expect(gapText).not.toMatch(/huizhou-ink-alley.*人工 JSON|人工 JSON.*huizhou-ink-alley/);
+    expect(gapText).toContain('huizhou-she-stone');
+  });
+
   it('keeps every missing chapter layout explicit in chapter gaps', () => {
     for (const chapter of REGION_CHAPTERS) {
       const gapText = chapter.gaps.join('\n');

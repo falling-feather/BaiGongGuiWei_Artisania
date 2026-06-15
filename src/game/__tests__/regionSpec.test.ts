@@ -136,6 +136,35 @@ describe('runtime map layouts', () => {
     );
   });
 
+  it('attaches M1.18 Huizhou ink alley layout to the local street spec', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const inkAlley = buildRegionSpec('huizhou', {
+      ...base,
+      currentRegion: 'huizhou',
+      currentSubregion: 'huizhou-ink-alley',
+      unlockedRegions: [...new Set([...base.unlockedRegions, 'huizhou', 'jiangnan', 'ganpo'])],
+    });
+
+    expect(inkAlley?.layout).toMatchObject({ subregionId: 'huizhou-ink-alley', size: { w: 56, h: 30 } });
+    expect(inkAlley?.layout?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-pine-soot' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'make-ink' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'hui-ink' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'hz-ink-workshop' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'hz-cheng-moshou' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'huizhou-paper-valley' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'huizhou-merchant-hall' }),
+      ]),
+    );
+    expect(inkAlley?.npcs.find((npc) => npc.id === 'hz-cheng-moshou')).toMatchObject({
+      tileX: 30,
+      tileY: 20,
+    });
+    expect(inkAlley?.activities.some((activity) => activity.id === 'hz-ink-workshop')).toBe(true);
+    expect(inkAlley?.crafts.some((craft) => craft.id === 'hui-ink')).toBe(true);
+  });
+
   it('only references live street targets from manual layouts', () => {
     const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
     const errors: string[] = [];

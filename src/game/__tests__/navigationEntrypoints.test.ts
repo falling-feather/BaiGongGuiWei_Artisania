@@ -143,4 +143,33 @@ describe('navigation entrypoints', () => {
     });
     expect(currentStreetRegionGate(state, 'xueyu')).toBeNull();
   });
+
+  it('validates Huizhou ink alley subregion gates from the current street spec', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const paperValley = {
+      ...base,
+      currentRegion: 'huizhou',
+      currentSubregion: 'huizhou-paper-valley',
+      unlockedRegions: [...new Set([...base.unlockedRegions, 'huizhou', 'jiangnan', 'ganpo'])],
+    };
+    const inkAlley = {
+      ...paperValley,
+      currentSubregion: 'huizhou-ink-alley',
+    };
+
+    expect(isCurrentStreetSubregionGate(paperValley, 'huizhou-ink-alley')).toBe(true);
+    expect(isCurrentStreetSubregionGate(inkAlley, 'huizhou-paper-valley')).toBe(true);
+    expect(isCurrentStreetSubregionGate(inkAlley, 'huizhou-merchant-hall')).toBe(true);
+    expect(isCurrentStreetSubregionGate(inkAlley, 'huizhou-ink-alley')).toBe(false);
+    expect(isCurrentStreetSubregionGate(inkAlley, 'jiangnan-suhang')).toBe(false);
+    expect(currentStreetRegionGate(inkAlley, 'jiangnan')).toMatchObject({
+      regionId: 'jiangnan',
+      routeId: 'route-jiangnan-huizhou-paper',
+    });
+    expect(currentStreetRegionGate(inkAlley, 'ganpo')).toMatchObject({
+      regionId: 'ganpo',
+      routeId: 'route-ganpo-huizhou-merchant',
+    });
+    expect(currentStreetRegionGate(inkAlley, 'bashu')).toBeNull();
+  });
 });
