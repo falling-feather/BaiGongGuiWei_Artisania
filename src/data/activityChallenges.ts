@@ -739,6 +739,60 @@ export const ACTIVITY_CHALLENGES: ActivityChallengeDef[] = [
       },
     ],
   },
+  {
+    id: 'sj-coal-iron-yard-fire',
+    activityId: 'sj-coal-iron-yard',
+    miniGame: 'timing_hold',
+    title: '煤铁验火',
+    prompt: '窑塬汉把煤、铁矿和驮车账摆在炉口，要你先稳哪一处。',
+    choices: [
+      {
+        id: 'dry-coal-clear-ring',
+        label: '先筛干煤，再听铁声定炉温',
+        quality: 0.9,
+        feedback: '煤干、铁声清，窑塬汉说这批重货才有资格入保票账。',
+      },
+      {
+        id: 'ore-first',
+        label: '只挑铁矿分量，煤火后面再补',
+        quality: 0.56,
+        feedback: '矿是重了，火却不稳，驮车账还要多记一笔损耗。',
+      },
+      {
+        id: 'rush-smoke',
+        label: '猛添煤快出炉，赶在驮车前装货',
+        quality: 0.42,
+        feedback: '炉口烟重，铁声发闷，窑塬汉把保票账又压回桌上。',
+      },
+    ],
+  },
+  {
+    id: 'sj-vinegar-yard-ferment',
+    activityId: 'sj-vinegar-yard',
+    miniGame: 'timing_hold',
+    title: '醋坊封坛',
+    prompt: '醋郎中掀开缸口，让你在酸香、晒醅和封坛日之间定下账面。',
+    choices: [
+      {
+        id: 'thick-aroma-ledger',
+        label: '先闻酸香厚薄，再记晒醅和封坛日',
+        quality: 0.9,
+        feedback: '酸气厚而不冲，醋郎中说这才是饭铺敢按日用账收的醋。',
+      },
+      {
+        id: 'seal-by-date',
+        label: '按日子直接封坛，少开缸免得走味',
+        quality: 0.58,
+        feedback: '日子有了，酸香却没记清，送铺子时还会被追问。',
+      },
+      {
+        id: 'strong-sour-fast',
+        label: '取最冲的一缸先送，味重才显得够老',
+        quality: 0.4,
+        feedback: '醋郎中摇头：冲不是厚，日用账最怕一口坏口碑。',
+      },
+    ],
+  },
   ...routeChallengeSpecs.map((spec) => challengeFromSpec(spec, routeChoices)),
   ...appraiseChallengeSpecs.map((spec) => challengeFromSpec(spec, appraiseChoices)),
 ];

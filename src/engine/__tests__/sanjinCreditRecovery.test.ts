@@ -121,6 +121,55 @@ function pingyaoItem(
   };
 }
 
+function sanjinLedgerItem(
+  resourceId: string,
+  id: string,
+  state: GameState,
+  quality = 0.72,
+  status: ItemInstance['status'] = 'held',
+): ItemInstance {
+  const sourceCraftId = resourceId === 'agedVinegar' ? 'aged-vinegar' : undefined;
+  const originSubregionId = resourceId === 'agedVinegar' ? 'sanjin-vinegar-yard' : 'sanjin-coal-yard';
+  return {
+    id,
+    resourceId,
+    sourceCraftId,
+    originRegionId: 'sanjin',
+    originSubregionId,
+    createdTurn: state.turn,
+    quality,
+    descriptors: resourceId === 'agedVinegar'
+      ? ['thick aroma', 'sealed jar']
+      : ['clear ring', 'heavy freight'],
+    appraisal: resourceId === 'agedVinegar'
+      ? 'The vinegar keeps a thick aroma and a clean sealing date.'
+      : 'The iron sample rings clean enough for a heavy-freight ledger.',
+    displayName: resourceId === 'agedVinegar'
+      ? 'Qingxu vinegar ledger sample'
+      : 'Coal iron ledger sample',
+    status,
+  };
+}
+
+function withSanjinLedgerItems(state: GameState): GameState {
+  return {
+    ...state,
+    resources: {
+      ...state.resources,
+      ironIngot: Math.max(3, state.resources.ironIngot ?? 0),
+      agedVinegar: Math.max(2, state.resources.agedVinegar ?? 0),
+    },
+    itemInstances: [
+      sanjinLedgerItem('ironIngot', 'display-sanjin-iron-ledger', state, 0.72, 'displayed'),
+      sanjinLedgerItem('ironIngot', 'held-sanjin-iron-ledger', state, 0.74),
+      sanjinLedgerItem('ironIngot', 'held-sanjin-iron-ledger-spare', state, 0.73),
+      sanjinLedgerItem('agedVinegar', 'display-sanjin-vinegar-ledger', state, 0.7, 'displayed'),
+      sanjinLedgerItem('agedVinegar', 'held-sanjin-vinegar-ledger', state, 0.72),
+      ...state.itemInstances,
+    ],
+  };
+}
+
 function withPolishGallery(state: GameState): GameState {
   return {
     ...state,
@@ -220,20 +269,39 @@ function reportFor(state: GameState): GameState {
   return gameReducer({ ...state, turn: state.maxTurns }, { type: 'END_TURN' }, content);
 }
 
+function requestNpcOrder(state: GameState, npcId: string): { state: GameState; order: ActiveOrder } {
+  const next = gameReducer(state, { type: 'USE_NPC_FUNCTION', npcId, functionKind: 'order' }, content);
+  const order = next.activeOrders.find((item) => item.npcId === npcId && item.status === 'active');
+  if (!order) throw new Error(`Missing active order for ${npcId}`);
+  return { state: next, order };
+}
+
 describe('Sanjin ticket-house credit recovery', () => {
   it('binds the chapter to ticket-house credit, polish return visits, and hand-polish collab', () => {
     const chapter = REGION_CHAPTERS.find((item) => item.id === 'chapter-sanjin-piaohao-lacquer');
     const returnVisit = HOME_VISITS.find((item) => item.id === 'homevisit-pingyao-client-return');
     const aftertalkVisit = HOME_VISITS.find((item) => item.id === 'homevisit-lei-credit-ledger-aftertalk');
+    const yaoyuanVisit = HOME_VISITS.find((item) => item.id === 'homevisit-yaoyuan-coal-iron-ledger-return');
+    const vinegarVisit = HOME_VISITS.find((item) => item.id === 'homevisit-cu-vinegar-ledger-return');
+    const yaoyuanNpc = ALL_NPCS.find((item) => item.id === 'sj-yaoyuan-han');
+    const vinegarNpc = ALL_NPCS.find((item) => item.id === 'sj-cu-langzhong');
 
     expect(chapter?.characterNpcIds).toEqual(
-      expect.arrayContaining([expect.objectContaining({ npcId: 'sj-lei-zhanggui', role: 'trade' })]),
+      expect.arrayContaining([
+        expect.objectContaining({ npcId: 'sj-lei-zhanggui', role: 'trade' }),
+        expect.objectContaining({ npcId: 'sj-yaoyuan-han', role: 'trade' }),
+        expect.objectContaining({ npcId: 'sj-cu-langzhong', role: 'lifeCulture' }),
+      ]),
     );
     expect(chapter?.orderHooks).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ source: 'activity', id: 'sj-piaohao', readsItemState: true }),
+        expect.objectContaining({ source: 'activity', id: 'sj-coal-iron-yard', readsItemState: true }),
+        expect.objectContaining({ source: 'activity', id: 'sj-vinegar-yard', readsItemState: true }),
         expect.objectContaining({ source: 'homeVisit', id: 'homevisit-pingyao-client-return', readsItemState: true }),
         expect.objectContaining({ source: 'homeVisit', id: 'homevisit-lei-credit-ledger-aftertalk', readsItemState: true }),
+        expect.objectContaining({ source: 'homeVisit', id: 'homevisit-yaoyuan-coal-iron-ledger-return', readsItemState: true }),
+        expect.objectContaining({ source: 'homeVisit', id: 'homevisit-cu-vinegar-ledger-return', readsItemState: true }),
         expect.objectContaining({ source: 'collab', id: 'collab-pingyao-hand-polish', readsItemState: true }),
       ]),
     );
@@ -242,6 +310,8 @@ describe('Sanjin ticket-house credit recovery', () => {
         'homevisit-pingyao-polish-room',
         'homevisit-pingyao-client-return',
         'homevisit-lei-credit-ledger-aftertalk',
+        'homevisit-yaoyuan-coal-iron-ledger-return',
+        'homevisit-cu-vinegar-ledger-return',
       ]),
     );
     expect(chapter?.collabRecipeIds).toContain('collab-pingyao-hand-polish');
@@ -249,6 +319,170 @@ describe('Sanjin ticket-house credit recovery', () => {
     expect(aftertalkVisit?.requiredFlags).toContain('sanjin-credit-ledger-aftertalk-open');
     expect(aftertalkVisit?.blockedFlags).toContain('sanjin-credit-ledger-aftertalk-settled');
     expect(aftertalkVisit?.blockedFlags).not.toContain('sanjin-credit-compound-ledger-open');
+    expect(yaoyuanVisit?.requiredFlags).toContain('sanjin-credit-coal-vinegar-ledger-clue');
+    expect(yaoyuanVisit?.blockedFlags).toContain('sanjin-coal-iron-ledger-settled');
+    expect(vinegarVisit?.requiredFlags).toContain('sanjin-coal-iron-ledger-settled');
+    expect(vinegarVisit?.blockedFlags).toContain('sanjin-vinegar-life-ledger-settled');
+    expect(yaoyuanNpc?.functions).toEqual(expect.arrayContaining(['order', 'homeVisit']));
+    expect(vinegarNpc?.functions).toEqual(expect.arrayContaining(['order', 'homeVisit']));
+  });
+
+  it('realizes the coal and vinegar ledger line through Lei, Yaoyuan, and Cu return visits', () => {
+    const beforeClue = withPolishGallery({
+      ...sanjinState(),
+      npcAffinity: {
+        ...sanjinState().npcAffinity,
+        'sj-lei-zhanggui': 54,
+        'sj-yaoyuan-han': 54,
+        'sj-cu-langzhong': 54,
+      },
+      flags: [...sanjinState().flags, 'sanjin-credit-ledger-aftertalk-open'],
+    });
+    const clue = gameReducer(
+      beforeClue,
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'sj-lei-zhanggui',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'lei-coal-vinegar-ledger-clue',
+      },
+      content,
+    );
+    expect(clue.flags).toContain('homevisit-choice-lei-coal-vinegar-ledger');
+    expect(clue.flags).toContain('sanjin-credit-coal-vinegar-ledger-clue');
+    expect(clue.flags).not.toContain('sanjin-credit-interest-settled');
+
+    const beforeCuVisit = gameReducer(
+      withSanjinLedgerItems({
+        ...sanjinState(),
+        npcAffinity: { ...sanjinState().npcAffinity, 'sj-cu-langzhong': 54 },
+      }),
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'sj-cu-langzhong',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'cu-vinegar-ledger-order',
+      },
+      content,
+    );
+    expect(beforeCuVisit.activeOrders.some((item) => item.sourceHomeVisitChoiceId === 'cu-vinegar-ledger-order')).toBe(false);
+
+    const yaoyuanOpened = gameReducer(
+      withSanjinLedgerItems(clue),
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'sj-yaoyuan-han',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'yaoyuan-coal-iron-ledger-order',
+      },
+      content,
+    );
+    const yaoyuanRecord = yaoyuanOpened.homeVisitRecords[0];
+    const yaoyuanOrder = activeOrder(yaoyuanOpened, (candidate) => candidate.id === yaoyuanRecord.referralOrderId);
+    expect(yaoyuanRecord.choiceId).toBe('yaoyuan-coal-iron-ledger-order');
+    expect(yaoyuanOrder).toMatchObject({
+      orderKind: 'referral',
+      sourceHomeVisitChoiceId: 'yaoyuan-coal-iron-ledger-order',
+      resourceId: 'ironIngot',
+      minQuality: 0.6,
+    });
+
+    const duplicateYaoyuan = gameReducer(
+      {
+        ...yaoyuanOpened,
+        calendar: { ...yaoyuanOpened.calendar, day: yaoyuanOpened.calendar.day + 1 },
+      },
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'sj-yaoyuan-han',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'yaoyuan-coal-iron-ledger-order',
+      },
+      content,
+    );
+    expect(
+      duplicateYaoyuan.activeOrders.filter((item) => item.sourceHomeVisitChoiceId === 'yaoyuan-coal-iron-ledger-order'),
+    ).toHaveLength(1);
+
+    const coalSettled = gameReducer(yaoyuanOpened, { type: 'FULFILL_ORDER', orderId: yaoyuanOrder.id }, content);
+    expect(coalSettled.activeOrders.find((item) => item.id === yaoyuanOrder.id)?.status).toBe('completed');
+    expect(coalSettled.flags).toContain('homevisit-referral-completed:yaoyuan-coal-iron-ledger-order');
+    expect(coalSettled.flags).toContain('sanjin-coal-iron-ledger-settled');
+    expect(coalSettled.flags).not.toContain('sanjin-credit-coal-vinegar-ledger-realized');
+
+    const vinegarOpened = gameReducer(
+      withSanjinLedgerItems(coalSettled),
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'sj-cu-langzhong',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'cu-vinegar-ledger-order',
+      },
+      content,
+    );
+    const vinegarRecord = vinegarOpened.homeVisitRecords[0];
+    const vinegarOrder = activeOrder(vinegarOpened, (candidate) => candidate.id === vinegarRecord.referralOrderId);
+    expect(vinegarRecord.choiceId).toBe('cu-vinegar-ledger-order');
+    expect(vinegarOrder).toMatchObject({
+      orderKind: 'referral',
+      sourceHomeVisitChoiceId: 'cu-vinegar-ledger-order',
+      resourceId: 'agedVinegar',
+      minQuality: 0.58,
+    });
+
+    const realized = gameReducer(vinegarOpened, { type: 'FULFILL_ORDER', orderId: vinegarOrder.id }, content);
+    expect(realized.activeOrders.find((item) => item.id === vinegarOrder.id)?.status).toBe('completed');
+    expect(realized.flags).toContain('homevisit-referral-completed:cu-vinegar-ledger-order');
+    expect(realized.flags).toContain('sanjin-vinegar-life-ledger-settled');
+    expect(realized.flags).toContain('sanjin-credit-coal-vinegar-ledger-realized');
+
+    const report = reportFor({
+      ...realized,
+      npcAffinity: { ...realized.npcAffinity, 'sj-yaoyuan-han': 82, 'sj-cu-langzhong': 81 },
+    });
+    const yaoyuanName = ALL_NPCS.find((item) => item.id === 'sj-yaoyuan-han')?.name;
+    const vinegarName = ALL_NPCS.find((item) => item.id === 'sj-cu-langzhong')?.name;
+    expect(report.report?.relationshipOutcomes?.some((line) => Boolean(yaoyuanName && line.includes(yaoyuanName)))).toBe(true);
+    expect(report.report?.relationshipOutcomes?.some((line) => Boolean(vinegarName && line.includes(vinegarName)))).toBe(true);
+  });
+
+  it('uses ledger-specific NPC order terms as the fallback route', () => {
+    const clueState = withSanjinLedgerItems({
+      ...sanjinState(),
+      npcAffinity: { ...sanjinState().npcAffinity, 'sj-yaoyuan-han': 54, 'sj-cu-langzhong': 54 },
+      flags: [...sanjinState().flags, 'sanjin-credit-coal-vinegar-ledger-clue'],
+    });
+    const yaoyuan = requestNpcOrder(clueState, 'sj-yaoyuan-han');
+    expect(yaoyuan.order).toMatchObject({
+      npcId: 'sj-yaoyuan-han',
+      orderKind: 'consignment',
+      resourceId: 'ironIngot',
+      depositCoin: 0,
+    });
+    expect(yaoyuan.order.creditNote).toBeTruthy();
+
+    const coalSettled = gameReducer(yaoyuan.state, { type: 'FULFILL_ORDER', orderId: yaoyuan.order.id }, content);
+    expect(coalSettled.flags).toContain('sanjin-coal-iron-ledger-settled');
+    expect(coalSettled.flags).toContain('sanjin-coal-iron-ledger-order-settled');
+
+    const vinegar = requestNpcOrder(
+      withSanjinLedgerItems({
+        ...coalSettled,
+        calendar: { ...coalSettled.calendar, day: coalSettled.calendar.day + 1 },
+      }),
+      'sj-cu-langzhong',
+    );
+    expect(vinegar.order).toMatchObject({
+      npcId: 'sj-cu-langzhong',
+      orderKind: 'consignment',
+      resourceId: 'agedVinegar',
+      depositCoin: 0,
+    });
+    expect(vinegar.order.creditNote).toBeTruthy();
+
+    const realized = gameReducer(vinegar.state, { type: 'FULFILL_ORDER', orderId: vinegar.order.id }, content);
+    expect(realized.flags).toContain('sanjin-vinegar-life-ledger-order-settled');
+    expect(realized.flags).toContain('sanjin-credit-coal-vinegar-ledger-realized');
   });
 
   it('penalizes new Lei Zhanggui credit orders after default and restores terms after polish-ledger payback', () => {

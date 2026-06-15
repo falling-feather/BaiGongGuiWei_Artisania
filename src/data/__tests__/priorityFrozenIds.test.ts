@@ -40,7 +40,9 @@ const FROZEN_SUBREGION_IDS = [
   'huizhou-paper-valley',
   'jingji-palace-yard',
   'sanjin-piaohao',
+  'sanjin-coal-yard',
   'sanjin-lacquer-yard',
+  'sanjin-vinegar-yard',
   'xueyu-thangka-court',
   'xueyu-snow-pass',
 ];
@@ -75,6 +77,8 @@ const FROZEN_ACTIVITY_IDS = [
   'hz-merchant-hall',
   'jj-official-gate',
   'sj-piaohao',
+  'sj-coal-iron-yard',
+  'sj-vinegar-yard',
   'xy-thangka-court',
   'xy-snow-pass',
 ];
@@ -101,6 +105,8 @@ const FROZEN_NPC_IDS = [
   'jj-lan-daqi',
   'sj-pingyao-qipo',
   'sj-lei-zhanggui',
+  'sj-yaoyuan-han',
+  'sj-cu-langzhong',
   'xy-losang',
   'xy-yak-captain',
 ];
@@ -126,6 +132,8 @@ const FROZEN_HOME_VISIT_IDS = [
   'homevisit-pingyao-polish-room',
   'homevisit-pingyao-client-return',
   'homevisit-lei-credit-ledger-aftertalk',
+  'homevisit-yaoyuan-coal-iron-ledger-return',
+  'homevisit-cu-vinegar-ledger-return',
   'homevisit-losang-thangka-hall',
   'homevisit-losang-patron-return',
 ];

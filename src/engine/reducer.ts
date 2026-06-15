@@ -3358,6 +3358,22 @@ function relationshipOutcomeAddendum(state: GameState, npc: NpcDef): string {
       '票号旧识完成复看后，她把掌温、光口和验样凭记都写进北地漆档。',
     );
   }
+  if (npc.id === 'sj-yaoyuan-han') {
+    if (state.flags.includes('sanjin-coal-iron-ledger-settled')) {
+      return '煤铁保票重货单已经清过，他把煤耗、铁声和驮车折耗都写成百工院能担保的重货账。';
+    }
+    if (state.flags.includes('sanjin-credit-coal-vinegar-ledger-clue')) {
+      return '雷掌柜圈出的煤铁账线已经递到窑塬，他还在等百工院拿出能入保票的重货凭样。';
+    }
+  }
+  if (npc.id === 'sj-cu-langzhong') {
+    if (state.flags.includes('sanjin-vinegar-life-ledger-settled')) {
+      return '醋坊民生日用账已经结清，他把封坛日、酸香厚薄和饭铺送达写成清徐日常声誉。';
+    }
+    if (state.flags.includes('sanjin-coal-iron-ledger-settled')) {
+      return '煤铁重货账清过后，他开始把清徐醋坊的日用送达也接进票号街账本。';
+    }
+  }
   if (npc.id === 'ln-he-yunsha') {
     return collectorReputationAddendum(
       state,
@@ -5218,6 +5234,40 @@ function npcOrderTerms(
       creditTrustScore: trust,
     };
   }
+  if (
+    npc.id === 'sj-yaoyuan-han' &&
+    state.flags.includes('sanjin-credit-coal-vinegar-ledger-clue') &&
+    !state.flags.includes('sanjin-coal-iron-ledger-settled')
+  ) {
+    return {
+      orderKind: 'consignment',
+      titleSuffix: '煤铁保票账单',
+      descLead: '煤铁账线已由票号圈出，',
+      creditNote: '要按煤耗、铁声和驮车折耗留凭；这张单会影响后续重货保票声誉。',
+      depositCoin: 0,
+      rewardPremium: 8,
+      minQualityDelta: 0.04,
+      expiresInDelta: -1,
+      creditTrustScore: undefined,
+    };
+  }
+  if (
+    npc.id === 'sj-cu-langzhong' &&
+    state.flags.includes('sanjin-coal-iron-ledger-settled') &&
+    !state.flags.includes('sanjin-vinegar-life-ledger-settled')
+  ) {
+    return {
+      orderKind: 'consignment',
+      titleSuffix: '醋坊民生日用账单',
+      descLead: '煤铁重货账已清，清徐醋坊账线接入票号街，',
+      creditNote: '要把封坛日、酸香厚薄和饭铺日用送达写清；这张单会影响民生账声誉。',
+      depositCoin: 0,
+      rewardPremium: 6,
+      minQualityDelta: 0.03,
+      expiresInDelta: 0,
+      creditTrustScore: undefined,
+    };
+  }
   if (npc.id === 'jj-song-yasi') {
     const palaceBacker =
       state.flags.includes('collector-reputation-palace-renewed') ||
@@ -5302,9 +5352,10 @@ function createNpcOrder(
   affinity: number,
 ): ActiveOrder {
   const candidates = orderResourceCandidates(npc, content);
-  const resourceId = candidates
-    .sort((a, b) => orderCandidateScore(state, content, npc, b, affinity) - orderCandidateScore(state, content, npc, a, affinity))[0]
-    ?.resourceId ?? 'bambooWare';
+  const resourceId = sanjinLedgerOrderResource(state, npc) ??
+    candidates
+      .sort((a, b) => orderCandidateScore(state, content, npc, b, affinity) - orderCandidateScore(state, content, npc, a, affinity))[0]
+      ?.resourceId ?? 'bambooWare';
   const rank = resourceTierRank(content, resourceId);
   const reputation = regionReputationOf(state, npc.regionId);
   const routeIds = orderRouteIdsForNpc(state, content, npc, reputation);
@@ -5371,6 +5422,24 @@ function createNpcOrder(
 
 function activeOrderForNpc(state: GameState, npcId: string) {
   return (state.activeOrders ?? []).find((order) => order.npcId === npcId && order.status === 'active') ?? null;
+}
+
+function sanjinLedgerOrderResource(state: GameState, npc: NpcDef): string | null {
+  if (
+    npc.id === 'sj-yaoyuan-han' &&
+    state.flags.includes('sanjin-credit-coal-vinegar-ledger-clue') &&
+    !state.flags.includes('sanjin-coal-iron-ledger-settled')
+  ) {
+    return 'ironIngot';
+  }
+  if (
+    npc.id === 'sj-cu-langzhong' &&
+    state.flags.includes('sanjin-coal-iron-ledger-settled') &&
+    !state.flags.includes('sanjin-vinegar-life-ledger-settled')
+  ) {
+    return 'agedVinegar';
+  }
+  return null;
 }
 
 function consumeOrderItems(items: ItemInstance[], order: ActiveOrder) {
@@ -5447,6 +5516,28 @@ function fulfillOrder(state: GameState, content: GameContent, orderId: string): 
     flags.add('sanjin-credit-interest-settled');
     flags.add('sanjin-credit-ledger-aftertalk-settled');
     flags.add('credit-repeat-default-settled:sj-lei-zhanggui');
+  }
+  if (order.sourceHomeVisitChoiceId === 'yaoyuan-coal-iron-ledger-order') {
+    flags.add('sanjin-coal-iron-ledger-settled');
+    flags.add('sanjin-coal-iron-ledger-return-settled');
+  }
+  if (order.sourceHomeVisitChoiceId === 'cu-vinegar-ledger-order') {
+    flags.add('sanjin-vinegar-life-ledger-settled');
+    flags.add('sanjin-vinegar-ledger-return-settled');
+  }
+  if (order.npcId === 'sj-yaoyuan-han' && order.orderKind === 'consignment') {
+    flags.add('sanjin-coal-iron-ledger-settled');
+    flags.add('sanjin-coal-iron-ledger-order-settled');
+  }
+  if (order.npcId === 'sj-cu-langzhong' && order.orderKind === 'consignment') {
+    flags.add('sanjin-vinegar-life-ledger-settled');
+    flags.add('sanjin-vinegar-life-ledger-order-settled');
+  }
+  if (
+    (flags.has('sanjin-coal-iron-ledger-settled') || flags.has('sanjin-coal-iron-ledger-order-settled')) &&
+    (flags.has('sanjin-vinegar-life-ledger-settled') || flags.has('sanjin-vinegar-life-ledger-order-settled'))
+  ) {
+    flags.add('sanjin-credit-coal-vinegar-ledger-realized');
   }
   for (const routeId of order.routeIds ?? []) flags.add(`route-known:${routeId}`);
 
