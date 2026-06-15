@@ -125,6 +125,7 @@ const FROZEN_HOME_VISIT_IDS = [
   'homevisit-alan-tea-road-client-return',
   'homevisit-pingyao-polish-room',
   'homevisit-pingyao-client-return',
+  'homevisit-lei-credit-ledger-aftertalk',
   'homevisit-losang-thangka-hall',
   'homevisit-losang-patron-return',
 ];

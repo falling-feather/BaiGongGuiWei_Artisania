@@ -1570,7 +1570,18 @@ function expireOrdersForDay(state: GameState, content: GameContent, day: number)
     flags.add(`order-expired:${order.id}`);
     if (order.orderKind && order.orderKind !== 'npc') flags.add(`${order.orderKind}-order-expired:${order.npcId}`);
     if ((order.depositCoin ?? 0) > 0) flags.add(`deposit-forfeited:${order.npcId}`);
-    if (order.orderKind === 'credit') flags.add(`credit-default:${order.npcId}`);
+    if (order.orderKind === 'credit') {
+      flags.add(`credit-default:${order.npcId}`);
+      if (
+        order.npcId === 'sj-lei-zhanggui' &&
+        state.flags.includes('credit-default-repaired:sj-lei-zhanggui') &&
+        !state.flags.includes('sanjin-credit-interest-settled')
+      ) {
+        flags.add('credit-repeat-default:sj-lei-zhanggui');
+        flags.add('sanjin-credit-interest-accrued');
+        flags.add('sanjin-credit-ledger-aftertalk-open');
+      }
+    }
     if (order.sourceHomeVisitRecordId) flags.add(`homevisit-order-expired:${order.sourceHomeVisitRecordId}`);
     if (order.sourceHomeVisitChoiceId) flags.add(`homevisit-referral-expired:${order.sourceHomeVisitChoiceId}`);
   }
@@ -3324,6 +3335,20 @@ function relationshipOutcomeAddendum(state: GameState, npc: NpcDef): string {
       '文房藏客完成复看后，她把原样、复单和藏印都留进纸谷声誉档。',
     );
   }
+  if (npc.id === 'sj-lei-zhanggui') {
+    if (state.flags.includes('sanjin-credit-interest-settled')) {
+      return '复违约利钱已经用后一张押货单清过，他把失约、补票和清账三笔都留在同一本票号账里。';
+    }
+    if (state.flags.includes('sanjin-credit-interest-accrued')) {
+      return '旧账虽补过，复违约利钱仍压在票号账上，他会继续按更重的保票条款看待百工院。';
+    }
+    if (state.flags.includes('sanjin-credit-payback-restored')) {
+      return '旧失约已经由漆柜续订单补回，他愿意把百工院重新写回可押货的信用名册。';
+    }
+    if (state.flags.includes('credit-default:sj-lei-zhanggui')) {
+      return '票号旧失约还没补回，他把那笔未兑的保票留作后来商路的警醒。';
+    }
+  }
   if (npc.id === 'sj-pingyao-qipo') {
     return collectorReputationAddendum(
       state,
@@ -4935,6 +4960,10 @@ function createHomeVisitReferralOrder(
 ): HomeVisitReferralResult | null {
   const referral = choice?.referralOrder;
   if (!item || !choice || choice.kind !== 'collect' || !referral) return null;
+  const hasActiveChoiceReferral = (state.activeOrders ?? []).some(
+    (order) => order.status === 'active' && order.sourceHomeVisitChoiceId === choice.id,
+  );
+  if (hasActiveChoiceReferral) return null;
   const named = withNamedItem(state, content, item);
   const itemName = itemShortName(named, content);
   const resourceId = referral.resourceId ?? item.resourceId;
@@ -5127,11 +5156,16 @@ function orderTrustScore(
     .some((routeId) => state.flags.includes(`route-known:${routeId}`)) ? 8 : 0;
   const piaohaoBonus = state.flags.includes('sanjin-piaohao-credit-note') || state.flags.includes('piaohao-credit') ? 26 : 0;
   const consignmentBonus = state.flags.includes('fang-route-ledger-advice') ? 8 : 0;
-  const sanjinCreditDefault = npc.id === 'sj-lei-zhanggui' && state.flags.includes('credit-default:sj-lei-zhanggui');
+  const isLeiTicketHouse = npc.id === 'sj-lei-zhanggui';
+  const sanjinCreditDefault = isLeiTicketHouse && state.flags.includes('credit-default:sj-lei-zhanggui');
   const sanjinCreditRepaired =
     state.flags.includes('credit-default-repaired:sj-lei-zhanggui') ||
     state.flags.includes('sanjin-credit-payback-restored');
-  const sanjinCreditAdjustment = sanjinCreditDefault ? (sanjinCreditRepaired ? 6 : -18) : 0;
+  const sanjinCreditInterestOpen =
+    isLeiTicketHouse &&
+    state.flags.includes('sanjin-credit-interest-accrued') &&
+    !state.flags.includes('sanjin-credit-interest-settled');
+  const sanjinCreditAdjustment = sanjinCreditInterestOpen ? -30 : sanjinCreditDefault ? (sanjinCreditRepaired ? 6 : -18) : 0;
   return Math.max(0, Math.min(100, Math.round(
     reputation * 0.65 +
     affinity * 0.45 +
@@ -5160,7 +5194,16 @@ function npcOrderTerms(
     const repaired =
       state.flags.includes('credit-default-repaired:sj-lei-zhanggui') ||
       state.flags.includes('sanjin-credit-payback-restored');
-    const defaultNote = defaulted && !repaired ? '旧失约未补，' : defaulted && repaired ? '旧失约已由漆柜续订单补回，' : '';
+    const interestOpen =
+      state.flags.includes('sanjin-credit-interest-accrued') &&
+      !state.flags.includes('sanjin-credit-interest-settled');
+    const defaultNote = interestOpen
+      ? '复违约利钱入账，'
+      : defaulted && !repaired
+        ? '旧失约未补，'
+        : defaulted && repaired
+          ? '旧失约已由漆柜续订单补回，'
+          : '';
     return {
       orderKind: 'credit',
       titleSuffix: '信用押货单',
@@ -5392,6 +5435,18 @@ function fulfillOrder(state: GameState, content: GameContent, orderId: string): 
     flags.add('credit-default-repaired:sj-lei-zhanggui');
     flags.add('credit-default-recovered:polish-credit-ledger');
     flags.add('sanjin-credit-payback-restored');
+  }
+  if (
+    state.flags.includes('sanjin-credit-interest-accrued') &&
+    !state.flags.includes('sanjin-credit-interest-settled') &&
+    (
+      (order.npcId === 'sj-lei-zhanggui' && order.orderKind === 'credit') ||
+      order.sourceHomeVisitChoiceId === 'lei-compound-ledger-order'
+    )
+  ) {
+    flags.add('sanjin-credit-interest-settled');
+    flags.add('sanjin-credit-ledger-aftertalk-settled');
+    flags.add('credit-repeat-default-settled:sj-lei-zhanggui');
   }
   for (const routeId of order.routeIds ?? []) flags.add(`route-known:${routeId}`);
 

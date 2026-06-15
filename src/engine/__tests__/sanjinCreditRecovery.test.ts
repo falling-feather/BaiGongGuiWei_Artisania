@@ -175,10 +175,56 @@ function runPolishLedgerRenewal(state: GameState): {
   return { afterSample, renewed, renewalOrder, beforeRenewalReputation };
 }
 
+function settleLedgerByLeiAftertalk(state: GameState): {
+  aftertalk: GameState;
+  settled: GameState;
+  settlementOrder: ActiveOrder;
+} {
+  const aftertalk = gameReducer(
+    withPolishGallery({
+      ...state,
+      npcAffinity: { ...state.npcAffinity, 'sj-lei-zhanggui': 54 },
+    }),
+    {
+      type: 'USE_NPC_FUNCTION',
+      npcId: 'sj-lei-zhanggui',
+      functionKind: 'homeVisit',
+      homeVisitChoiceId: 'lei-compound-ledger-order',
+    },
+    content,
+  );
+  const record = aftertalk.homeVisitRecords[0];
+  const settlementOrder = activeOrder(aftertalk, (candidate) => candidate.id === record.referralOrderId);
+  const settled = gameReducer(aftertalk, { type: 'FULFILL_ORDER', orderId: settlementOrder.id }, content);
+
+  return { aftertalk, settled, settlementOrder };
+}
+
+function settleLedgerByReceipt(state: GameState): GameState {
+  return gameReducer(
+    withPolishGallery({
+      ...state,
+      npcAffinity: { ...state.npcAffinity, 'sj-lei-zhanggui': 54 },
+    }),
+    {
+      type: 'USE_NPC_FUNCTION',
+      npcId: 'sj-lei-zhanggui',
+      functionKind: 'homeVisit',
+      homeVisitChoiceId: 'lei-interest-receipt',
+    },
+    content,
+  );
+}
+
+function reportFor(state: GameState): GameState {
+  return gameReducer({ ...state, turn: state.maxTurns }, { type: 'END_TURN' }, content);
+}
+
 describe('Sanjin ticket-house credit recovery', () => {
   it('binds the chapter to ticket-house credit, polish return visits, and hand-polish collab', () => {
     const chapter = REGION_CHAPTERS.find((item) => item.id === 'chapter-sanjin-piaohao-lacquer');
     const returnVisit = HOME_VISITS.find((item) => item.id === 'homevisit-pingyao-client-return');
+    const aftertalkVisit = HOME_VISITS.find((item) => item.id === 'homevisit-lei-credit-ledger-aftertalk');
 
     expect(chapter?.characterNpcIds).toEqual(
       expect.arrayContaining([expect.objectContaining({ npcId: 'sj-lei-zhanggui', role: 'trade' })]),
@@ -187,14 +233,22 @@ describe('Sanjin ticket-house credit recovery', () => {
       expect.arrayContaining([
         expect.objectContaining({ source: 'activity', id: 'sj-piaohao', readsItemState: true }),
         expect.objectContaining({ source: 'homeVisit', id: 'homevisit-pingyao-client-return', readsItemState: true }),
+        expect.objectContaining({ source: 'homeVisit', id: 'homevisit-lei-credit-ledger-aftertalk', readsItemState: true }),
         expect.objectContaining({ source: 'collab', id: 'collab-pingyao-hand-polish', readsItemState: true }),
       ]),
     );
     expect(chapter?.homeVisitIds).toEqual(
-      expect.arrayContaining(['homevisit-pingyao-polish-room', 'homevisit-pingyao-client-return']),
+      expect.arrayContaining([
+        'homevisit-pingyao-polish-room',
+        'homevisit-pingyao-client-return',
+        'homevisit-lei-credit-ledger-aftertalk',
+      ]),
     );
     expect(chapter?.collabRecipeIds).toContain('collab-pingyao-hand-polish');
     expect(returnVisit?.requiredFlags).toContain('homevisit-referral-completed:polish-sample-cabinet');
+    expect(aftertalkVisit?.requiredFlags).toContain('sanjin-credit-ledger-aftertalk-open');
+    expect(aftertalkVisit?.blockedFlags).toContain('sanjin-credit-ledger-aftertalk-settled');
+    expect(aftertalkVisit?.blockedFlags).not.toContain('sanjin-credit-compound-ledger-open');
   });
 
   it('penalizes new Lei Zhanggui credit orders after default and restores terms after polish-ledger payback', () => {
@@ -248,5 +302,153 @@ describe('Sanjin ticket-house credit recovery', () => {
     expect(renewed.flags).not.toContain('credit-default-repaired:sj-lei-zhanggui');
     expect(renewed.flags).not.toContain('credit-default-recovered:polish-credit-ledger');
     expect(renewed.flags).not.toContain('sanjin-credit-payback-restored');
+  });
+
+  it('opens repeat-default interest ledgers and settles them through Lei Zhanggui aftertalk', () => {
+    const opened = requestLeiOrder(sanjinState());
+    const defaulted = expireOrder(opened.state, opened.order);
+    const { renewed } = runPolishLedgerRenewal(defaulted);
+    const restored = requestLeiOrder({
+      ...renewed,
+      calendar: { ...renewed.calendar, day: renewed.calendar.day + 1 },
+    });
+
+    const repeatDefaulted = expireOrder(restored.state, restored.order);
+    expect(repeatDefaulted.flags).toContain('credit-repeat-default:sj-lei-zhanggui');
+    expect(repeatDefaulted.flags).toContain('sanjin-credit-interest-accrued');
+    expect(repeatDefaulted.flags).toContain('sanjin-credit-ledger-aftertalk-open');
+
+    const interestOrder = requestLeiOrder({
+      ...repeatDefaulted,
+      calendar: { ...repeatDefaulted.calendar, day: repeatDefaulted.calendar.day + 1 },
+    });
+    expect(interestOrder.order.creditTrustScore ?? 0).toBeLessThan(restored.order.creditTrustScore ?? 0);
+    expect(interestOrder.order.creditNote).toContain('复违约利钱入账');
+
+    const unsettledReport = reportFor({
+      ...repeatDefaulted,
+      npcAffinity: { ...repeatDefaulted.npcAffinity, 'sj-lei-zhanggui': 56 },
+    });
+    expect(
+      unsettledReport.report?.relationshipOutcomes?.some(
+        (line) => line.includes('雷掌柜') && line.includes('复违约利钱仍压'),
+      ),
+    ).toBe(true);
+
+    const { aftertalk, settled, settlementOrder } = settleLedgerByLeiAftertalk(repeatDefaulted);
+    expect(aftertalk.flags).toContain('homevisit:homevisit-lei-credit-ledger-aftertalk');
+    expect(aftertalk.flags).toContain('homevisit-choice-lei-compound-ledger');
+    expect(settlementOrder).toMatchObject({
+      orderKind: 'referral',
+      sourceHomeVisitChoiceId: 'lei-compound-ledger-order',
+      resourceId: 'pingyaoLacquer',
+      minQuality: 0.68,
+    });
+    const duplicateAttempt = gameReducer(
+      {
+        ...aftertalk,
+        calendar: { ...aftertalk.calendar, day: aftertalk.calendar.day + 1 },
+      },
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'sj-lei-zhanggui',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'lei-compound-ledger-order',
+      },
+      content,
+    );
+    expect(
+      duplicateAttempt.activeOrders.filter((item) => item.sourceHomeVisitChoiceId === 'lei-compound-ledger-order'),
+    ).toHaveLength(1);
+
+    const expiredSettlement = expireOrder(aftertalk, settlementOrder);
+    expect(expiredSettlement.activeOrders.find((item) => item.id === settlementOrder.id)?.status).toBe('expired');
+    expect(expiredSettlement.flags).toContain('homevisit-referral-expired:lei-compound-ledger-order');
+    const receiptAfterExpired = gameReducer(
+      {
+        ...expiredSettlement,
+        npcAffinity: { ...expiredSettlement.npcAffinity, 'sj-lei-zhanggui': 54 },
+      },
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'sj-lei-zhanggui',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'lei-interest-receipt',
+      },
+      content,
+    );
+    expect(receiptAfterExpired.flags).toContain('homevisit-choice-lei-interest-receipt');
+    expect(receiptAfterExpired.flags).toContain('sanjin-credit-interest-settled');
+
+    expect(settled.activeOrders.find((item) => item.id === settlementOrder.id)?.status).toBe('completed');
+    expect(settled.flags).toContain('homevisit-referral-completed:lei-compound-ledger-order');
+    expect(settled.flags).toContain('sanjin-credit-interest-settled');
+    expect(settled.flags).toContain('sanjin-credit-ledger-aftertalk-settled');
+    expect(settled.flags).toContain('credit-repeat-default-settled:sj-lei-zhanggui');
+
+    const clearedOrder = requestLeiOrder({
+      ...settled,
+      calendar: { ...settled.calendar, day: settled.calendar.day + 1 },
+    });
+    expect(clearedOrder.order.creditTrustScore ?? 0).toBeGreaterThan(interestOrder.order.creditTrustScore ?? 0);
+    expect(clearedOrder.order.creditNote).toContain('旧失约已由漆柜续订单补回');
+
+    const settledReport = reportFor({
+      ...settled,
+      npcAffinity: { ...settled.npcAffinity, 'sj-lei-zhanggui': 56 },
+    });
+    expect(
+      settledReport.report?.relationshipOutcomes?.some(
+        (line) => line.includes('雷掌柜') && line.includes('清过'),
+      ),
+    ).toBe(true);
+  });
+
+  it('can settle repeat-default interest immediately through Lei Zhanggui receipt branch', () => {
+    const opened = requestLeiOrder(sanjinState());
+    const defaulted = expireOrder(opened.state, opened.order);
+    const { renewed } = runPolishLedgerRenewal(defaulted);
+    const restored = requestLeiOrder({
+      ...renewed,
+      calendar: { ...renewed.calendar, day: renewed.calendar.day + 1 },
+    });
+    const repeatDefaulted = expireOrder(restored.state, restored.order);
+    const settled = settleLedgerByReceipt(repeatDefaulted);
+
+    expect(settled.flags).toContain('homevisit:homevisit-lei-credit-ledger-aftertalk');
+    expect(settled.flags).toContain('homevisit-choice-lei-interest-receipt');
+    expect(settled.flags).toContain('sanjin-credit-interest-settled');
+    expect(settled.flags).toContain('sanjin-credit-ledger-aftertalk-settled');
+    expect(settled.flags).toContain('credit-repeat-default-settled:sj-lei-zhanggui');
+    expect(settled.activeOrders.some((item) => item.sourceHomeVisitChoiceId === 'lei-interest-receipt')).toBe(false);
+  });
+
+  it('does not open repeat-default interest before payback repair or after settlement', () => {
+    const opened = requestLeiOrder(sanjinState());
+    const firstDefault = expireOrder(opened.state, opened.order);
+    const secondBeforeRepair = requestLeiOrder({
+      ...firstDefault,
+      calendar: { ...firstDefault.calendar, day: firstDefault.calendar.day + 1 },
+    });
+    const repeatBeforeRepair = expireOrder(secondBeforeRepair.state, secondBeforeRepair.order);
+    expect(repeatBeforeRepair.flags).not.toContain('credit-repeat-default:sj-lei-zhanggui');
+    expect(repeatBeforeRepair.flags).not.toContain('sanjin-credit-interest-accrued');
+    expect(repeatBeforeRepair.flags).not.toContain('sanjin-credit-ledger-aftertalk-open');
+
+    const { renewed } = runPolishLedgerRenewal(firstDefault);
+    const repairedOrder = requestLeiOrder({
+      ...renewed,
+      calendar: { ...renewed.calendar, day: renewed.calendar.day + 1 },
+    });
+    const repeatAfterRepair = expireOrder(repairedOrder.state, repairedOrder.order);
+    const { settled } = settleLedgerByLeiAftertalk(repeatAfterRepair);
+    const postSettlementOrder = requestLeiOrder({
+      ...settled,
+      calendar: { ...settled.calendar, day: settled.calendar.day + 1 },
+    });
+    const repeatAfterSettlement = expireOrder(postSettlementOrder.state, postSettlementOrder.order);
+    const openedFlags = repeatAfterSettlement.flags.filter((flag) => flag === 'sanjin-credit-ledger-aftertalk-open');
+    expect(openedFlags).toHaveLength(1);
+    expect(repeatAfterSettlement.flags).toContain('sanjin-credit-interest-settled');
   });
 });
