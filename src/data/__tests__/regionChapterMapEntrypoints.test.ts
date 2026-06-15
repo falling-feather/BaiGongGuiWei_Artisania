@@ -65,6 +65,19 @@ describe('region chapter map entrypoints', () => {
     expect(gapText).not.toMatch(/lingnan-duan-stone.*人工 JSON|人工 JSON.*lingnan-duan-stone/);
   });
 
+  it('keeps Qiandian M1.22 Dongchuan copper layout closed', () => {
+    const qiandian = REGION_CHAPTERS.find((chapter) => chapter.id === 'chapter-qiandian-silver-tea-road');
+    const gapText = qiandian?.gaps.join('\n') ?? '';
+
+    expect(qiandian?.entrySubregionIds).toEqual([
+      'qiandian-miao-village',
+      'qiandian-tea-road',
+      'qiandian-dongchuan-copper',
+    ]);
+    expect(layoutSubregionIds.has('qiandian-dongchuan-copper')).toBe(true);
+    expect(gapText).not.toMatch(/qiandian-dongchuan-copper.*人工 JSON|人工 JSON.*qiandian-dongchuan-copper/);
+  });
+
   it('keeps every missing chapter layout explicit in chapter gaps', () => {
     for (const chapter of REGION_CHAPTERS) {
       const gapText = chapter.gaps.join('\n');

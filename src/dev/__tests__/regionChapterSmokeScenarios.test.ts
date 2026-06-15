@@ -232,6 +232,26 @@ describe('region chapter smoke scenarios', () => {
     expect(spec?.npcs.some((npc) => npc.id === 'ln-tan-yanbo')).toBe(true);
   });
 
+  it('allows DEV Qiandian chapter smoke to start at the M1.22 Dongchuan copper mine for browser QA', () => {
+    const state = buildRegionChapterSmokeState(content, 'chapter-qiandian-silver-tea-road', {
+      subregionId: 'qiandian-dongchuan-copper',
+    });
+    if (!state) throw new Error('Missing Qiandian chapter smoke state');
+
+    const spec = buildRegionSpec(state.currentRegion, state);
+
+    expect(state.currentRegion).toBe('qiandian');
+    expect(state.currentSubregion).toBe('qiandian-dongchuan-copper');
+    expect(state.trackedLoreEntryId).toBe('subregion-qiandian-dongchuan-copper');
+    expect(spec?.subregionId).toBe('qiandian-dongchuan-copper');
+    expect(spec?.industries.map((industry) => industry.id)).toEqual(
+      expect.arrayContaining(['harvest-copper-ore', 'smelt-copper']),
+    );
+    expect(spec?.crafts.some((craft) => craft.id === 'jianshui-pottery')).toBe(true);
+    expect(spec?.activities.some((activity) => activity.id === 'qd-dongchuan-mine')).toBe(true);
+    expect(spec?.npcs.some((npc) => npc.id === 'qd-tongshan-ke')).toBe(true);
+  });
+
   it('ignores chapter smoke subregion overrides outside the scenario region', () => {
     const state = buildRegionChapterSmokeState(content, 'chapter-xueyu-thangka-snowpass', {
       subregionId: 'xiyu-caravan-post',

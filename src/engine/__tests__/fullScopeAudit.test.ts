@@ -63,6 +63,7 @@ describe('full scope audit', () => {
     const jiangnan = audit.rows.find((row) => row.regionId === 'jiangnan');
     const bashu = audit.rows.find((row) => row.regionId === 'bashu');
     const lingnan = audit.rows.find((row) => row.regionId === 'lingnan');
+    const qiandian = audit.rows.find((row) => row.regionId === 'qiandian');
     const ganpo = audit.rows.find((row) => row.regionId === 'ganpo');
     const huizhou = audit.rows.find((row) => row.regionId === 'huizhou');
     const xiyu = audit.rows.find((row) => row.regionId === 'xiyu');
@@ -77,6 +78,10 @@ describe('full scope audit', () => {
     expect(lingnan?.gaps).not.toContain('layout-subregion:2/4');
     expect(lingnan?.m1Actions).toContain('补佛山冶坊铁器修造回流到海贸订单');
     expect(lingnan?.m1Actions).not.toContain('补佛山冶坊或端石坑口的可运行街景入口');
+    expect(qiandian?.counts.layoutSubregions).toBe(3);
+    expect(qiandian?.gaps).not.toContain('layout-subregion:2/3');
+    expect(qiandian?.m1Actions).toContain('补东川铜矿矿口回访与铜料状态反馈');
+    expect(qiandian?.m1Actions).not.toContain('补东川铜矿运行地图或采炼入口');
     expect(ganpo?.gaps).not.toContain('layout-subregion:1/3');
     expect(ganpo?.signatureCraftsWithoutInteraction).toContain('xiabu');
     expect(ganpo?.m1Actions).toContain('补河运柴场长线风险与高岭瓷土读数');

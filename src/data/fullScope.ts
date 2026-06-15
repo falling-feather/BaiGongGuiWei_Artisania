@@ -78,9 +78,9 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     m1Group: 'lingnan-qiandian',
     chapterGoal: '把苗寨银巷、茶马驿道与东川铜矿推进为银饰、蜡染和高原商路章节。',
     playPillars: ['苗银工艺', '茶马驿道', '东川铜矿采炼'],
-    targetMinimums: DEFAULT_MINIMUMS,
+    targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 3 },
     m1Actions: [
-      '补东川铜矿运行地图或采炼入口',
+      '补东川铜矿矿口回访与铜料状态反馈',
       '补苗银礼俗订单和银娘阿岚回访',
       '把茶马驿道与巴蜀/雪域路线事件接通',
     ],

@@ -110,6 +110,7 @@ describe('region chapter audit', () => {
     const jiangnan = audit.rows.find((row) => row.regionId === 'jiangnan');
     const bashu = audit.rows.find((row) => row.regionId === 'bashu');
     const lingnan = audit.rows.find((row) => row.regionId === 'lingnan');
+    const qiandian = audit.rows.find((row) => row.regionId === 'qiandian');
     const ganpo = audit.rows.find((row) => row.regionId === 'ganpo');
     const huizhou = audit.rows.find((row) => row.regionId === 'huizhou');
 
@@ -121,6 +122,7 @@ describe('region chapter audit', () => {
     expect(bashu?.layoutGaps).not.toContain('layout-subregion:bashu-linqiong-iron');
     expect(lingnan?.layoutGaps).not.toContain('layout-subregion:lingnan-forge');
     expect(lingnan?.layoutGaps).not.toContain('layout-subregion:lingnan-duan-stone');
+    expect(qiandian?.layoutGaps).not.toContain('layout-subregion:qiandian-dongchuan-copper');
     expect(ganpo?.layoutGaps).not.toContain('layout-subregion:ganpo-kaolin-hill');
     expect(ganpo?.layoutGaps).not.toContain('layout-subregion:ganpo-river-wood');
     expect(huizhou?.layoutGaps).not.toContain('layout-subregion:huizhou-ink-alley');

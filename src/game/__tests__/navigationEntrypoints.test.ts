@@ -246,4 +246,32 @@ describe('navigation entrypoints', () => {
     });
     expect(currentStreetRegionGate(duanStone, 'bashu')).toBeNull();
   });
+
+  it('validates Qiandian Dongchuan copper gates from the current street spec', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const dongchuan = {
+      ...base,
+      currentRegion: 'qiandian',
+      currentSubregion: 'qiandian-dongchuan-copper',
+      unlockedRegions: [...new Set([...base.unlockedRegions, 'qiandian', 'bashu', 'lingnan', 'jingchu'])],
+    };
+
+    expect(isCurrentStreetSubregionGate(dongchuan, 'qiandian-miao-village')).toBe(true);
+    expect(isCurrentStreetSubregionGate(dongchuan, 'qiandian-tea-road')).toBe(true);
+    expect(isCurrentStreetSubregionGate(dongchuan, 'qiandian-dongchuan-copper')).toBe(false);
+    expect(isCurrentStreetSubregionGate(dongchuan, 'lingnan-harbor')).toBe(false);
+    expect(currentStreetRegionGate(dongchuan, 'bashu')).toMatchObject({
+      regionId: 'bashu',
+      routeId: 'route-bashu-qiandian-tea-horse',
+    });
+    expect(currentStreetRegionGate(dongchuan, 'lingnan')).toMatchObject({
+      regionId: 'lingnan',
+      routeId: 'route-qiandian-lingnan-harbor',
+    });
+    expect(currentStreetRegionGate(dongchuan, 'jingchu')).toMatchObject({
+      regionId: 'jingchu',
+      routeId: 'route-qiandian-jingchu-mine',
+    });
+    expect(currentStreetRegionGate(dongchuan, 'huizhou')).toBeNull();
+  });
 });

@@ -12,6 +12,7 @@ import lingnanGambieredYardMap from './mapLayouts/lingnan-gambiered-yard.json';
 import lingnanHarborMap from './mapLayouts/lingnan-harbor.json';
 import qiandianMiaoVillageMap from './mapLayouts/qiandian-miao-village.json';
 import qiandianTeaRoadMap from './mapLayouts/qiandian-tea-road.json';
+import qiandianDongchuanCopperMap from './mapLayouts/qiandian-dongchuan-copper.json';
 import jingchuChuLacquerMap from './mapLayouts/jingchu-chu-lacquer.json';
 import jingchuLakeMarketMap from './mapLayouts/jingchu-lake-market.json';
 import ganpoKaolinHillMap from './mapLayouts/ganpo-kaolin-hill.json';
@@ -333,6 +334,7 @@ export const RUNTIME_MAP_EDITOR_SNAPSHOTS: RuntimeMapEditorSnapshot[] = [
   lingnanDuanStoneMap,
   qiandianMiaoVillageMap,
   qiandianTeaRoadMap,
+  qiandianDongchuanCopperMap,
   jingchuChuLacquerMap,
   jingchuLakeMarketMap,
   ganpoKaolinHillMap,

@@ -131,6 +131,15 @@ const PRIORITY_MAP_LAYOUT_CASES: PriorityMapLayoutCase[] = [
     regionGateIds: ['bashu', 'lingnan', 'jingchu'],
   },
   {
+    subregionId: 'qiandian-dongchuan-copper',
+    industryIds: ['harvest-copper-ore', 'smelt-copper'],
+    craftIds: ['jianshui-pottery'],
+    activityIds: ['qd-dongchuan-mine'],
+    npcIds: ['qd-tongshan-ke'],
+    subregionGateIds: ['qiandian-miao-village', 'qiandian-tea-road'],
+    regionGateIds: ['bashu', 'lingnan', 'jingchu'],
+  },
+  {
     subregionId: 'jingchu-chu-lacquer',
     industryIds: ['harvest-lacquer', 'tap-lacquer'],
     craftIds: ['chu-lacquer'],
@@ -354,6 +363,7 @@ const M1_ADDITIONAL_SHIPPED_LAYOUT_IDS = [
   'bashu-linqiong-iron',
   'lingnan-forge',
   'lingnan-duan-stone',
+  'qiandian-dongchuan-copper',
   'jingji-market-gate',
   'sanjin-coal-yard',
   'sanjin-vinegar-yard',

@@ -460,6 +460,33 @@ export const ACTIVITY_CHALLENGES: ActivityChallengeDef[] = [
     ],
   },
   {
+    id: 'qd-dongchuan-mine-vein',
+    activityId: 'qd-dongchuan-mine',
+    miniGame: 'timing_hold',
+    title: '东川听脉',
+    prompt: '铜山客把矿灯、铜脉和炉账摆在洞口，问你这一筐矿该先稳哪一处。',
+    choices: [
+      {
+        id: 'listen-vein-then-smelt',
+        label: '先听矿脉回声，再按成色分筐入炉',
+        quality: 0.91,
+        feedback: '铜山客点头：脉声、成色和炉账对得上，铜料才不虚耗。',
+      },
+      {
+        id: 'hammer-rich-seam',
+        label: '只追最亮的富矿脉，趁早多凿几筐',
+        quality: 0.55,
+        feedback: '富矿诱人，可山腹一空，下一炉反倒缺了稳料。',
+      },
+      {
+        id: 'rush-mine-cart',
+        label: '催矿车快进快出，炉口缺料再补',
+        quality: 0.43,
+        feedback: '矿车跑得急，筛洗和炉温都乱了，铜山客把矿灯按低让你重听。',
+      },
+    ],
+  },
+  {
     id: 'ln-qilou-night-market-route',
     activityId: 'ln-qilou-night-market',
     miniGame: 'route_plan',

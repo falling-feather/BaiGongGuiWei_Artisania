@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  REGIONS,
   RUNTIME_MAP_EDITOR_SNAPSHOTS,
   RUNTIME_MAP_LAYOUTS,
   runtimeLayoutFromEditorSnapshot,
@@ -183,6 +184,7 @@ describe('runtime map editor adapter', () => {
       'lingnan-duan-stone',
       'qiandian-miao-village',
       'qiandian-tea-road',
+      'qiandian-dongchuan-copper',
       'jingchu-chu-lacquer',
       'jingchu-lake-market',
       'ganpo-kaolin-hill',
@@ -302,6 +304,20 @@ describe('runtime map editor adapter', () => {
         expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'lingnan-forge' }),
         expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'lingnan-gambiered-yard' }),
         expect.objectContaining({ interaction: 'gate', targetId: 'qiandian' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('qiandian-dongchuan-copper')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-copper-ore' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'smelt-copper' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'jianshui-pottery' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'qd-dongchuan-mine' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'qd-tongshan-ke' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'qiandian-miao-village' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'qiandian-tea-road' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'bashu' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'lingnan' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'jingchu' }),
       ]),
     );
     expect(snapshotsBySubregion.get('ganpo-kaolin-hill')?.objects).toEqual(
@@ -452,6 +468,20 @@ describe('runtime map editor adapter', () => {
     }
 
     expect(errors).toEqual([]);
+  });
+
+  it('keeps the remaining unshipped manual map list explicit after M1.22', () => {
+    const shippedLayoutIds = new Set(RUNTIME_MAP_LAYOUTS.map((layout) => layout.subregionId));
+    const missingManualMapIds = REGIONS.flatMap((region) => region.subregions.map((subregion) => subregion.id))
+      .filter((subregionId) => !shippedLayoutIds.has(subregionId))
+      .sort();
+
+    expect(missingManualMapIds).toEqual([
+      'jiangnan-linan',
+      'jiangnan-taihu',
+      'jingchu-mine-yard',
+      'jingchu-xiang-embroidery',
+    ]);
   });
 
   it('keeps shipped NPC markers on reachable street tiles', () => {

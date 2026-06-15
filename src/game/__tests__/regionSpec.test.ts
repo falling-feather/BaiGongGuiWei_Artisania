@@ -285,6 +285,38 @@ describe('runtime map layouts', () => {
     expect(duanStone?.activities.some((activity) => activity.id === 'ln-duan-inkstone-pit')).toBe(true);
   });
 
+  it('attaches M1.22 Qiandian Dongchuan copper layout to the local street spec', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const dongchuan = buildRegionSpec('qiandian', {
+      ...base,
+      currentRegion: 'qiandian',
+      currentSubregion: 'qiandian-dongchuan-copper',
+      unlockedRegions: [...new Set([...base.unlockedRegions, 'qiandian', 'bashu', 'lingnan', 'jingchu'])],
+    });
+
+    expect(dongchuan?.layout).toMatchObject({ subregionId: 'qiandian-dongchuan-copper', size: { w: 56, h: 30 } });
+    expect(dongchuan?.layout?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-copper-ore' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'smelt-copper' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'jianshui-pottery' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'qd-dongchuan-mine' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'qd-tongshan-ke' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'qiandian-miao-village' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'qiandian-tea-road' }),
+      ]),
+    );
+    expect(dongchuan?.industries.map((industry) => industry.id)).toEqual(
+      expect.arrayContaining(['harvest-copper-ore', 'smelt-copper']),
+    );
+    expect(dongchuan?.crafts.some((craft) => craft.id === 'jianshui-pottery')).toBe(true);
+    expect(dongchuan?.npcs.find((npc) => npc.id === 'qd-tongshan-ke')).toMatchObject({
+      tileX: 29,
+      tileY: 20,
+    });
+    expect(dongchuan?.activities.some((activity) => activity.id === 'qd-dongchuan-mine')).toBe(true);
+  });
+
   it('only references live street targets from manual layouts', () => {
     const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
     const errors: string[] = [];

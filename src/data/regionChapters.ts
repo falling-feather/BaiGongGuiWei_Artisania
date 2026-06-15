@@ -147,6 +147,7 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     ],
     characterNpcIds: [
       { npcId: 'qd-yinniang-alan', role: 'artisan', note: '苗银匠。' },
+      { npcId: 'qd-tongshan-ke', role: 'artisan', note: '东川铜矿采炼与铜料账入口。' },
       { npcId: 'qd-mu-luozi', role: 'trade', note: '茶马驿道领路人。' },
       { npcId: 'qd-danqing-sao', role: 'lifeCulture', note: '蜡染与苗寨日常入口。' },
     ],
@@ -161,8 +162,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-alan-silver-ritual-fit'],
     escortEncounterIds: ['escort-tea-horse-load-ledger'],
     smokeScenarioIds: ['chapter-qiandian-silver-tea-road'],
-    nextActions: ['补东川铜矿人工 JSON 与矿口回访', '补蜡染人物回访与银染互证后日谈', '继续扩展茶马会后续分支到岭南港口回访'],
-    gaps: ['已补活动即时订单、三阶段茶马会摊位、阿岚礼银家访回访和礼银联作；仍缺东川铜矿人工 JSON 与蜡染人物长线回访。', 'qiandian-dongchuan-copper 仍缺人工 JSON。'],
+    nextActions: ['补东川铜矿矿口回访与铜银材料状态反馈', '补蜡染人物回访与银染互证后日谈', '继续扩展茶马会后续分支到岭南港口回访'],
+    gaps: ['M1.22 已接入 qiandian-dongchuan-copper 街景入口；剩余转向东川矿口回访、铜银材料状态反馈、蜡染人物长线回访和岭南港口回访延展。'],
   },
   {
     id: 'chapter-jingchu-ferry-lacquer',
