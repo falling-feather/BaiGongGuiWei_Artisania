@@ -2261,7 +2261,27 @@ export const REGION_ACTIVITIES: ActivityDef[] = [
       flags: ['jingji-palace-procurement-order-open'],
     },
   }),
-  act('jj-appraisal-market', 'jingji', 'jingji-market-gate', '都门市口', 'trade', 'jj-meng-zhangyan', ['appraise_select'], '鉴宝、估价与拍卖。', '孟掌眼把器物转了半圈，三句话里有两句是价。', { resources: { coin: 16 }, attributes: { commerce: 2, knowledge: 1 }, descriptorTags: ['trade'] }),
+  act('jj-appraisal-market', 'jingji', 'jingji-market-gate', '都门市口', 'trade', 'jj-meng-zhangyan', ['appraise_select'], '鉴宝、估价与拍卖。', '孟掌眼把器物转了半圈，三句话里有两句是价。', {
+    resources: { coin: 16 },
+    attributes: { commerce: 2, knowledge: 1 },
+    flags: ['jingji-market-appraisal-seen'],
+    routeIds: ['route-jiangnan-jingji-canal', 'route-jingji-sanjin-official'],
+    descriptorTags: ['trade'],
+    generatedOrder: {
+      npcId: 'jj-meng-zhangyan',
+      title: '都门市口官样背书单',
+      desc: '孟掌眼替官署门房先看一件能入市口、能复验漕运料账的景泰蓝样器，价、名、路都要说得清。',
+      resourceId: 'cloisonne',
+      quantity: 1,
+      minQuality: 0.64,
+      rewardCoin: 44,
+      expiresIn: 6,
+      rewardMetrics: { market: 2, heritage: 1 },
+      rewardAttributes: { commerce: 2, knowledge: 1 },
+      routeIds: ['route-jiangnan-jingji-canal', 'route-jingji-sanjin-official'],
+      flags: ['jingji-market-procurement-recheck-order-open'],
+    },
+  }),
 
   act('sj-piaohao', 'sanjin', 'sanjin-piaohao', '日升票号', 'trade', 'sj-lei-zhanggui', ['route_plan'], '汇兑、借贷与押货。', '雷掌柜写下一张小票，告诉你信用也会磨损。', {
     resources: { coin: 12 },

@@ -14,6 +14,7 @@ import huizhouPaperValleyMap from './mapLayouts/huizhou-paper-valley.json';
 import huizhouMerchantHallMap from './mapLayouts/huizhou-merchant-hall.json';
 import jingjiPalaceYardMap from './mapLayouts/jingji-palace-yard.json';
 import jingjiOfficialGateMap from './mapLayouts/jingji-official-gate.json';
+import jingjiMarketGateMap from './mapLayouts/jingji-market-gate.json';
 import sanjinCoalYardMap from './mapLayouts/sanjin-coal-yard.json';
 import sanjinLacquerYardMap from './mapLayouts/sanjin-lacquer-yard.json';
 import sanjinPiaohaoMap from './mapLayouts/sanjin-piaohao.json';
@@ -321,6 +322,7 @@ export const RUNTIME_MAP_EDITOR_SNAPSHOTS: RuntimeMapEditorSnapshot[] = [
   huizhouMerchantHallMap,
   jingjiPalaceYardMap,
   jingjiOfficialGateMap,
+  jingjiMarketGateMap,
   sanjinCoalYardMap,
   sanjinLacquerYardMap,
   sanjinPiaohaoMap,

@@ -5273,7 +5273,11 @@ function npcOrderTerms(
       state.flags.includes('collector-reputation-palace-renewed') ||
       state.flags.includes('palace-order-ready') ||
       state.flags.includes('jingji-official-permit');
-    const permitTrust = Math.min(100, trust + (palaceBacker ? 14 : 0));
+    const canalCleared = state.flags.includes('jingji-canal-tribute-cleared');
+    const canalStalled = state.flags.includes('jingji-canal-tribute-stalled') && !canalCleared;
+    const canalTrustDelta = (canalCleared ? 8 : 0) - (canalStalled ? 10 : 0);
+    const canalNote = canalCleared ? '漕运料账已清，' : canalStalled ? '漕运料账滞着，' : '';
+    const permitTrust = Math.min(100, Math.max(0, trust + (palaceBacker ? 14 : 0) + canalTrustDelta));
     const formalPermit = permitTrust >= 72;
     const depositCoin = formalPermit ? 0 : permitTrust >= 48 ? 8 : 16;
     return {
@@ -5281,8 +5285,8 @@ function npcOrderTerms(
       titleSuffix: formalPermit ? '官样采办许可单' : '官样采办预审单',
       descLead: '官署门房先审名帖、商誉与担保。',
       creditNote: depositCoin > 0
-        ? `采办商誉 ${permitTrust}，先押 ${depositCoin} 文名帖保金；误期会折损门房担保。`
-        : `采办商誉 ${permitTrust}，宋押司愿免押名帖，只按宫样验收结果结账；误期仍会折损门房担保。`,
+        ? `${canalNote}采办商誉 ${permitTrust}，先押 ${depositCoin} 文名帖保金；误期会折损门房担保。`
+        : `${canalNote}采办商誉 ${permitTrust}，宋押司愿免押名帖，只按宫样验收结果结账；误期仍会折损门房担保。`,
       depositCoin,
       rewardPremium: depositCoin + (formalPermit ? 18 : 10),
       minQualityDelta: formalPermit ? 0.08 : 0.12,

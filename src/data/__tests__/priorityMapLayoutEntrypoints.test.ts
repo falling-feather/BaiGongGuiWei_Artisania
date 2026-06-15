@@ -152,6 +152,14 @@ const PRIORITY_MAP_LAYOUT_CASES: PriorityMapLayoutCase[] = [
     regionGateIds: ['sanjin', 'jiangnan'],
   },
   {
+    subregionId: 'jingji-market-gate',
+    craftIds: ['inner-painting'],
+    activityIds: ['jj-appraisal-market'],
+    npcIds: ['jj-meng-zhangyan'],
+    subregionGateIds: ['jingji-palace-yard', 'jingji-official-gate'],
+    regionGateIds: ['sanjin', 'jiangnan'],
+  },
+  {
     subregionId: 'sanjin-lacquer-yard',
     industryIds: ['harvest-lacquer', 'tap-lacquer'],
     craftIds: ['pingyao-lacquer'],
@@ -229,7 +237,7 @@ const PRIORITY_N4_ACTIVITY_TARGET_LAYOUT_IDS = [
   'sanjin-piaohao',
 ];
 
-const M1_ADDITIONAL_SHIPPED_LAYOUT_IDS = ['sanjin-coal-yard', 'sanjin-vinegar-yard'];
+const M1_ADDITIONAL_SHIPPED_LAYOUT_IDS = ['jingji-market-gate', 'sanjin-coal-yard', 'sanjin-vinegar-yard'];
 
 function layoutFor(subregionId: string) {
   const layout = RUNTIME_MAP_LAYOUTS.find((item) => item.subregionId === subregionId);

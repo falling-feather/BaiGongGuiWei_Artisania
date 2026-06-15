@@ -105,6 +105,16 @@ const M1_ORDER_CHAIN_CASES: M1OrderChainCase[] = [
     routeIds: ['route-jiangnan-jingji-canal', 'route-jingji-sanjin-official'],
   },
   {
+    chapterId: 'chapter-jingji-palace-procurement',
+    activityId: 'jj-appraisal-market',
+    npcId: 'jj-meng-zhangyan',
+    regionId: 'jingji',
+    subregionId: 'jingji-market-gate',
+    resourceId: 'cloisonne',
+    openFlag: 'jingji-market-procurement-recheck-order-open',
+    routeIds: ['route-jiangnan-jingji-canal', 'route-jingji-sanjin-official'],
+  },
+  {
     chapterId: 'chapter-sanjin-piaohao-lacquer',
     activityId: 'sj-piaohao',
     npcId: 'sj-lei-zhanggui',
@@ -185,9 +195,10 @@ describe('M1 region chapter activity order chains', () => {
     (testCase) => {
       const initial = buildRegionChapterSmokeState(content, testCase.chapterId);
       if (!initial) throw new Error(`Missing chapter smoke state for ${testCase.chapterId}`);
+      const localInitial = { ...initial, currentSubregion: testCase.subregionId };
 
       const performed = gameReducer(
-        initial,
+        localInitial,
         { type: 'PERFORM_ACTIVITY', activityId: testCase.activityId, quality: 0.9 },
         content,
       );

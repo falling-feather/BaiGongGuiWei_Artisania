@@ -265,7 +265,7 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     playPillars: [
       { kind: 'craft', label: '景泰蓝与花丝宫造', activityIds: ['jj-cloisonne-yard', 'jj-filigree-shop'], craftIds: ['cloisonne', 'filigree'] },
       { kind: 'life', label: '都门鉴宝与官样规矩', activityIds: ['jj-appraisal-market', 'jj-official-gate'] },
-      { kind: 'tradeRoute', label: '官署门房与漕运采办', activityIds: ['jj-official-gate'], routeIds: ['route-jiangnan-jingji-canal', 'route-jingji-sanjin-official'] },
+      { kind: 'tradeRoute', label: '官署门房与漕运采办', activityIds: ['jj-appraisal-market', 'jj-official-gate'], routeIds: ['route-jiangnan-jingji-canal', 'route-jingji-sanjin-official'] },
     ],
     characterNpcIds: [
       { npcId: 'jj-lan-daqi', role: 'artisan', note: '景泰蓝匠。' },
@@ -274,6 +274,7 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     ],
     orderHooks: [
       { source: 'activity', id: 'jj-official-gate', note: '官署门房活动生成官样采办单，并读取景泰蓝作品质量。', readsItemState: true },
+      { source: 'activity', id: 'jj-appraisal-market', note: '都门市口活动生成官样背书单，并读取景泰蓝作品与漕运路线状态。', readsItemState: true },
       { source: 'homeVisit', id: 'homevisit-lan-palace-return', note: '宫样采办藏客回访读取作品。', readsItemState: true },
       { source: 'collab', id: 'collab-lan-cloisonne-blue', note: '景泰蓝宫造联作。', readsItemState: true },
       { source: 'escort', id: 'escort-jingji-canal-tribute', note: '漕运料账簿影响宫造采办。' },
@@ -282,8 +283,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-lan-cloisonne-blue'],
     escortEncounterIds: ['escort-jingji-canal-tribute'],
     smokeScenarioIds: ['chapter-jingji-palace-procurement'],
-    nextActions: ['补都门市口人工地图与订单入口', '补宫样采办后续摊位或漕运复验分支', '补采办许可的过期担保折损与市口背书后日谈'],
-    gaps: ['官署门房已有活动即时订单、宋押司 palace 采办商誉门槛和宫样回访续单；仍缺都门市口人工 JSON 与更长漕运/市口采办分支。', 'jingji-market-gate 仍缺人工 JSON。'],
+    nextActions: ['内置浏览器复验都门市口、市口到官署门房、官署到江南漕运 gate', '扩展采办许可的过期担保折损与市口背书后日谈', '补更长漕运复验后续回访与多轮料账统计'],
+    gaps: ['官署门房已有活动即时订单、宋押司 palace 采办商誉门槛、宫样回访续单、都门市口人工 JSON 与市口背书订单；仍缺 M3 级更长漕运复验回访和多轮料账统计。'],
   },
   {
     id: 'chapter-sanjin-piaohao-lacquer',

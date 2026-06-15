@@ -185,6 +185,7 @@ describe('runtime map editor adapter', () => {
       'huizhou-merchant-hall',
       'jingji-palace-yard',
       'jingji-official-gate',
+      'jingji-market-gate',
       'sanjin-coal-yard',
       'sanjin-lacquer-yard',
       'sanjin-piaohao',
@@ -262,6 +263,13 @@ describe('runtime map editor adapter', () => {
         expect.objectContaining({ interaction: 'craft', targetId: 'aged-vinegar' }),
         expect.objectContaining({ interaction: 'activity', targetId: 'sj-vinegar-yard' }),
         expect.objectContaining({ interaction: 'npc', npcId: 'sj-cu-langzhong' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('jingji-market-gate')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'craft', targetId: 'inner-painting' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'jj-appraisal-market' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jj-meng-zhangyan' }),
       ]),
     );
 

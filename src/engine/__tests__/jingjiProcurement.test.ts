@@ -128,6 +128,7 @@ describe('Jingji palace procurement gating', () => {
     expect(chapter?.orderHooks).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ source: 'activity', id: 'jj-official-gate', readsItemState: true }),
+        expect.objectContaining({ source: 'activity', id: 'jj-appraisal-market', readsItemState: true }),
         expect.objectContaining({ source: 'homeVisit', id: 'homevisit-lan-palace-return', readsItemState: true }),
         expect.objectContaining({ source: 'collab', id: 'collab-lan-cloisonne-blue', readsItemState: true }),
       ]),
@@ -168,6 +169,29 @@ describe('Jingji palace procurement gating', () => {
     expect(formal.order.creditNote).toContain('采办商誉');
     expect(formal.state.flags).toContain('palace-order:jj-song-yasi');
     expect(formal.state.flags).not.toContain('deposit-order:jj-song-yasi');
+  });
+
+  it('lets canal tribute ledger results adjust Song Yasi procurement trust', () => {
+    const base = withProcurementTrust(jingjiState(), {
+      reputation: 34,
+      commerce: 18,
+      people: 10,
+      affinity: 24,
+    });
+    const neutral = requestSongProcurement(base);
+    const cleared = requestSongProcurement({
+      ...base,
+      flags: [...base.flags, 'jingji-canal-tribute-cleared'],
+    });
+    const stalled = requestSongProcurement({
+      ...base,
+      flags: [...base.flags, 'jingji-canal-tribute-stalled'],
+    });
+
+    expect(cleared.order.creditTrustScore ?? 0).toBeGreaterThan(neutral.order.creditTrustScore ?? 0);
+    expect(cleared.order.creditNote).toContain('漕运料账已清');
+    expect(stalled.order.creditTrustScore ?? 0).toBeLessThan(neutral.order.creditTrustScore ?? 0);
+    expect(stalled.order.creditNote).toContain('漕运料账滞着');
   });
 
   it('lets high-reputation formal palace procurement complete through clean tracked work', () => {
