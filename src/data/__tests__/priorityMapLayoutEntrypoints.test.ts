@@ -118,6 +118,23 @@ const PRIORITY_MAP_LAYOUT_CASES: PriorityMapLayoutCase[] = [
     regionGateIds: ['jiangnan', 'huizhou', 'jingchu'],
   },
   {
+    subregionId: 'ganpo-kaolin-hill',
+    industryIds: ['harvest-kaolin', 'mine-kaolin'],
+    activityIds: ['gp-kaolin-hill'],
+    npcIds: ['gp-shi-bai'],
+    subregionGateIds: ['ganpo-kiln-town', 'ganpo-river-wood'],
+    regionGateIds: ['jiangnan', 'huizhou', 'jingchu'],
+  },
+  {
+    subregionId: 'ganpo-river-wood',
+    industryIds: ['harvest-coal'],
+    craftIds: ['xiabu'],
+    activityIds: ['gp-river-wood-yard'],
+    npcIds: ['gp-chai-yazi'],
+    subregionGateIds: ['ganpo-kiln-town', 'ganpo-kaolin-hill'],
+    regionGateIds: ['jiangnan', 'huizhou', 'jingchu'],
+  },
+  {
     subregionId: 'huizhou-paper-valley',
     industryIds: ['harvest-qingtan', 'make-paper', 'harvest-tea-leaf', 'pick-tea'],
     craftIds: ['xuan-paper'],
@@ -271,6 +288,8 @@ const PRIORITY_N4_ACTIVITY_TARGET_LAYOUT_IDS = [
 ];
 
 const M1_ADDITIONAL_SHIPPED_LAYOUT_IDS = [
+  'ganpo-kaolin-hill',
+  'ganpo-river-wood',
   'jingji-market-gate',
   'sanjin-coal-yard',
   'sanjin-vinegar-yard',

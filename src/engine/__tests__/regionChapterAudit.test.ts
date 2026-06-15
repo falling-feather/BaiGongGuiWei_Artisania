@@ -113,7 +113,7 @@ describe('region chapter audit', () => {
     expect(jiangnan?.unknownReferences).toEqual([]);
     expect(jiangnan?.layoutGaps).toContain('layout-subregion:jiangnan-suhang');
     expect(jiangnan?.layoutGaps).toContain('layout-subregion:jiangnan-baigongyuan');
-    expect(ganpo?.layoutGaps).toContain('layout-subregion:ganpo-kaolin-hill');
-    expect(ganpo?.layoutGaps).toContain('layout-subregion:ganpo-river-wood');
+    expect(ganpo?.layoutGaps).not.toContain('layout-subregion:ganpo-kaolin-hill');
+    expect(ganpo?.layoutGaps).not.toContain('layout-subregion:ganpo-river-wood');
   });
 });

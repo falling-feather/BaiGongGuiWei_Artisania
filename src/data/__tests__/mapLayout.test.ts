@@ -180,7 +180,9 @@ describe('runtime map editor adapter', () => {
       'qiandian-tea-road',
       'jingchu-chu-lacquer',
       'jingchu-lake-market',
+      'ganpo-kaolin-hill',
       'ganpo-kiln-town',
+      'ganpo-river-wood',
       'huizhou-paper-valley',
       'huizhou-merchant-hall',
       'jingji-palace-yard',
@@ -232,6 +234,26 @@ describe('runtime map editor adapter', () => {
       expect.arrayContaining([
         expect.objectContaining({ interaction: 'activity', targetId: 'ln-qilou-night-market' }),
         expect.objectContaining({ interaction: 'npc', npcId: 'ln-wu-haichao' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('ganpo-kaolin-hill')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-kaolin' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'mine-kaolin' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'gp-kaolin-hill' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'gp-shi-bai' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'ganpo-kiln-town' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'ganpo-river-wood' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('ganpo-river-wood')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-coal' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'xiabu' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'gp-river-wood-yard' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'gp-chai-yazi' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'ganpo-kiln-town' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'ganpo-kaolin-hill' }),
       ]),
     );
     expect(snapshotsBySubregion.get('xiyu-jade-yard')?.objects).toEqual(

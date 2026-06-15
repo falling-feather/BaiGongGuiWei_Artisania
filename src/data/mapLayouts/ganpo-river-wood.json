@@ -1,0 +1,29 @@
+{
+  "schema": "artisania-map-editor/v2",
+  "regionId": "ganpo",
+  "subregionId": "ganpo-river-wood",
+  "tileSize": 32,
+  "size": { "w": 56, "h": 30 },
+  "roads": [
+    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
+    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
+    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
+    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
+    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
+    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+  ],
+  "objects": [
+    { "itemId": "player_spawn", "x": 28, "y": 15 },
+    { "itemId": "industry_coal", "name": "river charcoal stack", "interaction": "industry", "targetId": "harvest-coal", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_textile", "name": "xiabu ramie shed", "interaction": "craft", "targetId": "xiabu", "x": 15, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "activity_route", "name": "firewood shipping ledger", "interaction": "activity", "targetId": "gp-river-wood-yard", "x": 27, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to kiln town", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "ganpo-kiln-town", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to kaolin hill", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "ganpo-kaolin-hill", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Jiangnan kiln river road", "interaction": "gate", "targetId": "jiangnan", "x": 49, "y": 5, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Huizhou merchant road", "interaction": "gate", "targetId": "huizhou", "x": 49, "y": 13, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Jingchu lake road", "interaction": "gate", "targetId": "jingchu", "x": 49, "y": 21, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "npc-gp-chai-yazi", "name": "Chai Yazi", "interaction": "npc", "npcId": "gp-chai-yazi", "x": 31, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "firewood-barge-a", "name": "firewood barge", "interaction": "decoration", "x": 36, "y": 16, "tileW": 4, "tileH": 2, "solid": true },
+    { "itemId": "ramie-bales-a", "name": "ramie bales", "interaction": "decoration", "x": 36, "y": 4, "tileW": 4, "tileH": 2, "solid": true }
+  ]
+}

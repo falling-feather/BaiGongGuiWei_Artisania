@@ -221,8 +221,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-wen-kiln-open'],
     escortEncounterIds: ['escort-ganpo-kiln-firewood', 'escort-ganpo-kiln-firewood-followup'],
     smokeScenarioIds: ['chapter-ganpo-kiln-firewood'],
-    nextActions: ['补高岭矿丘和河运柴场人工地图', '补瓷土/釉料来源对作品诊断的读取'],
-    gaps: ['章节链较完整，但 ganpo-kaolin-hill 与 ganpo-river-wood 仍缺人工 JSON。'],
+    nextActions: ['补瓷土/釉料来源对作品诊断的读取', '补河运柴场长线风险与回访差异'],
+    gaps: ['章节链较完整，M1.16 已关闭 ganpo-kaolin-hill 与 ganpo-river-wood 人工 JSON 缺口；剩余转向材料读数、河运长线与多入口 smokeBindings。'],
   },
   {
     id: 'chapter-huizhou-paper-merchant',

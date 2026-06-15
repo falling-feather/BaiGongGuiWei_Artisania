@@ -106,7 +106,7 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['景德镇瓷', '开窑会', '河运柴场与高岭矿丘'],
     targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 3, orderHookCount: 2 },
     m1Actions: [
-      '补高岭矿丘和河运柴场人工入口',
+      '补河运柴场长线风险与高岭瓷土读数',
       '把开窑会后续单接到瓷行藏客与窑柴风险',
       '补瓷土/釉料来源对作品诊断的读取',
     ],

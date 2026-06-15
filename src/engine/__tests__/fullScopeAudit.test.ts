@@ -63,8 +63,9 @@ describe('full scope audit', () => {
     const ganpo = audit.rows.find((row) => row.regionId === 'ganpo');
     const xiyu = audit.rows.find((row) => row.regionId === 'xiyu');
 
-    expect(ganpo?.gaps).toContain('layout-subregion:1/3');
-    expect(ganpo?.m1Actions).toContain('补高岭矿丘和河运柴场人工入口');
+    expect(ganpo?.gaps).not.toContain('layout-subregion:1/3');
+    expect(ganpo?.signatureCraftsWithoutInteraction).toContain('xiabu');
+    expect(ganpo?.m1Actions).toContain('补河运柴场长线风险与高岭瓷土读数');
     expect(xiyu?.gaps).not.toContain('layout-subregion:3/4');
     expect(xiyu?.signatureCraftsWithoutInteraction).not.toContain('atlas-silk');
     expect(xiyu?.signatureCraftsWithoutInteraction).toEqual(expect.arrayContaining(['carpet', 'copperware']));
