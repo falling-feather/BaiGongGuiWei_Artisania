@@ -103,6 +103,39 @@ describe('runtime map layouts', () => {
     });
   });
 
+  it('attaches M1.17 Suhang and Baigongyuan layouts to Jiangnan street specs', () => {
+    const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
+    const suhang = buildRegionSpec('jiangnan', {
+      ...base,
+      currentRegion: 'jiangnan',
+      currentSubregion: 'jiangnan-suhang',
+    });
+    const baigongyuan = buildRegionSpec('jiangnan', {
+      ...base,
+      currentRegion: 'jiangnan',
+      currentSubregion: 'jiangnan-baigongyuan',
+    });
+
+    expect(suhang?.layout).toMatchObject({ subregionId: 'jiangnan-suhang', size: { w: 58, h: 28 } });
+    expect(suhang?.layout?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-indigo' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'bamboo-weaving' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jn-indigo-keeper' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'jiangnan-baigongyuan' }),
+      ]),
+    );
+    expect(baigongyuan?.layout).toMatchObject({ subregionId: 'jiangnan-baigongyuan', size: { w: 58, h: 28 } });
+    expect(baigongyuan?.layout?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'craft', targetId: 'indigo-dyeing' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'jn-yard-fields' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jn-xiaoman' }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'jiangnan-suhang' }),
+      ]),
+    );
+  });
+
   it('only references live street targets from manual layouts', () => {
     const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 1, 12, REGIONS, '');
     const errors: string[] = [];

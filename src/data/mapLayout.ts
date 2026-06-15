@@ -1,5 +1,7 @@
+import jiangnanBaigongyuanMap from './mapLayouts/jiangnan-baigongyuan.json';
 import jiangnanLongquanMap from './mapLayouts/jiangnan-longquan.json';
 import jiangnanJinlingMap from './mapLayouts/jiangnan-jinling.json';
+import jiangnanSuhangMap from './mapLayouts/jiangnan-suhang.json';
 import bashuBambooSeaMap from './mapLayouts/bashu-bamboo-sea.json';
 import bashuJinliMap from './mapLayouts/bashu-jinli.json';
 import bashuTeaHorseMap from './mapLayouts/bashu-tea-horse.json';
@@ -312,8 +314,10 @@ export function runtimeLayoutFromEditorSnapshot(
 
 /** Editor-compatible first batch: runtime consumes these checked-in JSON assets through runtimeLayoutFromEditorSnapshot. */
 export const RUNTIME_MAP_EDITOR_SNAPSHOTS: RuntimeMapEditorSnapshot[] = [
+  jiangnanSuhangMap,
   jiangnanLongquanMap,
   jiangnanJinlingMap,
+  jiangnanBaigongyuanMap,
   bashuBambooSeaMap,
   bashuJinliMap,
   bashuTeaHorseMap,

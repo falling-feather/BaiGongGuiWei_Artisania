@@ -1,0 +1,35 @@
+{
+  "schema": "artisania-map-editor/v2",
+  "regionId": "jiangnan",
+  "subregionId": "jiangnan-suhang",
+  "tileSize": 32,
+  "size": { "w": 58, "h": 28 },
+  "roads": [
+    { "points": [{ "x": 2, "y": 7 }, { "x": 55, "y": 7 }] },
+    { "points": [{ "x": 2, "y": 14 }, { "x": 55, "y": 14 }] },
+    { "points": [{ "x": 2, "y": 21 }, { "x": 55, "y": 21 }] },
+    { "points": [{ "x": 8, "y": 3 }, { "x": 8, "y": 24 }] },
+    { "points": [{ "x": 28, "y": 3 }, { "x": 28, "y": 24 }] },
+    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 24 }] }
+  ],
+  "objects": [
+    { "itemId": "player_spawn", "x": 29, "y": 14 },
+    { "itemId": "industry_indigo", "name": "indigo herb baskets", "interaction": "industry", "targetId": "harvest-indigo", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_indigo", "name": "living indigo vat", "interaction": "industry", "targetId": "build-indigo", "x": 14, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_bamboo", "name": "water market bamboo bundles", "interaction": "industry", "targetId": "harvest-bamboo", "x": 23, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "industry_bamboo", "name": "bamboo splitting bench", "interaction": "industry", "targetId": "split-bamboo", "x": 32, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_textile", "name": "Suhang indigo dye shed", "interaction": "craft", "targetId": "indigo-dyeing", "x": 12, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "craft_bamboo", "name": "Suhang bamboo weaving stall", "interaction": "craft", "targetId": "bamboo-weaving", "x": 24, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Longquan mountain forge", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-longquan", "x": 3, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Jinling lantern market", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-jinling", "x": 15, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Linan rain lane", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-linan", "x": 27, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Taihu weaving dock", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-taihu", "x": 39, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Baigong courtyard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-baigongyuan", "x": 51, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Huizhou paper road", "interaction": "gate", "targetId": "huizhou", "x": 52, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "Ganpo kiln river road", "interaction": "gate", "targetId": "ganpo", "x": 52, "y": 13, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "npc-jn-indigo-keeper", "name": "A Lan", "interaction": "npc", "npcId": "jn-indigo-keeper", "x": 11, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "npc-jn-bamboo-master", "name": "Zhou Bo", "interaction": "npc", "npcId": "jn-bamboo-master", "x": 24, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
+    { "itemId": "dock-crates-a", "name": "water market cargo crates", "interaction": "decoration", "x": 36, "y": 17, "tileW": 4, "tileH": 2, "solid": true },
+    { "itemId": "dye-vat-row-a", "name": "indigo vat row", "interaction": "decoration", "x": 18, "y": 18, "tileW": 3, "tileH": 2, "solid": true }
+  ]
+}

@@ -70,8 +70,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-yunjin-pick-weft'],
     escortEncounterIds: ['escort-jingji-canal-tribute'],
     smokeScenarioIds: ['chapter-jiangnan-baigong-homecoming'],
-    nextActions: ['补百工院人工地图与家园章节入口', '把临安水市、太湖织埠纳入主轴外回访链'],
-    gaps: ['jiangnan-suhang 与 jiangnan-baigongyuan 仍缺人工 JSON。'],
+    nextActions: ['把临安水市、太湖织埠纳入主轴外回访链', '补蓝染/竹编基础工艺的专属交互深度'],
+    gaps: ['M1.17 已关闭 jiangnan-suhang 与 jiangnan-baigongyuan 人工 JSON 缺口；剩余转向临安/太湖回访、蓝染/竹编专属工艺深度与多入口 smokeBindings。'],
   },
   {
     id: 'chapter-bashu-tea-horse-brocade',

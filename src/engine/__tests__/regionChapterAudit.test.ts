@@ -111,8 +111,8 @@ describe('region chapter audit', () => {
     const ganpo = audit.rows.find((row) => row.regionId === 'ganpo');
 
     expect(jiangnan?.unknownReferences).toEqual([]);
-    expect(jiangnan?.layoutGaps).toContain('layout-subregion:jiangnan-suhang');
-    expect(jiangnan?.layoutGaps).toContain('layout-subregion:jiangnan-baigongyuan');
+    expect(jiangnan?.layoutGaps).not.toContain('layout-subregion:jiangnan-suhang');
+    expect(jiangnan?.layoutGaps).not.toContain('layout-subregion:jiangnan-baigongyuan');
     expect(ganpo?.layoutGaps).not.toContain('layout-subregion:ganpo-kaolin-hill');
     expect(ganpo?.layoutGaps).not.toContain('layout-subregion:ganpo-river-wood');
   });

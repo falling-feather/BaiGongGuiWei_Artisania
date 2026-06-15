@@ -169,8 +169,10 @@ describe('runtime map editor adapter', () => {
     );
 
     expect([...snapshotsBySubregion.keys()]).toEqual([
+      'jiangnan-suhang',
       'jiangnan-longquan',
       'jiangnan-jinling',
+      'jiangnan-baigongyuan',
       'bashu-bamboo-sea',
       'bashu-jinli',
       'bashu-tea-horse',
@@ -218,10 +220,33 @@ describe('runtime map editor adapter', () => {
         expect.objectContaining({ interaction: 'npc', npcId: 'jn-ye-qingzhan' }),
       ]),
     );
+    expect(snapshotsBySubregion.get('jiangnan-suhang')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'industry', targetId: 'harvest-indigo' }),
+        expect.objectContaining({ interaction: 'industry', targetId: 'split-bamboo' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'indigo-dyeing' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'bamboo-weaving' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jn-indigo-keeper' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jn-bamboo-master' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jiangnan-baigongyuan' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'huizhou' }),
+        expect.objectContaining({ interaction: 'gate', targetId: 'ganpo' }),
+      ]),
+    );
     expect(snapshotsBySubregion.get('jiangnan-jinling')?.objects).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ interaction: 'activity', targetId: 'jn-qinhuai-lantern' }),
         expect.objectContaining({ interaction: 'npc', npcId: 'jn-qiao-zhaoye' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('jiangnan-baigongyuan')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'craft', targetId: 'indigo-dyeing' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'bamboo-weaving' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'jn-yard-fields' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jn-xiaoman' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jiangnan-suhang' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jiangnan-longquan' }),
       ]),
     );
     expect(snapshotsBySubregion.get('bashu-tea-horse')?.objects).toEqual(

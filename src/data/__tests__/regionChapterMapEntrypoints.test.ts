@@ -5,6 +5,20 @@ import { RUNTIME_MAP_LAYOUTS } from '../mapLayout';
 const layoutSubregionIds = new Set(RUNTIME_MAP_LAYOUTS.map((layout) => layout.subregionId));
 
 describe('region chapter map entrypoints', () => {
+  it('keeps Jiangnan M1.17 chapter entry layouts backed by runtime maps', () => {
+    const jiangnan = REGION_CHAPTERS.find((chapter) => chapter.id === 'chapter-jiangnan-baigong-homecoming');
+
+    expect(jiangnan?.entrySubregionIds).toEqual([
+      'jiangnan-suhang',
+      'jiangnan-jinling',
+      'jiangnan-longquan',
+      'jiangnan-baigongyuan',
+    ]);
+    expect(jiangnan?.entrySubregionIds.every((subregionId) => layoutSubregionIds.has(subregionId))).toBe(true);
+    expect(jiangnan?.gaps.join('\n')).not.toMatch(/jiangnan-suhang.*仍缺|仍缺.*jiangnan-suhang/);
+    expect(jiangnan?.gaps.join('\n')).not.toMatch(/jiangnan-baigongyuan.*仍缺|仍缺.*jiangnan-baigongyuan/);
+  });
+
   it('keeps every missing chapter layout explicit in chapter gaps', () => {
     for (const chapter of REGION_CHAPTERS) {
       const gapText = chapter.gaps.join('\n');

@@ -74,6 +74,7 @@ const FROZEN_CRAFT_IDS = [
 
 const FROZEN_ACTIVITY_IDS = [
   'jn-qinhuai-lantern',
+  'jn-yard-fields',
   'bs-tea-horse-post',
   'ln-qilou-night-market',
   'gp-kiln-opening-fair',
@@ -96,8 +97,11 @@ const FROZEN_ACTIVITY_IDS = [
 
 const FROZEN_NPC_IDS = [
   'jn-ning-ciqiu',
+  'jn-bamboo-master',
+  'jn-indigo-keeper',
   'jn-ye-qingzhan',
   'jn-qiao-zhaoye',
+  'jn-xiaoman',
   'bs-luo-qingmie',
   'bs-zhuo-jinniang',
   'bs-mabang-ayue',
@@ -164,8 +168,10 @@ const FROZEN_COLLAB_RECIPE_IDS = [
 ];
 
 const FROZEN_LAYOUT_SUBREGION_IDS = [
+  'jiangnan-suhang',
   'jiangnan-longquan',
   'jiangnan-jinling',
+  'jiangnan-baigongyuan',
   'bashu-bamboo-sea',
   'bashu-jinli',
   'bashu-tea-horse',

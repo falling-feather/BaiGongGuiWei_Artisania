@@ -13,6 +13,14 @@ interface PriorityMapLayoutCase {
 
 const PRIORITY_MAP_LAYOUT_CASES: PriorityMapLayoutCase[] = [
   {
+    subregionId: 'jiangnan-suhang',
+    industryIds: ['harvest-indigo', 'build-indigo', 'harvest-bamboo', 'split-bamboo'],
+    craftIds: ['indigo-dyeing', 'bamboo-weaving'],
+    npcIds: ['jn-bamboo-master', 'jn-indigo-keeper'],
+    subregionGateIds: ['jiangnan-longquan', 'jiangnan-jinling', 'jiangnan-linan', 'jiangnan-taihu', 'jiangnan-baigongyuan'],
+    regionGateIds: ['huizhou', 'ganpo'],
+  },
+  {
     subregionId: 'jiangnan-longquan',
     industryIds: ['harvest-iron-ore', 'harvest-coal', 'smelt-iron', 'harvest-kaolin', 'mine-kaolin', 'forge-sword'],
     craftIds: ['longquan-sword', 'celadon'],
@@ -29,6 +37,13 @@ const PRIORITY_MAP_LAYOUT_CASES: PriorityMapLayoutCase[] = [
     npcIds: ['jn-qiao-zhaoye', 'jn-ning-ciqiu'],
     subregionGateIds: ['jiangnan-longquan', 'jiangnan-suhang', 'jiangnan-taihu', 'jiangnan-baigongyuan'],
     regionGateIds: ['jingji', 'ganpo', 'huizhou'],
+  },
+  {
+    subregionId: 'jiangnan-baigongyuan',
+    craftIds: ['indigo-dyeing', 'bamboo-weaving'],
+    activityIds: ['jn-yard-fields'],
+    npcIds: ['jn-xiaoman'],
+    subregionGateIds: ['jiangnan-suhang', 'jiangnan-jinling', 'jiangnan-longquan', 'jiangnan-linan', 'jiangnan-taihu'],
   },
   {
     subregionId: 'bashu-bamboo-sea',
@@ -288,6 +303,8 @@ const PRIORITY_N4_ACTIVITY_TARGET_LAYOUT_IDS = [
 ];
 
 const M1_ADDITIONAL_SHIPPED_LAYOUT_IDS = [
+  'jiangnan-suhang',
+  'jiangnan-baigongyuan',
   'ganpo-kaolin-hill',
   'ganpo-river-wood',
   'jingji-market-gate',
