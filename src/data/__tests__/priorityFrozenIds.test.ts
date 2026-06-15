@@ -173,6 +173,7 @@ const FROZEN_LAYOUT_SUBREGION_IDS = [
   'sanjin-lacquer-yard',
   'sanjin-vinegar-yard',
   'xueyu-thangka-court',
+  'xueyu-snow-pass',
 ];
 
 function expectFrozenIds(

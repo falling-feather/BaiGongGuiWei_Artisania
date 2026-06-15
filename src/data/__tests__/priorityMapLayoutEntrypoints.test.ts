@@ -202,6 +202,13 @@ const PRIORITY_MAP_LAYOUT_CASES: PriorityMapLayoutCase[] = [
     regionGateIds: ['bashu', 'xiyu'],
   },
   {
+    subregionId: 'xueyu-snow-pass',
+    activityIds: ['xy-snow-pass'],
+    npcIds: ['xy-yak-captain'],
+    subregionGateIds: ['xueyu-thangka-court', 'xueyu-pigment-valley', 'xueyu-silver-tent'],
+    regionGateIds: ['bashu', 'xiyu'],
+  },
+  {
     subregionId: 'xiyu-jade-yard',
     industryIds: ['harvest-copper-ore', 'smelt-copper'],
     craftIds: ['jade-carving'],
@@ -237,7 +244,12 @@ const PRIORITY_N4_ACTIVITY_TARGET_LAYOUT_IDS = [
   'sanjin-piaohao',
 ];
 
-const M1_ADDITIONAL_SHIPPED_LAYOUT_IDS = ['jingji-market-gate', 'sanjin-coal-yard', 'sanjin-vinegar-yard'];
+const M1_ADDITIONAL_SHIPPED_LAYOUT_IDS = [
+  'jingji-market-gate',
+  'sanjin-coal-yard',
+  'sanjin-vinegar-yard',
+  'xueyu-snow-pass',
+];
 
 function layoutFor(subregionId: string) {
   const layout = RUNTIME_MAP_LAYOUTS.find((item) => item.subregionId === subregionId);

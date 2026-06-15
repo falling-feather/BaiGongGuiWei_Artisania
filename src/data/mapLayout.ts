@@ -20,6 +20,7 @@ import sanjinLacquerYardMap from './mapLayouts/sanjin-lacquer-yard.json';
 import sanjinPiaohaoMap from './mapLayouts/sanjin-piaohao.json';
 import sanjinVinegarYardMap from './mapLayouts/sanjin-vinegar-yard.json';
 import xueyuThangkaCourtMap from './mapLayouts/xueyu-thangka-court.json';
+import xueyuSnowPassMap from './mapLayouts/xueyu-snow-pass.json';
 import xiyuJadeYardMap from './mapLayouts/xiyu-jade-yard.json';
 import xiyuBazaarMap from './mapLayouts/xiyu-bazaar.json';
 import xiyuCaravanPostMap from './mapLayouts/xiyu-caravan-post.json';
@@ -328,6 +329,7 @@ export const RUNTIME_MAP_EDITOR_SNAPSHOTS: RuntimeMapEditorSnapshot[] = [
   sanjinPiaohaoMap,
   sanjinVinegarYardMap,
   xueyuThangkaCourtMap,
+  xueyuSnowPassMap,
   xiyuJadeYardMap,
   xiyuBazaarMap,
   xiyuCaravanPostMap,

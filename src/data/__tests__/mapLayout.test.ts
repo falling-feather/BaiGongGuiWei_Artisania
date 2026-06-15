@@ -191,6 +191,7 @@ describe('runtime map editor adapter', () => {
       'sanjin-piaohao',
       'sanjin-vinegar-yard',
       'xueyu-thangka-court',
+      'xueyu-snow-pass',
       'xiyu-jade-yard',
       'xiyu-bazaar',
       'xiyu-caravan-post',
@@ -270,6 +271,13 @@ describe('runtime map editor adapter', () => {
         expect.objectContaining({ interaction: 'craft', targetId: 'inner-painting' }),
         expect.objectContaining({ interaction: 'activity', targetId: 'jj-appraisal-market' }),
         expect.objectContaining({ interaction: 'npc', npcId: 'jj-meng-zhangyan' }),
+      ]),
+    );
+    expect(snapshotsBySubregion.get('xueyu-snow-pass')?.objects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interaction: 'activity', targetId: 'xy-snow-pass' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'xy-yak-captain' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'xueyu-thangka-court' }),
       ]),
     );
 
