@@ -3447,6 +3447,15 @@ function relationshipOutcomeAddendum(state: GameState, npc: NpcDef): string {
       '货栈藏客完成复看后，她把原样、复单和天气批次都写进岭南晒场色档。',
     );
   }
+  if (npc.id === 'qd-tongshan-ke') {
+    return collectorReputationAddendum(
+      state,
+      'homevisit-referral-completed:tongshan-copper-silver-ledger-order',
+      'homevisit-tongshan-copper-silver-ledger-resolved',
+      '东川铜银复样已按料账成交，他把矿口、炉账、胎骨和银线配比写进百工院可追溯熟料名册。',
+      '铜山客已经替百工院留下一份东川铜银料账，后续乌铜走银、苗银和宫造铜胎都能按这份账复看材料来路。',
+    );
+  }
   if (npc.id === 'xy-losang') {
     return collectorReputationAddendum(
       state,

@@ -58,6 +58,7 @@ function qiandianState(): GameState {
       'qd-yinniang-alan': 36,
       'qd-mu-luozi': 36,
       'qd-danqing-sao': 36,
+      'qd-tongshan-ke': 36,
     },
   };
 }
@@ -83,10 +84,46 @@ function silverItem(
   };
 }
 
+function copperSilverItem(
+  id: string,
+  state: GameState,
+  quality = 0.74,
+  status: ItemInstance['status'] = 'held',
+): ItemInstance {
+  return {
+    id,
+    resourceId: 'wutongSilver',
+    sourceCraftId: 'wutong-silver',
+    originRegionId: 'qiandian',
+    originSubregionId: 'qiandian-dongchuan-copper',
+    createdTurn: state.turn,
+    quality,
+    descriptors: ['东川铜胎稳', '银线入账清'],
+    appraisal: '一件能对上东川矿口、铜料亏耗和银线配比的乌铜走银样。',
+    displayName: id.includes('display') ? '东川铜银料账陈列样' : '东川铜银复样',
+    status,
+  };
+}
+
 function activeOrder(state: GameState, predicate: (order: ActiveOrder) => boolean): ActiveOrder {
   const order = state.activeOrders.find((candidate) => candidate.status === 'active' && predicate(candidate));
   if (!order) throw new Error('Missing expected active order');
   return order;
+}
+
+function reportFor(state: GameState): GameState {
+  return gameReducer(
+    {
+      ...state,
+      turn: state.maxTurns,
+      pendingEvent: null,
+      pendingEscortCrisis: null,
+      pendingSupplyCrisis: null,
+      pendingActivityStallClosing: null,
+    },
+    { type: 'END_TURN' },
+    content,
+  );
 }
 
 describe('Qiandian silver ritual longline', () => {
@@ -95,9 +132,11 @@ describe('Qiandian silver ritual longline', () => {
     const activity = REGION_ACTIVITIES.find((item) => item.id === 'qd-tea-horse-road');
     const alan = ALL_NPCS.find((item) => item.id === 'qd-yinniang-alan');
     const muluozi = ALL_NPCS.find((item) => item.id === 'qd-mu-luozi');
+    const tongshan = ALL_NPCS.find((item) => item.id === 'qd-tongshan-ke');
 
     expect(alan?.functions).toEqual(expect.arrayContaining(['homeVisit', 'collab', 'order']));
     expect(muluozi?.functions).toContain('order');
+    expect(tongshan?.functions).toEqual(expect.arrayContaining(['homeVisit', 'appraisal', 'order']));
     expect(activity?.reward.stall?.stages?.map((stage) => stage.id)).toEqual([
       'open-ritual-sample',
       'barter-silver-dye',
@@ -111,15 +150,101 @@ describe('Qiandian silver ritual longline', () => {
     expect(chapter?.homeVisitIds).toEqual([
       'homevisit-alan-silver-ritual-case',
       'homevisit-alan-tea-road-client-return',
+      'homevisit-tongshan-copper-silver-ledger',
     ]);
     expect(chapter?.collabRecipeIds).toEqual(['collab-alan-silver-ritual-fit']);
     expect(chapter?.orderHooks).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ source: 'homeVisit', id: 'homevisit-alan-silver-ritual-case', readsItemState: true }),
         expect.objectContaining({ source: 'homeVisit', id: 'homevisit-alan-tea-road-client-return', readsItemState: true }),
+        expect.objectContaining({ source: 'homeVisit', id: 'homevisit-tongshan-copper-silver-ledger', readsItemState: true }),
         expect.objectContaining({ source: 'collab', id: 'collab-alan-silver-ritual-fit', readsItemState: true }),
       ]),
     );
+  });
+
+  it('turns the Dongchuan mine activity into a copper-silver material feedback visit', () => {
+    const base = qiandianState();
+    const displayed = copperSilverItem('display-tongshan-copper-silver-ledger', base, 0.76, 'displayed');
+    const replica = copperSilverItem('held-tongshan-copper-silver-replica', base, 0.72);
+    let state: GameState = {
+      ...base,
+      currentSubregion: 'qiandian-dongchuan-copper',
+      resources: {
+        ...base.resources,
+        wutongSilver: (base.resources.wutongSilver ?? 0) + 3,
+        copperStock: (base.resources.copperStock ?? 0) + 2,
+        copperOre: (base.resources.copperOre ?? 0) + 1,
+      },
+      itemInstances: [displayed, replica, ...base.itemInstances],
+    };
+
+    const unavailable = gameReducer(
+      state,
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'qd-tongshan-ke',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'tongshan-copper-silver-ledger-order',
+      },
+      content,
+    );
+    expect(unavailable.homeVisitRecords.length).toBe(0);
+    expect(unavailable.flags).not.toContain('homevisit-tongshan-copper-silver-ledger-resolved');
+
+    state = gameReducer(state, { type: 'PERFORM_ACTIVITY', activityId: 'qd-dongchuan-mine', quality: 0.84 }, content);
+    expect(state.flags).toContain('qd-dongchuan-copper-ledger-open');
+    expect(state.completedActivities).toContain('qd-dongchuan-mine');
+    expect(state.npcStates['qd-tongshan-ke']?.knownTopics).toContain('activity:qd-dongchuan-mine');
+
+    const returned = gameReducer(
+      state,
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'qd-tongshan-ke',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'tongshan-copper-silver-ledger-order',
+      },
+      content,
+    );
+    const record = returned.homeVisitRecords[0];
+    const referral = activeOrder(returned, (order) => order.id === record.referralOrderId);
+
+    expect(record).toMatchObject({
+      npcId: 'qd-tongshan-ke',
+      title: '东川铜银料账',
+      choiceId: 'tongshan-copper-silver-ledger-order',
+      choiceKind: 'collect',
+      referralTitle: '东川铜银复样单',
+      itemId: displayed.id,
+    });
+    expect(referral).toMatchObject({
+      npcId: 'qd-tongshan-ke',
+      orderKind: 'referral',
+      sourceHomeVisitRecordId: record.id,
+      sourceHomeVisitChoiceId: 'tongshan-copper-silver-ledger-order',
+      resourceId: 'wutongSilver',
+      quantity: 1,
+      minQuality: 0.64,
+    });
+    expect(returned.flags).toContain('homevisit:homevisit-tongshan-copper-silver-ledger');
+    expect(returned.flags).toContain('qiandian-copper-silver-material-read');
+    expect(returned.flags).toContain('homevisit-tongshan-copper-silver-ledger-resolved');
+    expect(returned.flags).toContain('qiandian-copper-silver-ledger-ready');
+    expect(returned.flags).toContain('homevisit-referral:tongshan-copper-silver-ledger-order');
+
+    const delivered = gameReducer(returned, { type: 'FULFILL_ORDER', orderId: referral.id }, content);
+    expect(delivered.activeOrders.find((candidate) => candidate.id === referral.id)?.status).toBe('completed');
+    expect(delivered.flags).toContain(`homevisit-order-completed:${record.id}`);
+    expect(delivered.flags).toContain('homevisit-referral-completed:tongshan-copper-silver-ledger-order');
+    expect(delivered.itemInstances.find((item) => item.id === displayed.id)?.status).toBe('displayed');
+    expect(delivered.itemInstances.some((item) => item.id === replica.id)).toBe(false);
+
+    const ended = reportFor({
+      ...delivered,
+      npcAffinity: { ...delivered.npcAffinity, 'qd-tongshan-ke': 80 },
+    });
+    expect(ended.report?.relationshipOutcomes?.some((line) => line.includes('铜山客') && line.includes('东川铜银复样'))).toBe(true);
   });
 
   it('runs the tea-horse silver stall through closing and completes its route follow-up order', () => {

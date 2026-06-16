@@ -89,7 +89,9 @@ describe('full scope audit', () => {
     expect(lingnan?.m1Actions).not.toContain('补佛山冶坊或端石坑口的可运行街景入口');
     expect(qiandian?.counts.layoutSubregions).toBe(3);
     expect(qiandian?.gaps).not.toContain('layout-subregion:2/3');
-    expect(qiandian?.m1Actions).toContain('补东川铜矿矿口回访与铜料状态反馈');
+    expect(qiandian?.m1Actions).not.toContain('补东川铜矿矿口回访与铜料状态反馈');
+    expect(qiandian?.m1Actions).toContain('补蜡染人物回访与银染互证后日谈');
+    expect(qiandian?.m1Actions).toContain('扩展黔滇多入口 smokeBindings');
     expect(qiandian?.m1Actions).not.toContain('补东川铜矿运行地图或采炼入口');
     expect(jingchu?.counts.layoutSubregions).toBe(4);
     expect(jingchu?.gaps).not.toContain('layout-subregion:2/4');

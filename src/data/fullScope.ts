@@ -76,9 +76,9 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['苗银工艺', '茶马驿道', '东川铜矿采炼'],
     targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 3 },
     m1Actions: [
-      '补东川铜矿矿口回访与铜料状态反馈',
-      '补苗银礼俗订单和银娘阿岚回访',
-      '把茶马驿道与巴蜀/雪域路线事件接通',
+      '补蜡染人物回访与银染互证后日谈',
+      '继续扩展茶马会后续分支到岭南港口回访',
+      '扩展黔滇多入口 smokeBindings',
     ],
   },
   {
