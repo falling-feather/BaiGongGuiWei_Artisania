@@ -41,7 +41,6 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['百工院家园', '龙泉剑瓷工艺', '秦淮灯市与文房社交'],
     targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 6, orderHookCount: 2 },
     m1Actions: [
-      '补江南章节多入口 smokeBindings',
       '让灯市后续单继续读取作品与 NPC 关系',
     ],
   },

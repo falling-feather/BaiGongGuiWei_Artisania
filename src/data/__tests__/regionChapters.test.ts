@@ -11,6 +11,8 @@ import {
   REGION_CHAPTERS,
   REGION_ROUTES,
   REGIONS,
+  RUNTIME_MAP_LAYOUTS,
+  SUBREGION_CONTENT,
 } from '../index';
 import { REGION_CHAPTER_SMOKE_SCENARIOS } from '../../dev/regionChapterSmokeScenarios';
 
@@ -21,6 +23,10 @@ const homeVisitIds = new Set(HOME_VISITS.map((visit) => visit.id));
 const collabIds = new Set(COLLAB_RECIPES.map((recipe) => recipe.id));
 const escortIds = new Set(ESCORT_ENCOUNTERS.map((encounter) => encounter.id));
 const smokeIds = new Set(Object.keys(REGION_CHAPTER_SMOKE_SCENARIOS));
+const layoutSubregionIds = new Set(RUNTIME_MAP_LAYOUTS.map((layout) => layout.subregionId));
+const npcById = new Map(ALL_NPCS.map((npc) => [npc.id, npc]));
+const routeById = new Map(REGION_ROUTES.map((route) => [route.id, route]));
+const subregionContentById = new Map(SUBREGION_CONTENT.map((entry) => [entry.subregionId, entry]));
 
 function subregionIdsFor(regionId: string): Set<string> {
   return new Set(regionById.get(regionId)?.subregions.map((subregion) => subregion.id) ?? []);
@@ -159,5 +165,72 @@ describe('region chapter specs', () => {
         expect(smokeScenario?.chapterId).toBe(chapter.id);
       }
     }
+  });
+
+  it('validates optional smokeBindings against local entry content and route landings', () => {
+    for (const chapter of REGION_CHAPTERS) {
+      const chapterActivities = new Set(chapter.playPillars.flatMap((pillar) => pillar.activityIds));
+      const chapterCrafts = new Set(chapter.playPillars.flatMap((pillar) => pillar.craftIds ?? []));
+      const chapterRoutes = new Set(chapter.playPillars.flatMap((pillar) => pillar.routeIds ?? []));
+      const entrySubregionIds = new Set(chapter.entrySubregionIds);
+
+      for (const binding of chapter.smokeBindings ?? []) {
+        const subregionContent = subregionContentById.get(binding.entrySubregionId);
+
+        expect(entrySubregionIds.has(binding.entrySubregionId), binding.id).toBe(true);
+        if (binding.requiresRuntimeLayout) {
+          expect(layoutSubregionIds.has(binding.entrySubregionId), binding.id).toBe(true);
+        }
+        for (const missingLayoutSubregionId of binding.missingLayoutSubregionIds ?? []) {
+          expect(layoutSubregionIds.has(missingLayoutSubregionId), binding.id).toBe(false);
+        }
+        for (const activityId of binding.activityIds) {
+          const activity = ACTIVITY_INDEX[activityId];
+          expect(activity?.regionId, `${binding.id}:${activityId}`).toBe(chapter.regionId);
+          expect(activity?.subregionId, `${binding.id}:${activityId}`).toBe(binding.entrySubregionId);
+          expect(chapterActivities.has(activityId), `${binding.id}:${activityId}`).toBe(true);
+        }
+        for (const craftId of binding.craftIds) {
+          expect(craftIds.has(craftId), `${binding.id}:${craftId}`).toBe(true);
+          expect(chapterCrafts.has(craftId), `${binding.id}:${craftId}`).toBe(true);
+          expect(subregionContent?.craftIds.includes(craftId), `${binding.id}:${craftId}`).toBe(true);
+        }
+        for (const npcId of binding.npcIds) {
+          const npc = npcById.get(npcId);
+          expect(npc?.regionId, `${binding.id}:${npcId}`).toBe(chapter.regionId);
+          expect(npc?.subregionId, `${binding.id}:${npcId}`).toBe(binding.entrySubregionId);
+        }
+        for (const routeId of binding.routeIds) {
+          const route = routeById.get(routeId);
+          expect(route, `${binding.id}:${routeId}`).toBeTruthy();
+          expect(chapterRoutes.has(routeId), `${binding.id}:${routeId}`).toBe(true);
+          expect([route?.fromRegionId, route?.toRegionId], `${binding.id}:${routeId}`).toContain(chapter.regionId);
+        }
+        for (const landingCase of binding.routeLandingCases ?? []) {
+          const route = routeById.get(landingCase.routeId);
+          expect(binding.routeIds).toContain(landingCase.routeId);
+          expect(route?.landingSubregionIds?.[chapter.regionId], `${binding.id}:${landingCase.routeId}`).toBe(
+            landingCase.landingSubregionId,
+          );
+          expect(entrySubregionIds.has(landingCase.landingSubregionId), binding.id).toBe(true);
+        }
+      }
+    }
+  });
+
+  it('freezes Jiangnan M1.28 six-entry smokeBindings coverage', () => {
+    const jiangnan = REGION_CHAPTERS.find((chapter) => chapter.id === 'chapter-jiangnan-baigong-homecoming');
+
+    expect(jiangnan?.smokeBindings?.map((binding) => binding.entrySubregionId)).toEqual([
+      'jiangnan-suhang',
+      'jiangnan-jinling',
+      'jiangnan-linan',
+      'jiangnan-longquan',
+      'jiangnan-taihu',
+      'jiangnan-baigongyuan',
+    ]);
+    expect(new Set(jiangnan?.smokeBindings?.map((binding) => binding.id)).size).toBe(6);
+    expect(jiangnan?.nextActions).not.toContain('补江南章节多入口 smokeBindings');
+    expect(jiangnan?.nextActions).toContain('让灯市后续单继续读取作品与 NPC 关系');
   });
 });

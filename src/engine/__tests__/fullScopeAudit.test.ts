@@ -72,7 +72,7 @@ describe('full scope audit', () => {
     expect(jiangnan?.counts.layoutSubregions).toBe(6);
     expect(jiangnan?.gaps.some((gap) => gap.startsWith('layout-subregion:'))).toBe(false);
     expect(jiangnan?.m1Actions).not.toContain('补蓝染/竹编基础工艺的专属交互深度');
-    expect(jiangnan?.m1Actions).toContain('补江南章节多入口 smokeBindings');
+    expect(jiangnan?.m1Actions).not.toContain('补江南章节多入口 smokeBindings');
     expect(jiangnan?.m1Actions).toContain('让灯市后续单继续读取作品与 NPC 关系');
     expect(jiangnan?.m1Actions).not.toContain('补临安茶肆与苏小茶生活回访');
     expect(jiangnan?.m1Actions).not.toContain('补临安茶肆/伞铺雨季回访链');

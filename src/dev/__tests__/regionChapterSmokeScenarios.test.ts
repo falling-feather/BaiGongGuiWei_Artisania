@@ -339,6 +339,63 @@ describe('region chapter smoke scenarios', () => {
     expect(spec?.npcs.some((npc) => npc.id === 'jn-shen-yunsuo')).toBe(true);
   });
 
+  it('drives Jiangnan M1.28 six-entry smokeBindings from the same chapter smoke state', () => {
+    const chapter = chapterById.get('chapter-jiangnan-baigong-homecoming');
+    if (!chapter?.smokeBindings) throw new Error('Missing Jiangnan smokeBindings');
+
+    for (const binding of chapter.smokeBindings) {
+      const state = buildRegionChapterSmokeState(content, chapter.id, {
+        subregionId: binding.entrySubregionId,
+      });
+      if (!state) throw new Error(`Missing Jiangnan chapter smoke state for ${binding.id}`);
+      const spec = buildRegionSpec(state.currentRegion, state);
+
+      expect(state.currentRegion).toBe('jiangnan');
+      expect(state.currentSubregion).toBe(binding.entrySubregionId);
+      expect(state.trackedLoreEntryId).toBe(`subregion-${binding.entrySubregionId}`);
+      expect(spec?.subregionId).toBe(binding.entrySubregionId);
+      for (const activityId of binding.activityIds) {
+        expect(spec?.activities.some((activity) => activity.id === activityId), `${binding.id}:${activityId}`).toBe(
+          true,
+        );
+      }
+      for (const craftId of binding.craftIds) {
+        expect(spec?.crafts.some((craft) => craft.id === craftId), `${binding.id}:${craftId}`).toBe(true);
+      }
+      for (const npcId of binding.npcIds) {
+        expect(spec?.npcs.some((npc) => npc.id === npcId), `${binding.id}:${npcId}`).toBe(true);
+      }
+      for (const routeId of binding.routeIds) {
+        expect(spec?.gates.some((gate) => gate.routeId === routeId), `${binding.id}:${routeId}`).toBe(true);
+      }
+      for (const landingCase of binding.routeLandingCases ?? []) {
+        expect(routeById.get(landingCase.routeId)?.landingSubregionIds?.jiangnan).toBe(
+          landingCase.landingSubregionId,
+        );
+      }
+
+      let exercised = state;
+      const craftId = binding.craftIds[0];
+      if (craftId) {
+        const producedBefore = exercised.crafts.find((craft) => craft.craftId === craftId)?.produced ?? 0;
+        exercised = gameReducer(exercised, { type: 'RUN_PROCESS', craftId, skipStepIds: [] }, content);
+        expect(exercised.crafts.find((craft) => craft.craftId === craftId)?.produced, `${binding.id}:${craftId}`)
+          .toBeGreaterThan(producedBefore);
+      }
+      const activityId = binding.activityIds[0];
+      if (activityId) {
+        exercised = gameReducer(exercised, { type: 'PERFORM_ACTIVITY', activityId, quality: 0.88 }, content);
+        expect(exercised.completedActivities, `${binding.id}:${activityId}`).toContain(activityId);
+      }
+      const npcId = binding.npcIds[0];
+      if (npcId) {
+        const affinityBefore = exercised.npcAffinity[npcId] ?? 0;
+        exercised = gameReducer(exercised, { type: 'TALK_NPC', npcId }, content);
+        expect(exercised.npcAffinity[npcId], `${binding.id}:${npcId}`).toBeGreaterThan(affinityBefore);
+      }
+    }
+  });
+
   it('ignores chapter smoke subregion overrides outside the scenario region', () => {
     const state = buildRegionChapterSmokeState(content, 'chapter-xueyu-thangka-snowpass', {
       subregionId: 'xiyu-caravan-post',

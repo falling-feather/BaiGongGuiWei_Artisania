@@ -24,6 +24,24 @@ export interface RegionChapterOrderHook {
   readsItemState?: boolean;
 }
 
+export interface RegionChapterSmokeRouteLandingCase {
+  routeId: string;
+  landingSubregionId: string;
+}
+
+export interface RegionChapterSmokeBinding {
+  id: string;
+  entrySubregionId: string;
+  activityIds: string[];
+  craftIds: string[];
+  npcIds: string[];
+  routeIds: string[];
+  requiresRuntimeLayout?: boolean;
+  missingLayoutSubregionIds?: string[];
+  routeLandingCases?: RegionChapterSmokeRouteLandingCase[];
+  note: string;
+}
+
 export interface RegionChapterSpec {
   id: string;
   regionId: string;
@@ -39,6 +57,7 @@ export interface RegionChapterSpec {
   collabRecipeIds: string[];
   escortEncounterIds: string[];
   smokeScenarioIds: string[];
+  smokeBindings?: RegionChapterSmokeBinding[];
   nextActions: string[];
   gaps: string[];
 }
@@ -60,8 +79,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
       'jiangnan-baigongyuan',
     ],
     playPillars: [
-      { kind: 'craft', label: '苏杭蓝染竹编、龙泉剑瓷与云锦伞作', activityIds: ['jn-longquan-sword-forge', 'jn-celadon-kiln', 'jn-cloud-brocade-office', 'jn-paper-umbrella-shop'], craftIds: ['indigo-dyeing', 'bamboo-weaving', 'longquan-sword', 'celadon', 'kesi', 'oilpaper-umbrella'] },
-      { kind: 'life', label: '百工院田圃与湖畔茶肆', activityIds: ['jn-yard-fields', 'jn-lake-tea-house'] },
+      { kind: 'craft', label: '苏杭蓝染竹编、龙泉剑瓷、金箔与云锦伞作', activityIds: ['jn-longquan-sword-forge', 'jn-celadon-kiln', 'jn-cloud-brocade-office', 'jn-paper-umbrella-shop', 'jn-gold-leaf-shop'], craftIds: ['indigo-dyeing', 'bamboo-weaving', 'longquan-sword', 'celadon', 'kesi', 'oilpaper-umbrella'] },
+      { kind: 'life', label: '百工院田圃、湖畔茶肆与兰溪修习', activityIds: ['jn-yard-fields', 'jn-lake-tea-house', 'jn-lanxi-orchid'] },
       { kind: 'tradeRoute', label: '秦淮灯市与纸墨商路', activityIds: ['jn-qinhuai-lantern'], routeIds: ['route-jiangnan-huizhou-paper', 'route-jiangnan-ganpo-kiln', 'route-jiangnan-jingji-canal'] },
     ],
     characterNpcIds: [
@@ -98,8 +117,77 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-yunjin-pick-weft'],
     escortEncounterIds: ['escort-jingji-canal-tribute'],
     smokeScenarioIds: ['chapter-jiangnan-baigong-homecoming'],
-    nextActions: ['补江南章节多入口 smokeBindings', '让灯市后续单继续读取作品与 NPC 关系'],
-    gaps: ['M1.27 已接入江南蓝染 / 竹编专属工艺阶段、缺陷、返修和地区选择守卫；江南剩余转向多入口 smokeBindings、灯市后续单关系读数与最终美术摆位。'],
+    smokeBindings: [
+      {
+        id: 'smoke-binding-jiangnan-suhang',
+        entrySubregionId: 'jiangnan-suhang',
+        activityIds: [],
+        craftIds: ['indigo-dyeing', 'bamboo-weaving'],
+        npcIds: ['jn-indigo-keeper', 'jn-bamboo-master'],
+        routeIds: ['route-jiangnan-huizhou-paper', 'route-jiangnan-ganpo-kiln'],
+        requiresRuntimeLayout: true,
+        routeLandingCases: [
+          { routeId: 'route-jiangnan-huizhou-paper', landingSubregionId: 'jiangnan-suhang' },
+          { routeId: 'route-jiangnan-ganpo-kiln', landingSubregionId: 'jiangnan-suhang' },
+        ],
+        note: '苏杭水市覆盖蓝染、竹编与纸墨 / 窑柴两条正式江南落点。',
+      },
+      {
+        id: 'smoke-binding-jiangnan-jinling',
+        entrySubregionId: 'jiangnan-jinling',
+        activityIds: ['jn-qinhuai-lantern', 'jn-gold-leaf-shop', 'jn-lanxi-orchid'],
+        craftIds: ['kesi'],
+        npcIds: ['jn-ning-ciqiu', 'jn-gu-bojin', 'jn-qiao-zhaoye'],
+        routeIds: ['route-jiangnan-jingji-canal'],
+        requiresRuntimeLayout: true,
+        routeLandingCases: [
+          { routeId: 'route-jiangnan-jingji-canal', landingSubregionId: 'jiangnan-jinling' },
+        ],
+        note: '金陵城覆盖秦淮灯市、金箔、兰溪修习与运河北上正式落点。',
+      },
+      {
+        id: 'smoke-binding-jiangnan-linan',
+        entrySubregionId: 'jiangnan-linan',
+        activityIds: ['jn-lake-tea-house', 'jn-paper-umbrella-shop'],
+        craftIds: ['oilpaper-umbrella'],
+        npcIds: ['jn-su-xiaocha', 'jn-lin-yuqiao', 'jn-fang-jiheng'],
+        routeIds: [],
+        requiresRuntimeLayout: true,
+        note: '临安水市覆盖湖畔茶肆、油纸伞铺与码头商人，路线听闻通过活动奖励解锁。',
+      },
+      {
+        id: 'smoke-binding-jiangnan-longquan',
+        entrySubregionId: 'jiangnan-longquan',
+        activityIds: ['jn-longquan-sword-forge', 'jn-celadon-kiln'],
+        craftIds: ['longquan-sword', 'celadon'],
+        npcIds: ['jn-lu-hanquan', 'jn-ye-qingzhan'],
+        routeIds: [],
+        requiresRuntimeLayout: true,
+        note: '龙泉山坊覆盖剑炉、青瓷窑与江南金石工艺样板。',
+      },
+      {
+        id: 'smoke-binding-jiangnan-taihu',
+        entrySubregionId: 'jiangnan-taihu',
+        activityIds: ['jn-cloud-brocade-office'],
+        craftIds: ['kesi', 'oilpaper-umbrella'],
+        npcIds: ['jn-shen-yunsuo'],
+        routeIds: [],
+        requiresRuntimeLayout: true,
+        note: '太湖织埠覆盖云锦局、缂丝与跨伞骨供应的织造入口。',
+      },
+      {
+        id: 'smoke-binding-jiangnan-baigongyuan',
+        entrySubregionId: 'jiangnan-baigongyuan',
+        activityIds: ['jn-yard-fields'],
+        craftIds: ['indigo-dyeing', 'bamboo-weaving'],
+        npcIds: ['jn-xiaoman'],
+        routeIds: [],
+        requiresRuntimeLayout: true,
+        note: '城郊百工院覆盖田圃生活底盘与蓝染 / 竹编家园工艺入口。',
+      },
+    ],
+    nextActions: ['让灯市后续单继续读取作品与 NPC 关系'],
+    gaps: ['M1.28 已接入江南六入口 smokeBindings；江南剩余转向灯市后续单关系读数与最终美术摆位。'],
   },
   {
     id: 'chapter-bashu-tea-horse-brocade',

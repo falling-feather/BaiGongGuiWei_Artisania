@@ -54,6 +54,8 @@ export {
   type RegionChapterOrderHook,
   type RegionChapterPillarKind,
   type RegionChapterPlayPillar,
+  type RegionChapterSmokeBinding,
+  type RegionChapterSmokeRouteLandingCase,
   type RegionChapterSpec,
   type RegionChapterStatus,
 } from './regionChapters';

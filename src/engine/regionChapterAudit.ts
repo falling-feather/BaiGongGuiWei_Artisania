@@ -21,6 +21,7 @@ export interface RegionChapterAuditRow {
     collabRecipes: number;
     escortEncounters: number;
     smokeScenarios: number;
+    smokeBindings: number;
   };
   nextActions: string[];
   gaps: string[];
@@ -123,6 +124,41 @@ export function buildRegionChapterAudit(
       ...chapter.smokeScenarioIds
         .filter((smokeScenarioId) => smokeScenarioIds.size > 0 && !smokeScenarioIds.has(smokeScenarioId))
         .map((smokeScenarioId) => `smoke:${smokeScenarioId}`),
+      ...(chapter.smokeBindings ?? []).flatMap((binding) => {
+        const bindingPrefix = `smokeBinding:${binding.id}`;
+        return [
+          ...(localSubregionIds.has(binding.entrySubregionId)
+            ? []
+            : [`${bindingPrefix}:entrySubregion:${binding.entrySubregionId}`]),
+          ...binding.activityIds
+            .filter((activityId) => activityById.get(activityId)?.regionId !== chapter.regionId)
+            .map((activityId) => `${bindingPrefix}:activity:${activityId}`),
+          ...binding.craftIds
+            .filter((craftId) => !craftIds.has(craftId))
+            .map((craftId) => `${bindingPrefix}:craft:${craftId}`),
+          ...binding.npcIds
+            .filter((npcId) => !npcIds.has(npcId))
+            .map((npcId) => `${bindingPrefix}:npc:${npcId}`),
+          ...binding.routeIds.flatMap((routeId) => {
+            const route = routesById.get(routeId);
+            if (!route) return [`${bindingPrefix}:route:${routeId}`];
+            return route.fromRegionId === chapter.regionId || route.toRegionId === chapter.regionId
+              ? []
+              : [`${bindingPrefix}:routeRegion:${routeId}`];
+          }),
+          ...(binding.routeLandingCases ?? []).flatMap((landingCase) => {
+            const route = routesById.get(landingCase.routeId);
+            if (!route) return [`${bindingPrefix}:routeLandingRoute:${landingCase.routeId}`];
+            const declaredLanding = route.landingSubregionIds?.[chapter.regionId];
+            const landingMatches =
+              declaredLanding === landingCase.landingSubregionId &&
+              localSubregionIds.has(landingCase.landingSubregionId);
+            return landingMatches
+              ? []
+              : [`${bindingPrefix}:routeLanding:${landingCase.routeId}:${landingCase.landingSubregionId}`];
+          }),
+        ];
+      }),
       ...routeLandingGaps,
     ];
     const layoutGaps = chapter.entrySubregionIds
@@ -151,6 +187,7 @@ export function buildRegionChapterAudit(
         collabRecipes: chapter.collabRecipeIds.length,
         escortEncounters: chapter.escortEncounterIds.length,
         smokeScenarios: chapter.smokeScenarioIds.length,
+        smokeBindings: chapter.smokeBindings?.length ?? 0,
       },
       nextActions: chapter.nextActions,
       gaps: chapter.gaps,
