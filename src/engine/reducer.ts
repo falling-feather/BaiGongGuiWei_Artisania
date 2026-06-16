@@ -1739,11 +1739,19 @@ function stableTextHash(value: string): number {
   return hash;
 }
 
+const ROUTE_PRESSURE_STABILITY_FLOOR = 8;
+
 function routePressureDelta(risk: number): number {
   if (risk >= 54) return -4;
   if (risk >= 44) return -2;
   if (risk <= 18) return 1;
   return 0;
+}
+
+function seasonalRoutePressureDelta(risk: number, stability: number): number {
+  const delta = routePressureDelta(risk);
+  if (delta < 0 && stability <= ROUTE_PRESSURE_STABILITY_FLOOR) return 0;
+  return delta;
 }
 
 function routeSupplyResource(state: GameState, content: GameContent, route: RouteSpec): string | null {
@@ -1872,7 +1880,7 @@ function settleRoutePressure(
   for (const route of allRouteSpecs(content)) {
     if (!unlocked.has(route.fromRegionId) || !unlocked.has(route.toRegionId)) continue;
     const risk = routeRiskScore({ ...state, routeStability }, route);
-    const delta = routePressureDelta(risk);
+    const delta = seasonalRoutePressureDelta(risk, routeStabilityOf({ routeStability }, route.id));
     if (delta !== 0) routeStability = addRouteStability(routeStability, [route.id], delta);
 
     const roll = (state.seed + state.turn * 97 + stableTextHash(route.id)) % 100;
