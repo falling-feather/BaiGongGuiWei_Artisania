@@ -3392,6 +3392,15 @@ function relationshipOutcomeAddendum(state: GameState, npc: NpcDef): string {
       '织埠藏客完成复看后，她把原样、复单和织样凭记都写进太湖花本档。',
     );
   }
+  if (npc.id === 'jn-su-xiaocha') {
+    return collectorReputationAddendum(
+      state,
+      'collector-reputation-paper-tea-renewed',
+      'homevisit-xiaocha-paper-route-return-resolved',
+      '纸路熟客已经按茶席续账续订宣纸茶笺，她把湖畔茶肆、徽州纸路和百工院人情账接成临安生活声誉。',
+      '纸路熟客完成复看后，她把原席、复单和纸路留签都写进临安茶肆声誉档。',
+    );
+  }
   if (npc.id === 'ln-he-yunsha') {
     return collectorReputationAddendum(
       state,

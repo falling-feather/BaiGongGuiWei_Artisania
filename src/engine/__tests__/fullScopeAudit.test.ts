@@ -71,8 +71,9 @@ describe('full scope audit', () => {
 
     expect(jiangnan?.counts.layoutSubregions).toBe(6);
     expect(jiangnan?.gaps.some((gap) => gap.startsWith('layout-subregion:'))).toBe(false);
-    expect(jiangnan?.m1Actions).toContain('补临安茶肆与苏小茶生活回访');
     expect(jiangnan?.m1Actions).toContain('补蓝染/竹编基础工艺的专属交互深度');
+    expect(jiangnan?.m1Actions).toContain('补江南章节多入口 smokeBindings');
+    expect(jiangnan?.m1Actions).not.toContain('补临安茶肆与苏小茶生活回访');
     expect(jiangnan?.m1Actions).not.toContain('补临安茶肆/伞铺雨季回访链');
     expect(jiangnan?.m1Actions).not.toContain('补太湖织埠缂丝/云锦藏客订单差异');
     expect(jiangnan?.m1Actions).not.toContain('补临安水市与太湖织埠回访链');

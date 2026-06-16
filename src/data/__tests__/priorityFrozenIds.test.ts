@@ -182,6 +182,8 @@ const FROZEN_ROUTE_IDS = [
 ];
 
 const FROZEN_HOME_VISIT_IDS = [
+  'homevisit-xiaocha-lake-tea-gallery',
+  'homevisit-xiaocha-paper-route-return',
   'homevisit-lin-rain-umbrella-gallery',
   'homevisit-lin-rain-client-return',
   'homevisit-shen-cloud-brocade-gallery',

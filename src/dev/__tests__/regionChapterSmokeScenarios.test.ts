@@ -311,6 +311,12 @@ describe('region chapter smoke scenarios', () => {
       expect.arrayContaining(['jn-lake-tea-house', 'jn-paper-umbrella-shop']),
     );
     expect(spec?.npcs.map((npc) => npc.id)).toEqual(expect.arrayContaining(['jn-su-xiaocha', 'jn-lin-yuqiao']));
+
+    const afterTeaHouse = gameReducer(state, { type: 'PERFORM_ACTIVITY', activityId: 'jn-lake-tea-house', quality: 0.88 }, content);
+
+    expect(afterTeaHouse.completedActivities).toContain('jn-lake-tea-house');
+    expect(afterTeaHouse.flags).toContain('heard-huizhou-paper-route');
+    expect(afterTeaHouse.flags).toContain('route-known:route-jiangnan-huizhou-paper');
   });
 
   it('allows DEV Jiangnan chapter smoke to start at the M1.24 Taihu weaving dock for browser QA', () => {
