@@ -68,6 +68,54 @@ describe('region chapter audit', () => {
     expect(jiangnan?.unknownReferences).toEqual([]);
   });
 
+  it('audits M1 smokeBindings as full 43-entry coverage with no coverage gaps', () => {
+    const audit = buildRegionChapterAudit(REGION_CHAPTERS, content, {
+      layoutSubregionIds,
+      smokeScenarioIds: REGION_CHAPTER_SMOKE_SCENARIO_IDS,
+    });
+    const countsByRegion = Object.fromEntries(audit.rows.map((row) => [row.regionId, row.counts.smokeBindings]));
+
+    expect(audit.rows.every((row) => row.smokeBindingCoverageGaps.length === 0)).toBe(true);
+    expect(audit.rows.reduce((sum, row) => sum + row.counts.smokeBindings, 0)).toBe(43);
+    expect(countsByRegion).toMatchObject({
+      jiangnan: 6,
+      bashu: 4,
+      lingnan: 4,
+      qiandian: 3,
+      jingchu: 4,
+      ganpo: 3,
+      huizhou: 4,
+      jingji: 3,
+      sanjin: 4,
+      xueyu: 4,
+      xiyu: 4,
+    });
+  });
+
+  it('reports smoke binding coverage gaps as invalid chapter audit rows', () => {
+    const bashu = REGION_CHAPTERS.find((chapter) => chapter.regionId === 'bashu');
+    if (!bashu) throw new Error('Missing Bashu chapter fixture');
+    const brokenChapter: RegionChapterSpec = {
+      ...bashu,
+      smokeBindings: bashu.smokeBindings?.slice(0, 1),
+    };
+    const audit = buildRegionChapterAudit([brokenChapter], content, {
+      layoutSubregionIds,
+      smokeScenarioIds: REGION_CHAPTER_SMOKE_SCENARIO_IDS,
+    });
+
+    expect(audit.invalidChapters).toBe(1);
+    expect(audit.rows[0].readiness).toBe('invalid');
+    expect(audit.rows[0].smokeBindingCoverageGaps).toEqual(
+      expect.arrayContaining([
+        'smokeBindingEntry:bashu-bamboo-sea',
+        'smokeBindingEntry:bashu-tea-horse',
+        'smokeBindingEntry:bashu-linqiong-iron',
+        'smokeBindingRouteLanding:route-bashu-qiandian-tea-horse:bashu-tea-horse',
+      ]),
+    );
+  });
+
   it('reports stable missing reference ids for bad chapter specs', () => {
     const brokenChapter: RegionChapterSpec = {
       ...REGION_CHAPTERS[0],

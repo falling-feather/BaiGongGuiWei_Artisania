@@ -76,6 +76,23 @@ const CHAPTER_ROUTE_NAVIGATION_CASES: ChapterRouteNavigationCase[] = REGION_CHAP
   });
 });
 
+const SMOKE_BINDING_ROUTE_NAVIGATION_CASES: ChapterRouteNavigationCase[] = REGION_CHAPTERS.flatMap((chapter) =>
+  (chapter.smokeBindings ?? []).flatMap((binding) =>
+    (binding.routeLandingCases ?? []).map((landingCase) => {
+      const route = routeById.get(landingCase.routeId);
+      const sourceRegionId = route?.fromRegionId === chapter.regionId ? route.toRegionId : route?.fromRegionId ?? '';
+      return {
+        name: `${binding.id}:${landingCase.routeId}`,
+        chapterId: chapter.id,
+        sourceRegionId,
+        targetRegionId: chapter.regionId,
+        routeId: landingCase.routeId,
+        landingSubregionId: landingCase.landingSubregionId,
+      };
+    }),
+  ),
+);
+
 function freshState(): GameState {
   const base = createInitialState(CRAFTS, STARTING_APPRENTICES, 20260614, undefined, REGIONS);
   return {
@@ -161,6 +178,31 @@ describe('region chapter street navigation', () => {
       const target = spec?.navigationTarget;
       expect(target).toMatchObject({ kind: 'gate', payload: testCase.targetRegionId });
 
+      const gate = currentStreetRegionGate(state, testCase.targetRegionId);
+      expect(gate?.routeId, testCase.name).toBe(testCase.routeId);
+      if (!gate?.unlocked) {
+        state = gameReducer(state, { type: 'UNLOCK_REGION', regionId: testCase.targetRegionId }, content);
+        expect(state.unlockedRegions, `failed to unlock ${testCase.targetRegionId}`).toContain(testCase.targetRegionId);
+      }
+
+      const reached = gameReducer(
+        state,
+        { type: 'TRAVEL', regionId: testCase.targetRegionId, routeId: testCase.routeId },
+        content,
+      );
+      expect(reached.currentRegion).toBe(testCase.targetRegionId);
+      expect(reached.currentSubregion).toBe(testCase.landingSubregionId);
+    },
+  );
+
+  it.each(SMOKE_BINDING_ROUTE_NAVIGATION_CASES)(
+    'lands smoke binding $name through the declared street gate route',
+    (testCase) => {
+      let state = freshState();
+      state = followTrackedLoreTo(state, testCase.sourceRegionId, firstSubregionId(testCase.sourceRegionId));
+      expect(state.currentRegion).toBe(testCase.sourceRegionId);
+
+      state = trackSubregion(state, testCase.landingSubregionId);
       const gate = currentStreetRegionGate(state, testCase.targetRegionId);
       expect(gate?.routeId, testCase.name).toBe(testCase.routeId);
       if (!gate?.unlocked) {

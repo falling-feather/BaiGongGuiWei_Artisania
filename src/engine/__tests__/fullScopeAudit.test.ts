@@ -92,7 +92,7 @@ describe('full scope audit', () => {
     expect(qiandian?.gaps).not.toContain('layout-subregion:2/3');
     expect(qiandian?.m1Actions).not.toContain('补东川铜矿矿口回访与铜料状态反馈');
     expect(qiandian?.m1Actions).toContain('补蜡染人物长线回访');
-    expect(qiandian?.m1Actions).toContain('扩展黔滇多入口 smokeBindings');
+    expect(qiandian?.m1Actions.some((action) => action.includes('smokeBindings'))).toBe(false);
     expect(qiandian?.m1Actions).not.toContain('补东川铜矿运行地图或采炼入口');
     expect(jingchu?.counts.layoutSubregions).toBe(4);
     expect(jingchu?.gaps).not.toContain('layout-subregion:2/4');
@@ -118,5 +118,13 @@ describe('full scope audit', () => {
     expect(xiyu?.m1Actions).toContain('补艾德莱斯织坊藏客回访与订单差异');
     expect(xiyu?.signatureCraftsWithoutInteraction).not.toContain('atlas-silk');
     expect(xiyu?.signatureCraftsWithoutInteraction).toEqual(expect.arrayContaining(['carpet', 'copperware']));
+  });
+
+  it('keeps completed M1/F3 smokeBinding expansion out of full-scope action lists', () => {
+    for (const requirement of FULL_SCOPE_REGION_REQUIREMENTS) {
+      expect(requirement.m1Actions.some((action) => action.includes('smokeBindings')), requirement.regionId).toBe(
+        false,
+      );
+    }
   });
 });

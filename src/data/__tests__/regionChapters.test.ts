@@ -218,6 +218,46 @@ describe('region chapter specs', () => {
     }
   });
 
+  it('requires M1 smokeBindings to cover every chapter entry subregion', () => {
+    const totalEntrySubregions = REGION_CHAPTERS.flatMap((chapter) => chapter.entrySubregionIds).length;
+    const totalSmokeBindings = REGION_CHAPTERS.flatMap((chapter) => chapter.smokeBindings ?? []).length;
+
+    expect(totalEntrySubregions).toBe(43);
+    expect(totalSmokeBindings).toBe(totalEntrySubregions);
+
+    for (const chapter of REGION_CHAPTERS) {
+      const bindingEntryIds = chapter.smokeBindings?.map((binding) => binding.entrySubregionId) ?? [];
+      const bindingIds = chapter.smokeBindings?.map((binding) => binding.id) ?? [];
+      const chapterRouteIds = [...new Set(chapter.playPillars.flatMap((pillar) => pillar.routeIds ?? []))];
+
+      expect(bindingEntryIds, chapter.id).toEqual(chapter.entrySubregionIds);
+      expect(new Set(bindingEntryIds).size, chapter.id).toBe(bindingEntryIds.length);
+      expect(new Set(bindingIds).size, chapter.id).toBe(bindingIds.length);
+      expect(chapter.smokeBindings?.every((binding) => binding.requiresRuntimeLayout), chapter.id).toBe(true);
+      expect(chapter.smokeBindings?.some((binding) => binding.activityIds.length > 0), chapter.id).toBe(true);
+      expect(chapter.smokeBindings?.some((binding) => binding.craftIds.length > 0), chapter.id).toBe(true);
+      expect(chapter.smokeBindings?.some((binding) => binding.npcIds.length > 0), chapter.id).toBe(true);
+
+      for (const routeId of chapterRouteIds) {
+        const route = routeById.get(routeId);
+        const landingSubregionId = route?.landingSubregionIds?.[chapter.regionId];
+        expect(landingSubregionId, `${chapter.id}:${routeId}`).toBeTruthy();
+        expect(
+          chapter.smokeBindings?.some(
+            (binding) =>
+              binding.entrySubregionId === landingSubregionId &&
+              binding.routeIds.includes(routeId) &&
+              (binding.routeLandingCases ?? []).some(
+                (landingCase) =>
+                  landingCase.routeId === routeId && landingCase.landingSubregionId === landingSubregionId,
+              ),
+          ),
+          `${chapter.id}:${routeId}`,
+        ).toBe(true);
+      }
+    }
+  });
+
   it('freezes Jiangnan M1.29 smoke bindings and lantern relationship hook coverage', () => {
     const jiangnan = REGION_CHAPTERS.find((chapter) => chapter.id === 'chapter-jiangnan-baigong-homecoming');
     const qinhuaiHook = jiangnan?.orderHooks.find(

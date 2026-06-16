@@ -78,7 +78,6 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     m1Actions: [
       '补蜡染人物长线回访',
       '继续扩展茶马会后续分支到岭南港口回访',
-      '扩展黔滇多入口 smokeBindings',
     ],
   },
   {
@@ -129,7 +128,6 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     targetMinimums: DEFAULT_MINIMUMS,
     m1Actions: [
       '补更长漕运复验后续回访与多轮料账统计',
-      '扩展京畿多入口 smokeBindings',
     ],
   },
   {
@@ -168,7 +166,6 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     m1Actions: [
       '把驼队远行与巴扎后续单接成长线商路风险',
       '补艾德莱斯织坊藏客回访与订单差异',
-      '扩展西域多入口 smokeBindings',
     ],
   },
 ];

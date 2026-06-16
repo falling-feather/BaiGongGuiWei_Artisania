@@ -12,6 +12,7 @@ export interface RegionChapterAuditRow {
   unknownReferences: string[];
   layoutGaps: string[];
   routeLandingGaps: string[];
+  smokeBindingCoverageGaps: string[];
   proposedHooks: string[];
   counts: {
     playPillars: number;
@@ -50,7 +51,8 @@ export function buildRegionChapterAudit(
   const regionById = new Map((content.regions ?? []).map((region) => [region.id, region]));
   const activityById = new Map((content.activities ?? []).map((activity) => [activity.id, activity]));
   const craftIds = new Set((content.crafts ?? []).map((craft) => craft.id));
-  const npcIds = new Set((content.npcs ?? []).map((npc) => npc.id));
+  const npcById = new Map((content.npcs ?? []).map((npc) => [npc.id, npc]));
+  const npcIds = new Set(npcById.keys());
   const routesById = new Map(
     (content.regionContent ?? []).flatMap((region) => region.routes.map((route) => [route.id, route] as const)),
   );
@@ -60,10 +62,21 @@ export function buildRegionChapterAudit(
   const escortEncounterIds = new Set((content.escortEncounters ?? []).map((encounter) => encounter.id));
   const layoutSubregionIds = new Set(options.layoutSubregionIds ?? []);
   const smokeScenarioIds = new Set(options.smokeScenarioIds ?? []);
+  const subregionContentById = new Map(
+    (content.subregionContent ?? []).map((entry) => [entry.subregionId, entry]),
+  );
 
   const rows = chapters.map((chapter) => {
     const region = regionById.get(chapter.regionId);
     const localSubregionIds = new Set(region?.subregions.map((subregion) => subregion.id) ?? []);
+    const smokeBindings = chapter.smokeBindings ?? [];
+    const chapterActivities = new Set(chapter.playPillars.flatMap((pillar) => pillar.activityIds));
+    const chapterCrafts = new Set(chapter.playPillars.flatMap((pillar) => pillar.craftIds ?? []));
+    const chapterRoutes = new Set(chapter.playPillars.flatMap((pillar) => pillar.routeIds ?? []));
+    const smokeBindingEntryCounts = smokeBindings.reduce((counts, binding) => {
+      counts.set(binding.entrySubregionId, (counts.get(binding.entrySubregionId) ?? 0) + 1);
+      return counts;
+    }, new Map<string, number>());
     const routeLandingGaps = chapter.playPillars.flatMap((pillar) =>
       (pillar.routeIds ?? []).flatMap((routeId) => {
         const route = routesById.get(routeId);
@@ -78,6 +91,70 @@ export function buildRegionChapterAudit(
           : [`routeLandingSubregion:${routeId}:${landingSubregionId}`];
       }),
     );
+    const smokeBindingCoverageGaps = [
+      ...(smokeBindings.length > 0 ? [] : [`smokeBindingMissing:${chapter.id}`]),
+      ...chapter.entrySubregionIds
+        .filter((subregionId) => !smokeBindingEntryCounts.has(subregionId))
+        .map((subregionId) => `smokeBindingEntry:${subregionId}`),
+      ...[...smokeBindingEntryCounts.entries()]
+        .filter(([, count]) => count > 1)
+        .map(([subregionId]) => `smokeBindingDuplicateEntry:${subregionId}`),
+      ...(smokeBindings.some((binding) => binding.activityIds.length > 0)
+        ? []
+        : [`smokeBindingNoActivity:${chapter.id}`]),
+      ...(smokeBindings.some((binding) => binding.craftIds.length > 0)
+        ? []
+        : [`smokeBindingNoCraft:${chapter.id}`]),
+      ...(smokeBindings.some((binding) => binding.npcIds.length > 0)
+        ? []
+        : [`smokeBindingNoNpc:${chapter.id}`]),
+      ...smokeBindings.flatMap((binding) => {
+        const localCrafts = new Set(subregionContentById.get(binding.entrySubregionId)?.craftIds ?? []);
+        return [
+          ...(binding.requiresRuntimeLayout ? [] : [`smokeBindingRuntimeLayout:${binding.id}`]),
+          ...((binding.missingLayoutSubregionIds?.length ?? 0) === 0
+            ? []
+            : [`smokeBindingMissingLayout:${binding.id}`]),
+          ...binding.activityIds.flatMap((activityId) => {
+            const activity = activityById.get(activityId);
+            return [
+              ...(chapterActivities.has(activityId) ? [] : [`smokeBindingChapterActivity:${binding.id}:${activityId}`]),
+              ...(activity?.subregionId === binding.entrySubregionId
+                ? []
+                : [`smokeBindingActivitySubregion:${binding.id}:${activityId}`]),
+            ];
+          }),
+          ...binding.craftIds.flatMap((craftId) => [
+            ...(chapterCrafts.has(craftId) ? [] : [`smokeBindingChapterCraft:${binding.id}:${craftId}`]),
+            ...(localCrafts.has(craftId) ? [] : [`smokeBindingLocalCraft:${binding.id}:${craftId}`]),
+          ]),
+          ...binding.npcIds.flatMap((npcId) => {
+            const npc = npcById.get(npcId);
+            return npc?.regionId === chapter.regionId && npc.subregionId === binding.entrySubregionId
+              ? []
+              : [`smokeBindingNpcSubregion:${binding.id}:${npcId}`];
+          }),
+          ...binding.routeIds.filter((routeId) => !chapterRoutes.has(routeId)).map(
+            (routeId) => `smokeBindingChapterRoute:${binding.id}:${routeId}`,
+          ),
+        ];
+      }),
+      ...[...chapterRoutes].flatMap((routeId) => {
+        const route = routesById.get(routeId);
+        const landingSubregionId = route?.landingSubregionIds?.[chapter.regionId];
+        if (!landingSubregionId) return [];
+        const landingCovered = smokeBindings.some(
+          (binding) =>
+            binding.entrySubregionId === landingSubregionId &&
+            binding.routeIds.includes(routeId) &&
+            (binding.routeLandingCases ?? []).some(
+              (landingCase) =>
+                landingCase.routeId === routeId && landingCase.landingSubregionId === landingSubregionId,
+            ),
+        );
+        return landingCovered ? [] : [`smokeBindingRouteLanding:${routeId}:${landingSubregionId}`];
+      }),
+    ];
     const unknownReferences = [
       ...(regionById.has(chapter.regionId) ? [] : [`region:${chapter.regionId}`]),
       ...chapter.entrySubregionIds
@@ -126,7 +203,7 @@ export function buildRegionChapterAudit(
       ...chapter.smokeScenarioIds
         .filter((smokeScenarioId) => smokeScenarioIds.size > 0 && !smokeScenarioIds.has(smokeScenarioId))
         .map((smokeScenarioId) => `smoke:${smokeScenarioId}`),
-      ...(chapter.smokeBindings ?? []).flatMap((binding) => {
+      ...smokeBindings.flatMap((binding) => {
         const bindingPrefix = `smokeBinding:${binding.id}`;
         return [
           ...(localSubregionIds.has(binding.entrySubregionId)
@@ -169,7 +246,8 @@ export function buildRegionChapterAudit(
     const proposedHooks = chapter.orderHooks
       .filter((hook) => hook.source === 'proposed')
       .map((hook) => hook.id);
-    const readiness: RegionChapterReadiness = unknownReferences.length > 0 ? 'invalid' : chapter.status;
+    const readiness: RegionChapterReadiness =
+      unknownReferences.length > 0 || smokeBindingCoverageGaps.length > 0 ? 'invalid' : chapter.status;
 
     return {
       chapterId: chapter.id,
@@ -180,6 +258,7 @@ export function buildRegionChapterAudit(
       unknownReferences,
       layoutGaps,
       routeLandingGaps,
+      smokeBindingCoverageGaps,
       proposedHooks,
       counts: {
         playPillars: chapter.playPillars.length,
