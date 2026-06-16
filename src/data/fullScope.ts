@@ -50,9 +50,7 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['蜀锦/竹编工艺', '茶马驿路线', '山路采料与铁炉'],
     targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 4, orderHookCount: 2 },
     m1Actions: [
-      '补临邛铁炉订单回流与铁锭供应读数',
-      '把茶马会后续单接到路线声望和马帮 NPC 回访',
-      '补蜀锦与青神竹编的章节级订单差异',
+      'M3：扩展蜀锦、青神竹编与临邛铁料的多轮价格、天气损耗和城镇生活事件',
     ],
   },
   {
@@ -63,9 +61,7 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['骑楼夜市', '香云纱晒染', '海贸船期与文房货'],
     targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 4, orderHookCount: 2 },
     m1Actions: [
-      '补佛山冶坊铁器修造回流到海贸订单',
-      '把骑楼夜市后续单接到船期与商港 NPC 回访',
-      '补端砚或石湾陶的订单读取作品缺陷',
+      'M3：扩展珠江海贸多轮压船期、天气改期和文房/铁器外销价格波动',
     ],
   },
   {
@@ -98,9 +94,7 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['景德镇瓷', '开窑会', '河运柴场与高岭矿丘'],
     targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 3, orderHookCount: 2 },
     m1Actions: [
-      '补河运柴场长线风险与高岭瓷土读数',
-      '把开窑会后续单接到瓷行藏客与窑柴风险',
-      '补瓷土/釉料来源对作品诊断的读取',
+      'M3：扩展高岭土、釉料、河运柴场的多轮价格和窑期统计',
     ],
   },
   {
@@ -155,8 +149,7 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['玉雕', '绿洲巴扎', '驼队远行与艾德莱斯织坊'],
     targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 4, orderHookCount: 2 },
     m1Actions: [
-      '把驼队远行与巴扎后续单接成长线商路风险',
-      '补艾德莱斯织坊藏客回访与订单差异',
+      'M3：扩展巴扎多轮估价、驼队补给损耗和织物远行订单价格',
     ],
   },
 ];

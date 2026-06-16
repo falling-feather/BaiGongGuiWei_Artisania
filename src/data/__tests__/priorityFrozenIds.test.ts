@@ -196,6 +196,8 @@ const FROZEN_HOME_VISIT_IDS = [
   'homevisit-alan-tea-road-client-return',
   'homevisit-tongshan-copper-silver-ledger',
   'homevisit-danqing-batik-harbor-return',
+  'homevisit-ayue-linqiong-iron-ledger-return',
+  'homevisit-wu-foshan-duan-ship-ledger',
   'homevisit-yeshu-daye-ore-ledger',
   'homevisit-wen-xiang-embroidery-ledger',
   'homevisit-cheng-stationery-credit-return',
@@ -209,6 +211,8 @@ const FROZEN_HOME_VISIT_IDS = [
   'homevisit-losang-patron-return',
   'homevisit-shicai-pigment-ledger',
   'homevisit-baiyinshu-silver-ledger',
+  'homevisit-guli-atlas-bazaar-return',
+  'homevisit-chai-river-kaolin-kiln-ledger',
 ];
 
 const FROZEN_ESCORT_ENCOUNTER_IDS = [

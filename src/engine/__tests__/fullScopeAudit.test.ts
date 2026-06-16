@@ -83,11 +83,13 @@ describe('full scope audit', () => {
     expect(jiangnan?.m1Actions).not.toContain('补临安水市与太湖织埠回访链');
     expect(bashu?.counts.layoutSubregions).toBe(4);
     expect(bashu?.gaps).not.toContain('layout-subregion:3/4');
-    expect(bashu?.m1Actions).toContain('补临邛铁炉订单回流与铁锭供应读数');
+    expect(bashu?.m1Actions).toContain('M3：扩展蜀锦、青神竹编与临邛铁料的多轮价格、天气损耗和城镇生活事件');
+    expect(bashu?.m1Actions).not.toContain('补临邛铁炉订单回流与铁锭供应读数');
     expect(bashu?.m1Actions).not.toContain('补临邛铁炉可运行入口');
     expect(lingnan?.counts.layoutSubregions).toBe(4);
     expect(lingnan?.gaps).not.toContain('layout-subregion:2/4');
-    expect(lingnan?.m1Actions).toContain('补佛山冶坊铁器修造回流到海贸订单');
+    expect(lingnan?.m1Actions).toContain('M3：扩展珠江海贸多轮压船期、天气改期和文房/铁器外销价格波动');
+    expect(lingnan?.m1Actions).not.toContain('补佛山冶坊铁器修造回流到海贸订单');
     expect(lingnan?.m1Actions).not.toContain('补佛山冶坊或端石坑口的可运行街景入口');
     expect(qiandian?.counts.layoutSubregions).toBe(3);
     expect(qiandian?.gaps).not.toContain('layout-subregion:2/3');
@@ -105,7 +107,8 @@ describe('full scope audit', () => {
     expect(jingchu?.m1Actions).not.toContain('补湘绣楼或矿冶外场的运行入口');
     expect(ganpo?.gaps).not.toContain('layout-subregion:1/3');
     expect(ganpo?.signatureCraftsWithoutInteraction).toContain('xiabu');
-    expect(ganpo?.m1Actions).toContain('补河运柴场长线风险与高岭瓷土读数');
+    expect(ganpo?.m1Actions).toContain('M3：扩展高岭土、釉料、河运柴场的多轮价格和窑期统计');
+    expect(ganpo?.m1Actions).not.toContain('补河运柴场长线风险与高岭瓷土读数');
     expect(huizhou?.m1Actions).not.toContain('补宣纸、徽墨、歙砚的订单差异');
     expect(huizhou?.m1Actions).toContain('M3：扩展徽商会馆多轮授信、违约与文房套单价格');
     expect(huizhou?.m1Actions).not.toContain('补歙石山坑运行入口');
@@ -123,7 +126,8 @@ describe('full scope audit', () => {
     expect(xueyu?.m1Actions).toContain('M3：扩展雪口供给、矿彩价格与银器耐寒损耗');
     expect(xiyu?.gaps).not.toContain('layout-subregion:3/4');
     expect(xiyu?.m1Actions).not.toContain('补艾德莱斯织坊章节入口');
-    expect(xiyu?.m1Actions).toContain('补艾德莱斯织坊藏客回访与订单差异');
+    expect(xiyu?.m1Actions).toContain('M3：扩展巴扎多轮估价、驼队补给损耗和织物远行订单价格');
+    expect(xiyu?.m1Actions).not.toContain('补艾德莱斯织坊藏客回访与订单差异');
     expect(xiyu?.signatureCraftsWithoutInteraction).not.toContain('atlas-silk');
     expect(xiyu?.signatureCraftsWithoutInteraction).toEqual(expect.arrayContaining(['carpet', 'copperware']));
   });
