@@ -22,6 +22,7 @@ export interface RegionChapterOrderHook {
   id: string;
   note: string;
   readsItemState?: boolean;
+  readsNpcRelationship?: boolean;
 }
 
 export interface RegionChapterSmokeRouteLandingCase {
@@ -94,7 +95,7 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
       { npcId: 'jn-xiaoman', role: 'lifeCulture', note: '百工院田圃与生活教学入口。' },
     ],
     orderHooks: [
-      { source: 'activity', id: 'jn-qinhuai-lantern', note: '灯市收束后生成后续灯彩订单。', readsItemState: true },
+      { source: 'activity', id: 'jn-qinhuai-lantern', note: '灯市收束后生成后续灯彩订单。', readsItemState: true, readsNpcRelationship: true },
       { source: 'homeVisit', id: 'homevisit-ning-masterwork-critique', note: '宁辞秋读取代表作题名与品相。', readsItemState: true },
       { source: 'homeVisit', id: 'homevisit-lin-rain-umbrella-gallery', note: '临安雨伞留样读取油纸伞品相。', readsItemState: true },
       { source: 'homeVisit', id: 'homevisit-lin-rain-client-return', note: '雨季伞铺藏客回访读取原样与复单。', readsItemState: true },
@@ -186,8 +187,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
         note: '城郊百工院覆盖田圃生活底盘与蓝染 / 竹编家园工艺入口。',
       },
     ],
-    nextActions: ['让灯市后续单继续读取作品与 NPC 关系'],
-    gaps: ['M1.28 已接入江南六入口 smokeBindings；江南剩余转向灯市后续单关系读数与最终美术摆位。'],
+    nextActions: [],
+    gaps: ['M1.29 已固定秦淮灯市后续单读取作品状态与乔照夜关系读数；江南程序侧剩余仅保留最终美术摆位。'],
   },
   {
     id: 'chapter-bashu-tea-horse-brocade',

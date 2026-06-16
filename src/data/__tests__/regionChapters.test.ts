@@ -218,8 +218,11 @@ describe('region chapter specs', () => {
     }
   });
 
-  it('freezes Jiangnan M1.28 six-entry smokeBindings coverage', () => {
+  it('freezes Jiangnan M1.29 smoke bindings and lantern relationship hook coverage', () => {
     const jiangnan = REGION_CHAPTERS.find((chapter) => chapter.id === 'chapter-jiangnan-baigong-homecoming');
+    const qinhuaiHook = jiangnan?.orderHooks.find(
+      (hook) => hook.source === 'activity' && hook.id === 'jn-qinhuai-lantern',
+    );
 
     expect(jiangnan?.smokeBindings?.map((binding) => binding.entrySubregionId)).toEqual([
       'jiangnan-suhang',
@@ -231,6 +234,10 @@ describe('region chapter specs', () => {
     ]);
     expect(new Set(jiangnan?.smokeBindings?.map((binding) => binding.id)).size).toBe(6);
     expect(jiangnan?.nextActions).not.toContain('补江南章节多入口 smokeBindings');
-    expect(jiangnan?.nextActions).toContain('让灯市后续单继续读取作品与 NPC 关系');
+    expect(jiangnan?.nextActions).not.toContain('让灯市后续单继续读取作品与 NPC 关系');
+    expect(qinhuaiHook).toMatchObject({
+      readsItemState: true,
+      readsNpcRelationship: true,
+    });
   });
 });

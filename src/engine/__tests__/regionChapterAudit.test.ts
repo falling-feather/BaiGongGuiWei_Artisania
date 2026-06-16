@@ -55,7 +55,7 @@ describe('region chapter audit', () => {
     expect(audit.rows.every((row) => row.unknownReferences.length === 0)).toBe(true);
   });
 
-  it('counts Jiangnan M1.28 smokeBindings in the chapter audit row', () => {
+  it('counts Jiangnan M1.29 smokeBindings and relationship-reading hooks in the chapter audit row', () => {
     const audit = buildRegionChapterAudit(REGION_CHAPTERS, content, {
       layoutSubregionIds,
       smokeScenarioIds: REGION_CHAPTER_SMOKE_SCENARIO_IDS,
@@ -63,6 +63,8 @@ describe('region chapter audit', () => {
     const jiangnan = audit.rows.find((row) => row.chapterId === 'chapter-jiangnan-baigong-homecoming');
 
     expect(jiangnan?.counts.smokeBindings).toBe(6);
+    expect(jiangnan?.counts.itemStateReadingHooks).toBeGreaterThanOrEqual(1);
+    expect(jiangnan?.counts.npcRelationshipReadingHooks).toBe(1);
     expect(jiangnan?.unknownReferences).toEqual([]);
   });
 

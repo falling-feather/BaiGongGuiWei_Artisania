@@ -40,9 +40,7 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     chapterGoal: '把百工院、龙泉、金陵灯市、临安茶伞与太湖织埠连成可回访的江南长期样板。',
     playPillars: ['百工院家园', '龙泉剑瓷工艺', '秦淮灯市与文房社交'],
     targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 6, orderHookCount: 2 },
-    m1Actions: [
-      '让灯市后续单继续读取作品与 NPC 关系',
-    ],
+    m1Actions: [],
   },
   {
     regionId: 'bashu',

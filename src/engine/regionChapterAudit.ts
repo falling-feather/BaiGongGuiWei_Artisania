@@ -22,6 +22,8 @@ export interface RegionChapterAuditRow {
     escortEncounters: number;
     smokeScenarios: number;
     smokeBindings: number;
+    itemStateReadingHooks: number;
+    npcRelationshipReadingHooks: number;
   };
   nextActions: string[];
   gaps: string[];
@@ -188,6 +190,8 @@ export function buildRegionChapterAudit(
         escortEncounters: chapter.escortEncounterIds.length,
         smokeScenarios: chapter.smokeScenarioIds.length,
         smokeBindings: chapter.smokeBindings?.length ?? 0,
+        itemStateReadingHooks: chapter.orderHooks.filter((hook) => hook.readsItemState).length,
+        npcRelationshipReadingHooks: chapter.orderHooks.filter((hook) => hook.readsNpcRelationship).length,
       },
       nextActions: chapter.nextActions,
       gaps: chapter.gaps,
