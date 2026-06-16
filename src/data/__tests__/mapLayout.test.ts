@@ -248,6 +248,7 @@ describe('runtime map editor adapter', () => {
       expect.arrayContaining([
         expect.objectContaining({ interaction: 'activity', targetId: 'jn-qinhuai-lantern' }),
         expect.objectContaining({ interaction: 'npc', npcId: 'jn-qiao-zhaoye' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jiangnan-linan' }),
       ]),
     );
     expect(snapshotsBySubregion.get('jiangnan-linan')?.objects).toEqual(
@@ -262,6 +263,7 @@ describe('runtime map editor adapter', () => {
         expect.objectContaining({ interaction: 'npc', npcId: 'jn-su-xiaocha' }),
         expect.objectContaining({ interaction: 'npc', npcId: 'jn-lin-yuqiao' }),
         expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jiangnan-suhang' }),
+        expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jiangnan-jinling' }),
         expect.objectContaining({ interaction: 'gate', runtimeInteraction: 'subregionGate', targetId: 'jiangnan-taihu' }),
         expect.objectContaining({ interaction: 'gate', targetId: 'huizhou' }),
         expect.objectContaining({ interaction: 'gate', targetId: 'ganpo' }),

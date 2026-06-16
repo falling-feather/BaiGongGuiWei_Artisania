@@ -411,6 +411,7 @@ describe('runtime map layouts', () => {
         expect.objectContaining({ interaction: 'activity', targetId: 'jn-paper-umbrella-shop', x: 36, y: 16 }),
         expect.objectContaining({ interaction: 'npc', npcId: 'jn-su-xiaocha', x: 24, y: 20 }),
         expect.objectContaining({ interaction: 'npc', npcId: 'jn-lin-yuqiao', x: 36, y: 20 }),
+        expect.objectContaining({ interaction: 'subregionGate', targetId: 'jiangnan-jinling' }),
         expect.objectContaining({ interaction: 'subregionGate', targetId: 'jiangnan-taihu' }),
       ]),
     );

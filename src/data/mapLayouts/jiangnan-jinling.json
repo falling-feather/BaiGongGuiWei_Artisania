@@ -25,6 +25,7 @@
     { "itemId": "gate", "name": "to Suhang water market", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-suhang", "x": 16, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "gate", "name": "to Taihu weaving dock", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-taihu", "x": 28, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "gate", "name": "to Baigong courtyard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-baigongyuan", "x": 40, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
+    { "itemId": "gate", "name": "to Linan water market", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jiangnan-linan", "x": 46, "y": 23, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "gate", "name": "Jingji canal road", "interaction": "gate", "targetId": "jingji", "x": 52, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "gate", "name": "Ganpo kiln river road", "interaction": "gate", "targetId": "ganpo", "x": 52, "y": 13, "tileW": 3, "tileH": 3, "solid": true },
     { "itemId": "gate", "name": "Huizhou paper road", "interaction": "gate", "targetId": "huizhou", "x": 52, "y": 22, "tileW": 3, "tileH": 3, "solid": true },

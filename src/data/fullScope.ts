@@ -76,7 +76,7 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['苗银工艺', '茶马驿道', '东川铜矿采炼'],
     targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 3 },
     m1Actions: [
-      '补蜡染人物回访与银染互证后日谈',
+      '补蜡染人物长线回访',
       '继续扩展茶马会后续分支到岭南港口回访',
       '扩展黔滇多入口 smokeBindings',
     ],
@@ -140,9 +140,9 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['推光漆器', '票号信用', '煤铁与老陈醋民生'],
     targetMinimums: DEFAULT_MINIMUMS,
     m1Actions: [
-      '补煤铁窑塬或清徐醋坊运行入口',
-      '把票号信用单接成长线商誉风险',
-      '补推光漆藏客回访和失败返修差异',
+      '扩展多轮本金/利钱统计到 M3 长线经济',
+      '持续复验煤铁窑塬与清徐醋坊街景 gate',
+      '把票号信用、煤铁保票和醋坊民生日用账纳入长局风险读数',
     ],
   },
   {
@@ -166,9 +166,9 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['玉雕', '绿洲巴扎', '驼队远行与艾德莱斯织坊'],
     targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 4, orderHookCount: 2 },
     m1Actions: [
-      '补艾德莱斯织坊章节入口',
       '把驼队远行与巴扎后续单接成长线商路风险',
-      '补玉作与织坊作品的藏客和订单差异',
+      '补艾德莱斯织坊藏客回访与订单差异',
+      '扩展西域多入口 smokeBindings',
     ],
   },
 ];
