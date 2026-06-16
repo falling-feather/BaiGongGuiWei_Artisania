@@ -3456,6 +3456,15 @@ function relationshipOutcomeAddendum(state: GameState, npc: NpcDef): string {
       '铜山客已经替百工院留下一份东川铜银料账，后续乌铜走银、苗银和宫造铜胎都能按这份账复看材料来路。',
     );
   }
+  if (npc.id === 'jc-yeshu') {
+    return collectorReputationAddendum(
+      state,
+      'homevisit-referral-completed:yeshu-daye-ore-ledger-order',
+      'homevisit-yeshu-daye-ore-ledger-resolved',
+      '大冶熟料复样已经按矿账成交，他把铜铁分筐、炉口配料和护矿路都写进百工院材料名册。',
+      '冶叔已经替百工院留下一份大冶铜铁料账，后续龙泉剑、景泰蓝和铜器都能按这份账复看矿料来路。',
+    );
+  }
   if (npc.id === 'xy-losang') {
     return collectorReputationAddendum(
       state,

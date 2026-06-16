@@ -95,7 +95,9 @@ describe('full scope audit', () => {
     expect(qiandian?.m1Actions).not.toContain('补东川铜矿运行地图或采炼入口');
     expect(jingchu?.counts.layoutSubregions).toBe(4);
     expect(jingchu?.gaps).not.toContain('layout-subregion:2/4');
-    expect(jingchu?.m1Actions).toContain('补大冶矿场铜铁料状态反馈与矿口回访');
+    expect(jingchu?.m1Actions).not.toContain('补大冶矿场铜铁料状态反馈与矿口回访');
+    expect(jingchu?.m1Actions).toContain('补湘绣楼人物回访与绣样订单差异');
+    expect(jingchu?.m1Actions).toContain('让荆楚路线影响赣鄱/徽州材料流动');
     expect(jingchu?.m1Actions).not.toContain('补湘绣楼或矿冶外场的运行入口');
     expect(ganpo?.gaps).not.toContain('layout-subregion:1/3');
     expect(ganpo?.signatureCraftsWithoutInteraction).toContain('xiabu');

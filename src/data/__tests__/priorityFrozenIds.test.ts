@@ -191,6 +191,7 @@ const FROZEN_HOME_VISIT_IDS = [
   'homevisit-alan-silver-ritual-case',
   'homevisit-alan-tea-road-client-return',
   'homevisit-tongshan-copper-silver-ledger',
+  'homevisit-yeshu-daye-ore-ledger',
   'homevisit-pingyao-polish-room',
   'homevisit-pingyao-client-return',
   'homevisit-lei-credit-ledger-aftertalk',
