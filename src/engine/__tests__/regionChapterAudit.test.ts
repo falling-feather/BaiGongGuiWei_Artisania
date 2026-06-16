@@ -50,8 +50,8 @@ describe('region chapter audit', () => {
 
     expect(audit.totalChapters).toBe(11);
     expect(audit.invalidChapters).toBe(0);
-    expect(audit.readyChapters).toBeGreaterThan(0);
-    expect(audit.needsExpansionChapters).toBeGreaterThan(0);
+    expect(audit.readyChapters).toBe(11);
+    expect(audit.needsExpansionChapters).toBe(0);
     expect(audit.rows.every((row) => row.unknownReferences.length === 0)).toBe(true);
   });
 

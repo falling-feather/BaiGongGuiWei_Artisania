@@ -841,6 +841,33 @@ export interface NightMarketStallRecord {
   summary: string;
 }
 
+export type EconomyLedgerEvent =
+  | 'credit-created'
+  | 'credit-defaulted'
+  | 'credit-repeat-defaulted'
+  | 'credit-settled'
+  | 'credit-interest-settled'
+  | 'coal-iron-ledger-settled'
+  | 'vinegar-ledger-settled';
+
+export interface EconomyLedgerRecord {
+  id: string;
+  ledgerId: string;
+  regionId: RegionId;
+  npcId: string;
+  orderId?: string;
+  orderTitle?: string;
+  event: EconomyLedgerEvent;
+  principal: number;
+  interest: number;
+  defaultCount: number;
+  balance: number;
+  status: 'open' | 'defaulted' | 'settled';
+  day: number;
+  phase: TimePhase;
+  summary: string;
+}
+
 export interface PendingActivityStallClosing {
   id: string;
   activityId: string;
@@ -974,6 +1001,8 @@ export interface GameState {
   homeVisitRecords: HomeVisitRecord[];
   /** 夜市/节令摊位记录，用于节令榜、多日灯会事件链与地区结局读取 */
   nightMarketStallRecords: NightMarketStallRecord[];
+  /** 长线经济账本记录，用于票号、押货、利钱和民生日用账的跨回合统计读数。 */
+  economyLedgerRecords: EconomyLedgerRecord[];
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -1123,6 +1152,11 @@ export interface HomeVisitReferralOrderDef {
   rewardCoin?: number;
   rewardMetrics?: Partial<Metrics>;
   rewardAttributes?: Partial<PlayerAttributes>;
+  routeIds?: string[];
+  orderKind?: ActiveOrder['orderKind'];
+  depositCoin?: number;
+  creditTrustScore?: number;
+  creditNote?: string;
   flags?: string[];
   topics?: string[];
   expiresIn?: number;

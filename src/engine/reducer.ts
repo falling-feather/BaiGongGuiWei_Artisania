@@ -70,6 +70,7 @@ import type {
   ItemDefect,
   ItemQualityDimension,
   WorkshopUpgradeDef,
+  EconomyLedgerRecord,
 } from './types';
 import { applyDelta, aggregateTownMetrics, METRIC_KEYS, METRIC_LABELS } from './metrics';
 import { createCalendar, createInitialState, LABOR_PER_TURN, titleForRank } from './state';
@@ -1592,6 +1593,68 @@ function advanceTimePhase(state: GameState, content: GameContent): GameState {
   };
 }
 
+const ECONOMY_LEDGER_LIMIT = 60;
+const SANJIN_CREDIT_LEDGER_ID = 'economy-ledger-sanjin-piaohao-credit';
+
+function sanjinCreditDefaultCount(state: Pick<GameState, 'economyLedgerRecords'>) {
+  return (state.economyLedgerRecords ?? []).filter(
+    (record) =>
+      record.ledgerId === SANJIN_CREDIT_LEDGER_ID &&
+      (record.event === 'credit-defaulted' || record.event === 'credit-repeat-defaulted'),
+  ).length;
+}
+
+function sanjinCreditInterest(principal: number, depositCoin = 0) {
+  return Math.max(4, Math.round((principal + depositCoin) * 0.18));
+}
+
+function withSanjinEconomyLedgerRecord(
+  state: GameState,
+  content: GameContent,
+  event: EconomyLedgerRecord['event'],
+  status: EconomyLedgerRecord['status'],
+  order: ActiveOrder | null,
+  options: {
+    principal?: number;
+    interest?: number;
+    balance?: number;
+    npcId?: string;
+    summary?: string;
+  } = {},
+): GameState {
+  const principal = options.principal ?? order?.rewardCoin ?? 0;
+  const interest =
+    options.interest ??
+    (event === 'credit-repeat-defaulted' || event === 'credit-interest-settled'
+      ? sanjinCreditInterest(principal, order?.depositCoin ?? 0)
+      : 0);
+  const defaultCount = sanjinCreditDefaultCount(state) + (event === 'credit-defaulted' || event === 'credit-repeat-defaulted' ? 1 : 0);
+  const balance = options.balance ?? (status === 'settled' ? 0 : principal + interest + (order?.depositCoin ?? 0));
+  const record: EconomyLedgerRecord = {
+    id: `${SANJIN_CREDIT_LEDGER_ID}-${state.calendar.day}-${state.turn}-${(state.economyLedgerRecords ?? []).length + 1}`,
+    ledgerId: SANJIN_CREDIT_LEDGER_ID,
+    regionId: 'sanjin',
+    npcId: options.npcId ?? order?.npcId ?? 'sj-lei-zhanggui',
+    orderId: order?.id,
+    orderTitle: order?.title,
+    event,
+    principal,
+    interest,
+    defaultCount,
+    balance,
+    status,
+    day: state.calendar.day,
+    phase: state.calendar.phase,
+    summary:
+      options.summary ??
+      `${order?.title ?? resourceName(content, order?.resourceId ?? 'coin')} 写入三晋票号长局账本：本金 ${principal}，利钱 ${interest}，余额 ${balance}。`,
+  };
+  return {
+    ...state,
+    economyLedgerRecords: [record, ...(state.economyLedgerRecords ?? [])].slice(0, ECONOMY_LEDGER_LIMIT),
+  };
+}
+
 function expireOrdersForDay(state: GameState, content: GameContent, day: number): GameState {
   const expired = (state.activeOrders ?? []).filter(
     (order) => order.status === 'active' && order.expiresDay !== undefined && order.expiresDay < day,
@@ -1622,13 +1685,29 @@ function expireOrdersForDay(state: GameState, content: GameContent, day: number)
     if (order.sourceHomeVisitRecordId) flags.add(`homevisit-order-expired:${order.sourceHomeVisitRecordId}`);
     if (order.sourceHomeVisitChoiceId) flags.add(`homevisit-referral-expired:${order.sourceHomeVisitChoiceId}`);
   }
-  const withExpired = {
+  let withExpired: GameState = {
     ...state,
     activeOrders: (state.activeOrders ?? []).map((order) =>
       expiredIds.has(order.id) ? { ...order, status: 'expired' as const } : order,
     ),
     flags: [...flags],
   };
+  for (const order of expired) {
+    if (order.npcId !== 'sj-lei-zhanggui' || order.orderKind !== 'credit') continue;
+    const repeated = flags.has('credit-repeat-default:sj-lei-zhanggui');
+    withExpired = withSanjinEconomyLedgerRecord(
+      withExpired,
+      content,
+      repeated ? 'credit-repeat-defaulted' : 'credit-defaulted',
+      'defaulted',
+      order,
+      {
+        summary: repeated
+          ? `雷掌柜复违约押货单过期，票号账本追加本金 ${order.rewardCoin} 与利钱 ${sanjinCreditInterest(order.rewardCoin, order.depositCoin ?? 0)}。`
+          : `雷掌柜信用押货单过期，票号账本记录本金 ${order.rewardCoin} 与押金 ${order.depositCoin ?? 0}。`,
+      },
+    );
+  }
   return expired.reduce(
     (next, order) => {
       const depositNote = (order.depositCoin ?? 0) > 0 ? `押金 ${order.depositCoin} 文不退，` : '';
@@ -3372,6 +3451,15 @@ function relationshipOutcomeAddendum(state: GameState, npc: NpcDef): string {
       '文房藏客完成复看后，她把原样、复单和藏印都留进纸谷声誉档。',
     );
   }
+  if (npc.id === 'hz-cheng-yuanzhou') {
+    return collectorReputationAddendum(
+      state,
+      'homevisit-referral-completed:cheng-hui-ink-credit-ledger',
+      'homevisit-cheng-stationery-credit-return-resolved',
+      '徽商会馆的文房授信单已经成交，他把荐藏、押金和徽商路凭据并入百工院信用名册。',
+      '程远舟已经替百工院开过一回文房荐藏信用账，后续纸墨砚三路都能按这份账复验商誉。',
+    );
+  }
   if (npc.id === 'sj-lei-zhanggui') {
     if (state.flags.includes('sanjin-credit-interest-settled')) {
       return '复违约利钱已经用后一张押货单清过，他把失约、补票和清账三笔都留在同一本票号账里。';
@@ -3411,6 +3499,17 @@ function relationshipOutcomeAddendum(state: GameState, npc: NpcDef): string {
       return '煤铁重货账清过后，他开始把清徐醋坊的日用送达也接进票号街账本。';
     }
   }
+  if (npc.id === 'jj-song-yasi') {
+    if (state.flags.includes('jingji-canal-material-ledger-stat-ready')) {
+      return '漕运复验已经入簿，他把料账、名帖和门房担保改写成宫造采办的硬凭据。';
+    }
+    if (state.flags.includes('jingji-canal-tribute-recheck-cleared')) {
+      return '漕运复验已清，他愿意按复核后的料账重新估百工院的宫造商誉。';
+    }
+    if (state.flags.includes('jingji-canal-tribute-recheck-stalled')) {
+      return '漕运复验滞着，他把这笔未清料账记作宫样采办前必须补齐的风险。';
+    }
+  }
   if (npc.id === 'jn-lin-yuqiao') {
     return collectorReputationAddendum(
       state,
@@ -3447,6 +3546,15 @@ function relationshipOutcomeAddendum(state: GameState, npc: NpcDef): string {
       '货栈藏客完成复看后，她把原样、复单和天气批次都写进岭南晒场色档。',
     );
   }
+  if (npc.id === 'qd-danqing-sao') {
+    return collectorReputationAddendum(
+      state,
+      'homevisit-referral-completed:danqing-batik-harbor-ledger',
+      'homevisit-danqing-batik-harbor-return-resolved',
+      '蜡染港样续单已经成交，她把冰纹、茶马驿路和岭南港口样客连成一册染布声誉。',
+      '丹青嫂已经替百工院留下蜡染港样凭记，后续银染、茶马和港口样客都能按这份布样复看。',
+    );
+  }
   if (npc.id === 'qd-tongshan-ke') {
     return collectorReputationAddendum(
       state,
@@ -3465,6 +3573,15 @@ function relationshipOutcomeAddendum(state: GameState, npc: NpcDef): string {
       '冶叔已经替百工院留下一份大冶铜铁料账，后续龙泉剑、景泰蓝和铜器都能按这份账复看矿料来路。',
     );
   }
+  if (npc.id === 'jc-wen-xiuniang') {
+    return collectorReputationAddendum(
+      state,
+      'homevisit-referral-completed:wen-xiang-sample-ledger',
+      'homevisit-wen-xiang-embroidery-ledger-resolved',
+      '湘绣绣样续单已经成交，她把针脚、湖路防潮和赣鄱水路写成百工院能交付的绣样账。',
+      '文绣娘已经替百工院留下湘绣样账，后续楚漆、湖路和徽商材料都能按这份账回看。',
+    );
+  }
   if (npc.id === 'xy-losang') {
     return collectorReputationAddendum(
       state,
@@ -3472,6 +3589,32 @@ function relationshipOutcomeAddendum(state: GameState, npc: NpcDef): string {
       'homevisit-losang-patron-return-resolved',
       '雪域来客已经按净室礼法续簿续订唐卡，他把度量、矿彩和敬意都托给百工院的远行声誉。',
       '雪域来客完成复看后，他把原样、复单和度量留签都写进净室礼法档。',
+    );
+  }
+  if (npc.id === 'xy-yak-captain') {
+    if (state.flags.includes('snow-pass-windbreak-secured')) {
+      return '雪口防风绳已经固定，他把百工院记作能稳住高寒供给的远行伙伴。';
+    }
+    if (state.flags.includes('snow-pass-supply-thinned')) {
+      return '雪口补给被风口削薄，他提醒百工院后续银器和矿彩都要补足耐寒备货。';
+    }
+  }
+  if (npc.id === 'xy-shicai-tong') {
+    return collectorReputationAddendum(
+      state,
+      'homevisit-referral-completed:shicai-pigment-ledger-order',
+      'homevisit-shicai-pigment-ledger-resolved',
+      '矿彩续单已经成交，他把雪线、彩石和唐卡颜料配比写进百工院矿彩名册。',
+      '石彩童已经留下矿彩料账，后续唐卡、彩绘和雪口供给都能按这份账复看颜料来路。',
+    );
+  }
+  if (npc.id === 'xy-baiyinshu') {
+    return collectorReputationAddendum(
+      state,
+      'homevisit-referral-completed:baiyinshu-silver-ledger-order',
+      'homevisit-baiyinshu-silver-ledger-resolved',
+      '银器续单已经成交，他把锻银、耐寒和西域驮队交付写成百工院高原银器声誉。',
+      '白银叔已经留下银器料账，后续藏银、镶石和雪口补给都能按这份账复看。',
     );
   }
   if (npc.id === 'xu-a-yue') {
@@ -5072,6 +5215,8 @@ function createHomeVisitReferralOrder(
     Math.max(0.45, Number((referral.minQuality ?? Math.max(0.48, item.quality - 0.08)).toFixed(2))),
   );
   const expiresIn = referral.expiresIn ?? 8;
+  const routeIds = referral.routeIds ?? [];
+  const orderKind = referral.orderKind ?? 'referral';
   const order: ActiveOrder = {
     id: `homevisit-order-${choice.id}-${state.calendar.day}-${state.turn}-${(state.activeOrders ?? []).length + 1}`,
     npcId: npc.id,
@@ -5084,17 +5229,28 @@ function createHomeVisitReferralOrder(
     rewardCoin: homeVisitReferralRewardCoin(state, content, item, referral, resourceId, quantity),
     rewardMetrics: mergeMetricDelta({ market: 1, heritage: 1 }, referral.rewardMetrics ?? {}),
     rewardAttributes: mergeNumberDeltas<PlayerAttributeKey>({ commerce: 1, people: 1 }, referral.rewardAttributes),
+    routeIds,
+    routeRisk: orderRouteRisk(state, content, routeIds),
     reputationAtCreation: regionReputationOf(state, item.originRegionId || npc.regionId),
     sourceHomeVisitRecordId: recordId,
     sourceHomeVisitChoiceId: choice.id,
-    orderKind: 'referral',
+    orderKind,
+    depositCoin: referral.depositCoin,
+    creditTrustScore: referral.creditTrustScore,
+    creditNote: referral.creditNote,
     createdDay: state.calendar.day,
     expiresDay: state.calendar.day + expiresIn,
     status: 'active',
   };
   return {
     order,
-    flags: [`homevisit-referral:${choice.id}`, `homevisit-referral-order:${order.id}`, ...(referral.flags ?? [])],
+    flags: [
+      `homevisit-referral:${choice.id}`,
+      `homevisit-referral-order:${order.id}`,
+      ...(orderKind && orderKind !== 'npc' ? [`${orderKind}-order:${npc.id}`] : []),
+      ...(referral.depositCoin && referral.depositCoin > 0 ? [`deposit-order:${npc.id}`] : []),
+      ...(referral.flags ?? []),
+    ],
     topics: ['homevisit-referral', 'collection-referral', ...(referral.topics ?? [])],
     regionReputationDelta: referral.regionReputationDelta ?? 1,
     note: `并留下转介绍订单「${order.title}」`,
@@ -5356,12 +5512,18 @@ function npcOrderTerms(
       state.flags.includes('palace-order-ready') ||
       state.flags.includes('jingji-official-permit');
     const canalCleared = state.flags.includes('jingji-canal-tribute-cleared');
-    const canalStalled = state.flags.includes('jingji-canal-tribute-stalled') && !canalCleared;
+    const canalRechecked =
+      state.flags.includes('jingji-canal-material-ledger-stat-ready') ||
+      state.flags.includes('jingji-canal-tribute-recheck-cleared');
+    const canalStalled =
+      (state.flags.includes('jingji-canal-tribute-stalled') || state.flags.includes('jingji-canal-tribute-recheck-stalled')) &&
+      !canalCleared &&
+      !canalRechecked;
     const backerDamaged =
       state.flags.includes('jingji-official-permit-backer-damaged') ||
       state.flags.includes('palace-order-expired:jj-song-yasi');
-    const canalTrustDelta = (canalCleared ? 8 : 0) - (canalStalled ? 10 : 0) - (backerDamaged ? 12 : 0);
-    const canalNote = canalCleared ? '漕运料账已清，' : canalStalled ? '漕运料账滞着，' : '';
+    const canalTrustDelta = (canalCleared ? 8 : 0) + (canalRechecked ? 6 : 0) - (canalStalled ? 10 : 0) - (backerDamaged ? 12 : 0);
+    const canalNote = canalRechecked ? '漕运复验入簿，' : canalCleared ? '漕运料账已清，' : canalStalled ? '漕运料账滞着，' : '';
     const backerNote = backerDamaged ? '门房担保折损，' : '';
     const trustNote = `${canalNote}${backerNote}`;
     const permitTrust = Math.min(100, Math.max(0, trust + (palaceBacker ? 14 : 0) + canalTrustDelta));
@@ -5632,7 +5794,7 @@ function fulfillOrder(state: GameState, content: GameContent, orderId: string): 
   }
   for (const routeId of order.routeIds ?? []) flags.add(`route-known:${routeId}`);
 
-  const base: GameState = {
+  let base: GameState = {
     ...state,
     resources: {
       ...state.resources,
@@ -5651,6 +5813,36 @@ function fulfillOrder(state: GameState, content: GameContent, orderId: string): 
       `交付「${order.title}」，入账 ${order.rewardCoin} 文${(order.depositCoin ?? 0) > 0 ? `（含押金返还 ${order.depositCoin} 文）` : ''}（${npc?.name ?? order.npcId}好感 ${cur}→${nextAffinity}）。`,
     ),
   };
+  if (order.npcId === 'sj-lei-zhanggui' && order.orderKind === 'credit') {
+    base = withSanjinEconomyLedgerRecord(base, content, 'credit-settled', 'settled', order, {
+      summary: `雷掌柜信用押货单按期交付，票号账本结清本金 ${order.rewardCoin}。`,
+    });
+  }
+  if (order.sourceHomeVisitChoiceId === 'lei-compound-ledger-order') {
+    base = withSanjinEconomyLedgerRecord(base, content, 'credit-interest-settled', 'settled', order, {
+      principal: 0,
+      balance: 0,
+      summary: '雷掌柜后日谈补账单交付，复违约利钱清账并留凭。',
+    });
+  }
+  if (
+    order.sourceHomeVisitChoiceId === 'yaoyuan-coal-iron-ledger-order' ||
+    (order.npcId === 'sj-yaoyuan-han' && order.orderKind === 'consignment')
+  ) {
+    base = withSanjinEconomyLedgerRecord(base, content, 'coal-iron-ledger-settled', 'settled', order, {
+      npcId: 'sj-yaoyuan-han',
+      summary: '煤铁保票账线完成交付，窑塬重货纳入票号长局风险读数。',
+    });
+  }
+  if (
+    order.sourceHomeVisitChoiceId === 'cu-vinegar-ledger-order' ||
+    (order.npcId === 'sj-cu-langzhong' && order.orderKind === 'consignment')
+  ) {
+    base = withSanjinEconomyLedgerRecord(base, content, 'vinegar-ledger-settled', 'settled', order, {
+      npcId: 'sj-cu-langzhong',
+      summary: '醋坊民生日用账完成交付，清徐日用声誉纳入票号长局风险读数。',
+    });
+  }
   const withMetrics = order.rewardMetrics ? applyEffect(base, { metrics: order.rewardMetrics }) : recompute(base);
   const withProfile = applyProfileXp(withMetrics, order.rewardAttributes ?? { commerce: 1 });
   const withRoutes = grantRouteStability(withProfile, content, order.routeIds, 2, `交付「${order.title}」`);
@@ -5856,10 +6048,15 @@ function useNpcFunction(
     const orderFlags = [`npc-order:${npcId}`];
     if (order.orderKind && order.orderKind !== 'npc') orderFlags.push(`${order.orderKind}-order:${npcId}`);
     if (depositCoin > 0) orderFlags.push(`deposit-order:${npcId}`);
-    const base = {
+    let base: GameState = {
       ...functionBaseState(state, npcId, affinityResult.runtime, functionKind, orderFlags),
       activeOrders: [order, ...(state.activeOrders ?? [])].slice(0, 12),
     };
+    if (order.npcId === 'sj-lei-zhanggui' && order.orderKind === 'credit') {
+      base = withSanjinEconomyLedgerRecord(base, content, 'credit-created', 'open', order, {
+        summary: `雷掌柜开出信用押货单，票号账本登记本金 ${order.rewardCoin}、押金 ${depositCoin}。`,
+      });
+    }
     const depositNote = depositCoin > 0 ? `已先押 ${depositCoin} 文；` : '';
     return applyProfileXp(
       applyEffect(base, {
@@ -5910,6 +6107,13 @@ function useNpcFunction(
     const recordId = `homevisit-${npcId}-${state.calendar.day}-${state.calendar.phase}-${(state.homeVisitRecords ?? []).length + 1}`;
     const itemName = item ? itemShortName(withNamedItem(state, content, item), content) : undefined;
     const referral = createHomeVisitReferralOrder(state, content, npc, item ?? null, choice, recordId);
+    const referralDeposit = referral?.order.depositCoin ?? 0;
+    if (referralDeposit > (state.resources.coin ?? 0)) {
+      return {
+        ...state,
+        log: pushLog(state.log, `接「${referral?.order.title ?? '荐藏订单'}」需先押 ${referralDeposit} 文，当前钱袋不足。`),
+      };
+    }
     if (referral) {
       for (const topic of referral.topics) knownTopics.add(topic);
       flags.push(...referral.flags);
@@ -5942,6 +6146,9 @@ function useNpcFunction(
     };
     const base: GameState = {
       ...functionBaseState(state, npcId, nextRuntime, functionKind, flags),
+      resources: referralDeposit > 0
+        ? { ...state.resources, coin: (state.resources.coin ?? 0) - referralDeposit }
+        : state.resources,
       itemInstances: applyHomeVisitChoiceToItem(state, content, item ?? null, npc, choice),
       homeVisitRecords: [record, ...(state.homeVisitRecords ?? [])].slice(0, 24),
       activeOrders: referral ? [referral.order, ...(state.activeOrders ?? [])].slice(0, 12) : state.activeOrders,

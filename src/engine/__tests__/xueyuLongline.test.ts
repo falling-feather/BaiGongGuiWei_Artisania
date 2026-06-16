@@ -54,8 +54,14 @@ function xueyuState(): GameState {
   return {
     ...state,
     activeOrders: [],
-    resources: { ...state.resources, coin: 9999, thangka: 12 },
-    npcAffinity: { ...state.npcAffinity, 'xy-losang': 36, 'xy-yak-captain': 36 },
+    resources: { ...state.resources, coin: 9999, thangka: 12, pigmentRefined: 12, tibetanSilver: 12, silverStock: 12, copperStock: 12 },
+    npcAffinity: {
+      ...state.npcAffinity,
+      'xy-losang': 36,
+      'xy-yak-captain': 36,
+      'xy-shicai-tong': 36,
+      'xy-baiyinshu': 36,
+    },
   };
 }
 
@@ -76,6 +82,48 @@ function thangkaItem(
     descriptors: ['矿彩有度', '敬意清正'],
     appraisal: '矿彩层次清楚，度量分寸稳当。',
     displayName: status === 'displayed' ? '雪域净室唐卡' : '雪域净室复样',
+    status,
+  };
+}
+
+function pigmentItem(
+  id: string,
+  state: GameState,
+  quality = 0.74,
+  status: ItemInstance['status'] = 'held',
+): ItemInstance {
+  return {
+    id,
+    resourceId: 'pigmentRefined',
+    sourceCraftId: 'thangka',
+    originRegionId: 'xueyu',
+    originSubregionId: 'xueyu-pigment-valley',
+    createdTurn: state.turn,
+    quality,
+    descriptors: ['矿彩分层', '雪路设色有账'],
+    appraisal: '一份能对上采石、研磨和唐卡设色层次的熟矿彩。',
+    displayName: status === 'displayed' ? '雪域矿彩料账陈列' : '雪域矿彩复样',
+    status,
+  };
+}
+
+function silverItem(
+  id: string,
+  state: GameState,
+  quality = 0.74,
+  status: ItemInstance['status'] = 'held',
+): ItemInstance {
+  return {
+    id,
+    resourceId: 'tibetanSilver',
+    sourceCraftId: 'tibetan-silver',
+    originRegionId: 'xueyu',
+    originSubregionId: 'xueyu-silver-tent',
+    createdTurn: state.turn,
+    quality,
+    descriptors: ['银片听锤', '雪口镶纹稳'],
+    appraisal: '一件银片厚实、镶口经得起高原风雪的藏银器。',
+    displayName: status === 'displayed' ? '雪口银器料账陈列' : '雪口藏银复样',
     status,
   };
 }
@@ -136,13 +184,28 @@ describe('Xueyu thangka snow-pass longline', () => {
   it('requires both the reverent hall referral and snow-pass supply order before patron return', () => {
     const chapter = REGION_CHAPTERS.find((item) => item.id === 'chapter-xueyu-thangka-snowpass');
     const returnVisit = HOME_VISITS.find((item) => item.id === 'homevisit-losang-patron-return');
+    const shicai = ALL_NPCS.find((item) => item.id === 'xy-shicai-tong');
+    const baiyinshu = ALL_NPCS.find((item) => item.id === 'xy-baiyinshu');
 
+    expect(chapter?.status).toBe('chapter-ready');
+    expect(shicai?.functions).toEqual(expect.arrayContaining(['homeVisit', 'order']));
+    expect(baiyinshu?.functions).toEqual(expect.arrayContaining(['homeVisit', 'order']));
     expect(chapter?.orderHooks).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ source: 'activity', id: 'xy-snow-pass', readsItemState: true }),
         expect.objectContaining({ source: 'homeVisit', id: 'homevisit-losang-patron-return', readsItemState: true }),
+        expect.objectContaining({ source: 'homeVisit', id: 'homevisit-shicai-pigment-ledger', readsItemState: true }),
+        expect.objectContaining({ source: 'homeVisit', id: 'homevisit-baiyinshu-silver-ledger', readsItemState: true }),
         expect.objectContaining({ source: 'collab', id: 'collab-losang-mineral-layer', readsItemState: true }),
         expect.objectContaining({ source: 'escort', id: 'escort-snow-pass-windbreak' }),
+      ]),
+    );
+    expect(chapter?.homeVisitIds).toEqual(
+      expect.arrayContaining([
+        'homevisit-losang-thangka-hall',
+        'homevisit-losang-patron-return',
+        'homevisit-shicai-pigment-ledger',
+        'homevisit-baiyinshu-silver-ledger',
       ]),
     );
     expect(returnVisit?.requiredFlags).toEqual(
@@ -151,6 +214,130 @@ describe('Xueyu thangka snow-pass longline', () => {
         'activity-order-completed:xy-snow-pass',
       ]),
     );
+  });
+
+  it('turns pigment valley material feedback into a refined pigment route order', () => {
+    const base = xueyuState();
+    const displayed = pigmentItem('display-shicai-pigment-ledger', base, 0.76, 'displayed');
+    const replica = pigmentItem('held-shicai-pigment-ledger', base, 0.72);
+    let state: GameState = {
+      ...base,
+      currentSubregion: 'xueyu-pigment-valley',
+      itemInstances: [displayed, replica, ...base.itemInstances],
+    };
+
+    const unavailable = gameReducer(
+      state,
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'xy-shicai-tong',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'shicai-pigment-ledger-order',
+      },
+      content,
+    );
+    expect(unavailable.homeVisitRecords.length).toBe(0);
+
+    state = gameReducer(state, { type: 'PERFORM_ACTIVITY', activityId: 'xy-pigment-valley', quality: 0.84 }, content);
+    expect(state.flags).toContain('xueyu-pigment-ledger-open');
+
+    const returned = gameReducer(
+      {
+        ...state,
+        calendar: { ...state.calendar, day: state.calendar.day + 1, phase: 'morning' },
+      },
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'xy-shicai-tong',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'shicai-pigment-ledger-order',
+      },
+      content,
+    );
+    const record = returned.homeVisitRecords[0];
+    const referral = activeOrder(returned, (order) => order.id === record.referralOrderId);
+
+    expect(record).toMatchObject({
+      npcId: 'xy-shicai-tong',
+      title: '矿彩料账',
+      choiceId: 'shicai-pigment-ledger-order',
+      referralTitle: '雪域矿彩复样单',
+      itemId: displayed.id,
+    });
+    expect(referral).toMatchObject({
+      npcId: 'xy-shicai-tong',
+      orderKind: 'route',
+      sourceHomeVisitChoiceId: 'shicai-pigment-ledger-order',
+      resourceId: 'pigmentRefined',
+      minQuality: 0.62,
+      routeIds: ['route-bashu-xueyu-snow-pass'],
+    });
+
+    const delivered = gameReducer(returned, { type: 'FULFILL_ORDER', orderId: referral.id }, content);
+    expect(delivered.activeOrders.find((candidate) => candidate.id === referral.id)?.status).toBe('completed');
+    expect(delivered.flags).toContain('homevisit-referral-completed:shicai-pigment-ledger-order');
+    expect(delivered.flags).toContain('route-order-completed:xy-shicai-tong');
+  });
+
+  it('connects snow-pass knowledge and silver tent output into a Tibetan silver route order', () => {
+    const base = xueyuState();
+    const displayed = silverItem('display-baiyinshu-silver-ledger', base, 0.78, 'displayed');
+    const replica = silverItem('held-baiyinshu-silver-ledger', base, 0.74);
+    let state: GameState = {
+      ...base,
+      currentSubregion: 'xueyu-snow-pass',
+      itemInstances: [displayed, replica, ...base.itemInstances],
+    };
+
+    state = gameReducer(state, { type: 'PERFORM_ACTIVITY', activityId: 'xy-snow-pass', quality: 0.84 }, content);
+    expect(state.flags).toContain('snow-pass-known');
+    state = gameReducer(
+      {
+        ...state,
+        currentSubregion: 'xueyu-silver-tent',
+        calendar: { ...state.calendar, day: state.calendar.day + 1, phase: 'morning' },
+      },
+      { type: 'PERFORM_ACTIVITY', activityId: 'xy-silver-tent', quality: 0.86 },
+      content,
+    );
+    expect(state.flags).toContain('xueyu-silver-ledger-open');
+
+    const returned = gameReducer(
+      {
+        ...state,
+        calendar: { ...state.calendar, day: state.calendar.day + 1, phase: 'morning' },
+      },
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'xy-baiyinshu',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'baiyinshu-silver-ledger-order',
+      },
+      content,
+    );
+    const record = returned.homeVisitRecords[0];
+    const referral = activeOrder(returned, (order) => order.id === record.referralOrderId);
+
+    expect(record).toMatchObject({
+      npcId: 'xy-baiyinshu',
+      title: '雪口银器料账',
+      choiceId: 'baiyinshu-silver-ledger-order',
+      referralTitle: '雪口藏银复样单',
+      itemId: displayed.id,
+    });
+    expect(referral).toMatchObject({
+      npcId: 'xy-baiyinshu',
+      orderKind: 'route',
+      sourceHomeVisitChoiceId: 'baiyinshu-silver-ledger-order',
+      resourceId: 'tibetanSilver',
+      minQuality: 0.64,
+      routeIds: ['route-xueyu-xiyu-caravan'],
+    });
+
+    const delivered = gameReducer(returned, { type: 'FULFILL_ORDER', orderId: referral.id }, content);
+    expect(delivered.activeOrders.find((candidate) => candidate.id === referral.id)?.status).toBe('completed');
+    expect(delivered.flags).toContain('homevisit-referral-completed:baiyinshu-silver-ledger-order');
+    expect(delivered.flags).toContain('route-order-completed:xy-baiyinshu');
   });
 
   it('blocks the patron return after the reverent hall referral until the snow-pass order is delivered', () => {

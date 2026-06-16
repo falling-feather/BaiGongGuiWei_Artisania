@@ -84,6 +84,27 @@ function dayeMaterialItem(
   };
 }
 
+function xiangEmbroideryItem(
+  id: string,
+  state: GameState,
+  quality = 0.74,
+  status: ItemInstance['status'] = 'held',
+): ItemInstance {
+  return {
+    id,
+    resourceId: 'xiangEmbroidery',
+    sourceCraftId: 'xiang-embroidery',
+    originRegionId: 'jingchu',
+    originSubregionId: 'jingchu-xiang-embroidery',
+    createdTurn: state.turn,
+    quality,
+    descriptors: ['湘绣针脚清', '水路防潮有账'],
+    appraisal: '一幅能说明针脚、丝料和防潮交付条件的湘绣样。',
+    displayName: id.includes('display') ? '湘绣水路样账陈列' : '湘绣水路复样',
+    status,
+  };
+}
+
 function activeOrder(state: GameState, predicate: (order: ActiveOrder) => boolean): ActiveOrder {
   const order = state.activeOrders.find((candidate) => candidate.status === 'active' && predicate(candidate));
   if (!order) throw new Error('Missing expected active order');
@@ -109,11 +130,26 @@ describe('Jingchu Daye ore longline', () => {
   it('binds Daye ore material feedback into the Jingchu chapter spec', () => {
     const chapter = REGION_CHAPTERS.find((item) => item.id === 'chapter-jingchu-ferry-lacquer');
     const activity = REGION_ACTIVITIES.find((item) => item.id === 'jc-daye-mine');
+    const ferry = REGION_ACTIVITIES.find((item) => item.id === 'jc-ferry-market');
+    const embroidery = REGION_ACTIVITIES.find((item) => item.id === 'jc-xiang-embroidery');
     const yeshu = ALL_NPCS.find((item) => item.id === 'jc-yeshu');
+    const wen = ALL_NPCS.find((item) => item.id === 'jc-wen-xiuniang');
     const visit = HOME_VISITS.find((item) => item.id === 'homevisit-yeshu-daye-ore-ledger');
 
+    expect(chapter?.status).toBe('chapter-ready');
     expect(yeshu?.functions).toEqual(expect.arrayContaining(['homeVisit', 'appraisal', 'order']));
+    expect(wen?.functions).toEqual(expect.arrayContaining(['homeVisit', 'appraisal', 'order']));
     expect(activity?.reward.flags).toContain('jingchu-daye-ore-ledger-open');
+    expect(embroidery?.reward.flags).toContain('jingchu-xiang-embroidery-ledger-open');
+    expect(ferry?.reward.stall?.stages?.map((stage) => stage.id)).toEqual([
+      'open-water-check',
+      'barge-sample-barter',
+      'close-route-ledger',
+    ]);
+    expect(ferry?.reward.stall?.closingChoices?.map((choice) => choice.id)).toEqual([
+      'seal-lake-route-ledger',
+      'send-ore-barge-ledger',
+    ]);
     expect(visit).toMatchObject({
       npcId: 'jc-yeshu',
       requiredFlags: ['jingchu-daye-ore-ledger-open'],
@@ -124,11 +160,16 @@ describe('Jingchu Daye ore longline', () => {
       expect.arrayContaining(['ironIngot', 'copperStock', 'treasureSword', 'cloisonne', 'copperware']),
     );
     expect(chapter?.homeVisitIds).toEqual(
-      expect.arrayContaining(['homevisit-yeshu-daye-ore-ledger', 'homevisit-xiong-lacquer-restoration']),
+      expect.arrayContaining([
+        'homevisit-yeshu-daye-ore-ledger',
+        'homevisit-xiong-lacquer-restoration',
+        'homevisit-wen-xiang-embroidery-ledger',
+      ]),
     );
     expect(chapter?.orderHooks).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ source: 'homeVisit', id: 'homevisit-yeshu-daye-ore-ledger', readsItemState: true }),
+        expect.objectContaining({ source: 'homeVisit', id: 'homevisit-wen-xiang-embroidery-ledger', readsItemState: true }),
       ]),
     );
     expect(chapter?.nextActions).not.toContain('补大冶矿场铜铁料状态反馈与矿口回访');
@@ -217,5 +258,99 @@ describe('Jingchu Daye ore longline', () => {
       npcAffinity: { ...delivered.npcAffinity, 'jc-yeshu': 80 },
     });
     expect(ended.report?.relationshipOutcomes?.some((line) => line.includes('冶叔') && line.includes('大冶熟料复样'))).toBe(true);
+  });
+
+  it('turns Xiang embroidery and the ferry closing ledger into a water-route sample order', () => {
+    const base = jingchuState();
+    const displayed = xiangEmbroideryItem('display-wen-xiang-water-ledger', base, 0.76, 'displayed');
+    const replica = xiangEmbroideryItem('held-wen-xiang-water-ledger', base, 0.74);
+    let state: GameState = {
+      ...base,
+      currentSubregion: 'jingchu-xiang-embroidery',
+      resources: {
+        ...base.resources,
+        xiangEmbroidery: 12,
+        rawSilkThread: 12,
+        chuLacquer: 12,
+        oilpaperUmbrella: 12,
+        ironIngot: 12,
+        tea: 12,
+      },
+      itemInstances: [displayed, replica, ...base.itemInstances],
+    };
+
+    const unavailable = gameReducer(
+      state,
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'jc-wen-xiuniang',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'wen-xiang-sample-ledger',
+      },
+      content,
+    );
+    expect(unavailable.homeVisitRecords.length).toBe(0);
+
+    state = gameReducer(state, { type: 'PERFORM_ACTIVITY', activityId: 'jc-xiang-embroidery', quality: 0.84 }, content);
+    expect(state.flags).toContain('jingchu-xiang-embroidery-ledger-open');
+
+    for (let run = 0; run < 3; run += 1) {
+      state = gameReducer(
+        {
+          ...state,
+          currentSubregion: 'jingchu-lake-market',
+          calendar: { ...state.calendar, day: state.calendar.day + (run === 0 ? 0 : 1), phase: 'morning' },
+        },
+        { type: 'PERFORM_ACTIVITY', activityId: 'jc-ferry-market', quality: 0.88, stallStrategyId: 'damp-proof-first' },
+        content,
+      );
+    }
+    state = gameReducer(state, { type: 'RESOLVE_ACTIVITY_STALL_CLOSING', choiceId: 'seal-lake-route-ledger' }, content);
+    expect(state.flags).toContain('jingchu-ferry-lake-route-ledger');
+    expect(state.flags).toContain('route-known:route-jingchu-ganpo-lake');
+
+    const returned = gameReducer(
+      {
+        ...state,
+        calendar: { ...state.calendar, day: state.calendar.day + 1, phase: 'morning' },
+      },
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'jc-wen-xiuniang',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'wen-xiang-sample-ledger',
+      },
+      content,
+    );
+    const record = returned.homeVisitRecords[0];
+    const referral = activeOrder(returned, (order) => order.id === record.referralOrderId);
+
+    expect(record).toMatchObject({
+      npcId: 'jc-wen-xiuniang',
+      title: '湘绣水路样账',
+      choiceId: 'wen-xiang-sample-ledger',
+      referralTitle: '湘绣水路复样单',
+      itemId: displayed.id,
+    });
+    expect(referral).toMatchObject({
+      npcId: 'jc-wen-xiuniang',
+      orderKind: 'route',
+      sourceHomeVisitChoiceId: 'wen-xiang-sample-ledger',
+      resourceId: 'xiangEmbroidery',
+      minQuality: 0.64,
+      routeIds: ['route-jingchu-ganpo-lake'],
+    });
+    expect(returned.flags).toContain('homevisit-wen-xiang-embroidery-ledger-resolved');
+
+    const delivered = gameReducer(returned, { type: 'FULFILL_ORDER', orderId: referral.id }, content);
+    expect(delivered.activeOrders.find((candidate) => candidate.id === referral.id)?.status).toBe('completed');
+    expect(delivered.flags).toContain('homevisit-referral-completed:wen-xiang-sample-ledger');
+    expect(delivered.flags).toContain('route-order-completed:jc-wen-xiuniang');
+
+    const ended = reportFor({
+      ...delivered,
+      npcAffinity: { ...delivered.npcAffinity, 'jc-wen-xiuniang': 80 },
+    });
+    expect(ended.report?.relationshipOutcomes?.some((line) => line.includes('文绣娘') && line.includes('湘绣绣样续单'))).toBe(true);
   });
 });

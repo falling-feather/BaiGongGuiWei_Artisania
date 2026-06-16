@@ -104,6 +104,12 @@ function requestSongProcurement(state: GameState): { state: GameState; order: Ac
   return { state: next, order };
 }
 
+function activeOrder(state: GameState, predicate: (order: ActiveOrder) => boolean): ActiveOrder {
+  const order = state.activeOrders.find((candidate) => candidate.status === 'active' && predicate(candidate));
+  if (!order) throw new Error('Missing expected active order');
+  return order;
+}
+
 function expireOrder(state: GameState, order: ActiveOrder): GameState {
   return gameReducer(
     {
@@ -130,20 +136,46 @@ function procurementItem(order: ActiveOrder, state: GameState, index: number): I
   };
 }
 
+function cloisonneItem(
+  id: string,
+  state: GameState,
+  quality = 0.78,
+  status: ItemInstance['status'] = 'held',
+): ItemInstance {
+  return {
+    id,
+    resourceId: 'cloisonne',
+    sourceCraftId: 'cloisonne',
+    originRegionId: 'jingji',
+    originSubregionId: 'jingji-palace-yard',
+    createdTurn: state.turn,
+    quality,
+    descriptors: ['宫样丝线准', '铜料账清', '蓝款可验'],
+    appraisal: '一件可对上铜料、矿彩和门房名帖的景泰蓝重器。',
+    displayName: status === 'displayed' ? '京畿漕运复验宫样' : '京畿官样采办复器',
+    status,
+  };
+}
+
 describe('Jingji palace procurement gating', () => {
   it('binds Song Yasi as the chapter procurement gatekeeper', () => {
     const chapter = REGION_CHAPTERS.find((item) => item.id === 'chapter-jingji-palace-procurement');
     const song = ALL_NPCS.find((item) => item.id === 'jj-song-yasi');
 
-    expect(song?.functions).toEqual(expect.arrayContaining(['order', 'route', 'escort']));
+    expect(chapter?.status).toBe('chapter-ready');
+    expect(song?.functions).toEqual(expect.arrayContaining(['order', 'route', 'escort', 'homeVisit']));
     expect(chapter?.orderHooks).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ source: 'activity', id: 'jj-official-gate', readsItemState: true }),
         expect.objectContaining({ source: 'activity', id: 'jj-appraisal-market', readsItemState: true }),
         expect.objectContaining({ source: 'homeVisit', id: 'homevisit-lan-palace-return', readsItemState: true }),
+        expect.objectContaining({ source: 'homeVisit', id: 'homevisit-song-canal-ledger-return', readsItemState: true }),
         expect.objectContaining({ source: 'collab', id: 'collab-lan-cloisonne-blue', readsItemState: true }),
+        expect.objectContaining({ source: 'escort', id: 'escort-jingji-canal-tribute-recheck' }),
       ]),
     );
+    expect(chapter?.homeVisitIds).toContain('homevisit-song-canal-ledger-return');
+    expect(chapter?.escortEncounterIds).toContain('escort-jingji-canal-tribute-recheck');
     expect(chapter?.orderHooks.find((hook) => hook.id === 'jj-official-gate')?.note).toContain('担保折损');
     expect(chapter?.nextActions.some((item) => item.includes('采办许可'))).toBe(false);
   });
@@ -199,11 +231,100 @@ describe('Jingji palace procurement gating', () => {
       ...base,
       flags: [...base.flags, 'jingji-canal-tribute-stalled'],
     });
+    const rechecked = requestSongProcurement({
+      ...base,
+      flags: [...base.flags, 'jingji-canal-tribute-recheck-cleared'],
+    });
 
     expect(cleared.order.creditTrustScore ?? 0).toBeGreaterThan(neutral.order.creditTrustScore ?? 0);
     expect(cleared.order.creditNote).toContain('漕运料账已清');
+    expect(rechecked.order.creditTrustScore ?? 0).toBeGreaterThan(neutral.order.creditTrustScore ?? 0);
+    expect(rechecked.order.creditNote).toContain('漕运复验入簿');
     expect(stalled.order.creditTrustScore ?? 0).toBeLessThan(neutral.order.creditTrustScore ?? 0);
     expect(stalled.order.creditNote).toContain('漕运料账滞着');
+  });
+
+  it('feeds the canal recheck escort result into Song Yasi home-visit procurement', () => {
+    const routeId = 'route-jiangnan-jingji-canal';
+    let state: GameState = withProcurementTrust(
+      {
+        ...jingjiState(),
+        unlockedRegions: [...new Set([...jingjiState().unlockedRegions, 'jiangnan', 'jingji'])],
+        resources: { ...jingjiState().resources, labor: 999, cloisonne: 12, copperStock: 12, pigmentRefined: 12 },
+        routeStability: { ...jingjiState().routeStability, [routeId]: 18, 'route-jingji-sanjin-official': 100 },
+        flags: [...jingjiState().flags, 'route-known:route-jiangnan-jingji-canal'],
+      },
+      {
+        reputation: 72,
+        commerce: 70,
+        people: 50,
+        affinity: 42,
+        palaceBacker: true,
+      },
+    );
+
+    state = gameReducer(state, { type: 'USE_NPC_FUNCTION', npcId: 'jj-song-yasi', functionKind: 'escort' }, content);
+    expect(state.pendingEscortCrisis?.encounterId).toBe('escort-jingji-canal-tribute');
+    state = gameReducer(state, { type: 'RESOLVE_ESCORT_CRISIS', choiceId: 'seal-tribute-manifest' }, content);
+    expect(state.flags).toContain('jingji-canal-tribute-cleared');
+    expect(state.routeEscortRuns[routeId]).toBe(1);
+
+    state = gameReducer(
+      {
+        ...state,
+        calendar: { ...state.calendar, day: state.calendar.day + 1, phase: 'morning' },
+      },
+      { type: 'USE_NPC_FUNCTION', npcId: 'jj-song-yasi', functionKind: 'escort' },
+      content,
+    );
+    expect(state.pendingEscortCrisis?.encounterId).toBe('escort-jingji-canal-tribute-recheck');
+    state = gameReducer(state, { type: 'RESOLVE_ESCORT_CRISIS', choiceId: 'audit-canal-material-ledger' }, content);
+    expect(state.flags).toContain('jingji-canal-tribute-recheck-cleared');
+    expect(state.flags).toContain('jingji-canal-material-ledger-stat-ready');
+
+    const displayed = cloisonneItem('display-song-canal-ledger-return', state, 0.8, 'displayed');
+    const replica = cloisonneItem('held-song-canal-ledger-return', state, 0.78);
+    const returned = gameReducer(
+      {
+        ...state,
+        calendar: { ...state.calendar, day: state.calendar.day + 1, phase: 'morning' },
+        itemInstances: [displayed, replica, ...state.itemInstances],
+      },
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'jj-song-yasi',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'song-canal-recheck-ledger',
+      },
+      content,
+    );
+    const record = returned.homeVisitRecords[0];
+    const referral = activeOrder(returned, (order) => order.id === record.referralOrderId);
+
+    expect(record).toMatchObject({
+      npcId: 'jj-song-yasi',
+      title: '漕运料账复验',
+      choiceId: 'song-canal-recheck-ledger',
+      referralTitle: '漕运复验官样采办单',
+      itemId: displayed.id,
+    });
+    expect(referral).toMatchObject({
+      npcId: 'jj-song-yasi',
+      orderKind: 'palace',
+      sourceHomeVisitChoiceId: 'song-canal-recheck-ledger',
+      resourceId: 'cloisonne',
+      minQuality: 0.72,
+      depositCoin: 0,
+      creditTrustScore: 78,
+      routeIds: ['route-jiangnan-jingji-canal', 'route-jingji-sanjin-official'],
+    });
+    expect(referral.creditNote).toContain('漕运复验入簿');
+    expect(returned.flags).toContain('homevisit-song-canal-ledger-return-resolved');
+
+    const delivered = gameReducer(returned, { type: 'FULFILL_ORDER', orderId: referral.id }, content);
+    expect(delivered.activeOrders.find((order) => order.id === referral.id)?.status).toBe('completed');
+    expect(delivered.flags).toContain('homevisit-referral-completed:song-canal-recheck-ledger');
+    expect(delivered.flags).toContain('palace-order-completed:jj-song-yasi');
   });
 
   it('damages Song Yasi backing when a palace procurement permit expires', () => {

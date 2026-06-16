@@ -175,5 +175,6 @@ export function createInitialState(
     activeOrders: [],
     homeVisitRecords: [],
     nightMarketStallRecords: [],
+    economyLedgerRecords: [],
   };
 }

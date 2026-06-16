@@ -105,6 +105,27 @@ function copperSilverItem(
   };
 }
 
+function batikItem(
+  id: string,
+  state: GameState,
+  quality = 0.74,
+  status: ItemInstance['status'] = 'held',
+): ItemInstance {
+  return {
+    id,
+    resourceId: 'batikCloth',
+    sourceCraftId: 'batik',
+    originRegionId: 'qiandian',
+    originSubregionId: 'qiandian-miao-village',
+    createdTurn: state.turn,
+    quality,
+    descriptors: ['蜡线稳', '蓝白染纹清', '茶马路引可验'],
+    appraisal: '一匹能让蜡线、蓝白层次和港样路引互相作证的蜡染布。',
+    displayName: id.includes('display') ? '黔滇蜡染港样陈列' : '黔滇蜡染港样复单',
+    status,
+  };
+}
+
 function activeOrder(state: GameState, predicate: (order: ActiveOrder) => boolean): ActiveOrder {
   const order = state.activeOrders.find((candidate) => candidate.status === 'active' && predicate(candidate));
   if (!order) throw new Error('Missing expected active order');
@@ -133,10 +154,15 @@ describe('Qiandian silver ritual longline', () => {
     const alan = ALL_NPCS.find((item) => item.id === 'qd-yinniang-alan');
     const muluozi = ALL_NPCS.find((item) => item.id === 'qd-mu-luozi');
     const tongshan = ALL_NPCS.find((item) => item.id === 'qd-tongshan-ke');
+    const danqing = ALL_NPCS.find((item) => item.id === 'qd-danqing-sao');
+    const batikActivity = REGION_ACTIVITIES.find((item) => item.id === 'qd-batik-yard');
 
+    expect(chapter?.status).toBe('chapter-ready');
     expect(alan?.functions).toEqual(expect.arrayContaining(['homeVisit', 'collab', 'order']));
     expect(muluozi?.functions).toContain('order');
     expect(tongshan?.functions).toEqual(expect.arrayContaining(['homeVisit', 'appraisal', 'order']));
+    expect(danqing?.functions).toEqual(expect.arrayContaining(['homeVisit', 'appraisal', 'order']));
+    expect(batikActivity?.reward.flags).toContain('qiandian-batik-harbor-ledger-open');
     expect(activity?.reward.stall?.stages?.map((stage) => stage.id)).toEqual([
       'open-ritual-sample',
       'barter-silver-dye',
@@ -151,6 +177,7 @@ describe('Qiandian silver ritual longline', () => {
       'homevisit-alan-silver-ritual-case',
       'homevisit-alan-tea-road-client-return',
       'homevisit-tongshan-copper-silver-ledger',
+      'homevisit-danqing-batik-harbor-return',
     ]);
     expect(chapter?.collabRecipeIds).toEqual(['collab-alan-silver-ritual-fit']);
     expect(chapter?.orderHooks).toEqual(
@@ -158,9 +185,105 @@ describe('Qiandian silver ritual longline', () => {
         expect.objectContaining({ source: 'homeVisit', id: 'homevisit-alan-silver-ritual-case', readsItemState: true }),
         expect.objectContaining({ source: 'homeVisit', id: 'homevisit-alan-tea-road-client-return', readsItemState: true }),
         expect.objectContaining({ source: 'homeVisit', id: 'homevisit-tongshan-copper-silver-ledger', readsItemState: true }),
+        expect.objectContaining({ source: 'homeVisit', id: 'homevisit-danqing-batik-harbor-return', readsItemState: true }),
         expect.objectContaining({ source: 'collab', id: 'collab-alan-silver-ritual-fit', readsItemState: true }),
       ]),
     );
+  });
+
+  it('connects Danqing batik ledgers to the tea-horse harbor closing order', () => {
+    const base = qiandianState();
+    const displayed = batikItem('display-danqing-batik-harbor-ledger', base, 0.76, 'displayed');
+    const replica = batikItem('held-danqing-batik-harbor-replica', base, 0.74);
+    let state: GameState = {
+      ...base,
+      currentSubregion: 'qiandian-miao-village',
+      resources: {
+        ...base.resources,
+        batikCloth: 12,
+        silverOrnament: 12,
+        wutongSilver: 12,
+        copperStock: 12,
+      },
+      itemInstances: [displayed, replica, ...base.itemInstances],
+    };
+
+    const unavailable = gameReducer(
+      state,
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'qd-danqing-sao',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'danqing-batik-harbor-ledger',
+      },
+      content,
+    );
+    expect(unavailable.homeVisitRecords.length).toBe(0);
+    expect(unavailable.flags).not.toContain('homevisit-danqing-batik-harbor-return-resolved');
+
+    state = gameReducer(state, { type: 'PERFORM_ACTIVITY', activityId: 'qd-batik-yard', quality: 0.84 }, content);
+    expect(state.flags).toContain('qiandian-batik-harbor-ledger-open');
+
+    for (let run = 0; run < 3; run += 1) {
+      state = gameReducer(
+        {
+          ...state,
+          currentSubregion: 'qiandian-tea-road',
+          calendar: { ...state.calendar, day: state.calendar.day + (run === 0 ? 0 : 1), phase: 'morning' },
+        },
+        { type: 'PERFORM_ACTIVITY', activityId: 'qd-tea-horse-road', quality: 0.9, stallStrategyId: 'harbor-return-sample' },
+        content,
+      );
+    }
+    state = gameReducer(state, { type: 'RESOLVE_ACTIVITY_STALL_CLOSING', choiceId: 'reserve-copper-silver-sample' }, content);
+    expect(state.flags).toContain('qiandian-closing-copper-silver-harbor');
+    expect(state.flags).toContain('route-known:route-qiandian-lingnan-harbor');
+
+    const returned = gameReducer(
+      {
+        ...state,
+        calendar: { ...state.calendar, day: state.calendar.day + 1, phase: 'morning' },
+      },
+      {
+        type: 'USE_NPC_FUNCTION',
+        npcId: 'qd-danqing-sao',
+        functionKind: 'homeVisit',
+        homeVisitChoiceId: 'danqing-batik-harbor-ledger',
+      },
+      content,
+    );
+    const record = returned.homeVisitRecords[0];
+    const referral = activeOrder(returned, (order) => order.id === record.referralOrderId);
+
+    expect(record).toMatchObject({
+      npcId: 'qd-danqing-sao',
+      title: '蜡染港样回访',
+      choiceId: 'danqing-batik-harbor-ledger',
+      referralTitle: '蜡染港样续订单',
+      itemId: displayed.id,
+    });
+    expect(referral).toMatchObject({
+      npcId: 'qd-danqing-sao',
+      orderKind: 'route',
+      sourceHomeVisitChoiceId: 'danqing-batik-harbor-ledger',
+      resourceId: 'batikCloth',
+      minQuality: 0.64,
+      routeIds: ['route-qiandian-lingnan-harbor'],
+    });
+    expect(returned.flags).toContain('homevisit-danqing-batik-harbor-return-resolved');
+    expect(returned.flags).toContain('homevisit-referral:danqing-batik-harbor-ledger');
+
+    const delivered = gameReducer(returned, { type: 'FULFILL_ORDER', orderId: referral.id }, content);
+    expect(delivered.activeOrders.find((candidate) => candidate.id === referral.id)?.status).toBe('completed');
+    expect(delivered.flags).toContain('homevisit-referral-completed:danqing-batik-harbor-ledger');
+    expect(delivered.flags).toContain('route-order-completed:qd-danqing-sao');
+    expect(delivered.itemInstances.find((item) => item.id === displayed.id)?.status).toBe('displayed');
+
+    const ended = reportFor({
+      ...delivered,
+      npcAffinity: { ...delivered.npcAffinity, 'qd-danqing-sao': 80 },
+    });
+    expect(ended.report?.relationshipOutcomes?.some((line) => line.includes('丹青嫂') && line.includes('蜡染港样续单'))).toBe(true);
   });
 
   it('turns the Dongchuan mine activity into a copper-silver material feedback visit', () => {

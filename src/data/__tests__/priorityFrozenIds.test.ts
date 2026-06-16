@@ -6,6 +6,7 @@ import {
   COLLAB_RECIPES,
   CRAFTS,
   CRAFT_INTERACTION_INDEX,
+  ESCORT_ENCOUNTERS,
   HOME_VISITS,
   LORE_ENTRY_INDEX,
   PRIORITY_ANCHOR_REGION_IDS,
@@ -194,7 +195,11 @@ const FROZEN_HOME_VISIT_IDS = [
   'homevisit-alan-silver-ritual-case',
   'homevisit-alan-tea-road-client-return',
   'homevisit-tongshan-copper-silver-ledger',
+  'homevisit-danqing-batik-harbor-return',
   'homevisit-yeshu-daye-ore-ledger',
+  'homevisit-wen-xiang-embroidery-ledger',
+  'homevisit-cheng-stationery-credit-return',
+  'homevisit-song-canal-ledger-return',
   'homevisit-pingyao-polish-room',
   'homevisit-pingyao-client-return',
   'homevisit-lei-credit-ledger-aftertalk',
@@ -202,6 +207,17 @@ const FROZEN_HOME_VISIT_IDS = [
   'homevisit-cu-vinegar-ledger-return',
   'homevisit-losang-thangka-hall',
   'homevisit-losang-patron-return',
+  'homevisit-shicai-pigment-ledger',
+  'homevisit-baiyinshu-silver-ledger',
+];
+
+const FROZEN_ESCORT_ENCOUNTER_IDS = [
+  'escort-tea-horse-load-ledger',
+  'escort-ganpo-kiln-firewood',
+  'escort-jingji-canal-tribute',
+  'escort-jingji-canal-tribute-recheck',
+  'escort-snow-pass-windbreak',
+  'escort-caravan-water-ledger',
 ];
 
 const FROZEN_COLLAB_RECIPE_IDS = [
@@ -274,6 +290,7 @@ describe('current priority frozen ids', () => {
   const npcIds = new Set(ALL_NPCS.map((npc) => npc.id));
   const routeIds = new Set(REGION_ROUTES.map((route) => route.id));
   const homeVisitIds = new Set(HOME_VISITS.map((visit) => visit.id));
+  const escortEncounterIds = new Set(ESCORT_ENCOUNTERS.map((encounter) => encounter.id));
   const collabRecipeIds = new Set(COLLAB_RECIPES.map((recipe) => recipe.id));
   const layoutSubregionIds = new Set(RUNTIME_MAP_LAYOUTS.map((layout) => layout.subregionId));
 
@@ -291,6 +308,7 @@ describe('current priority frozen ids', () => {
     expectFrozenIds('npcs', FROZEN_NPC_IDS, npcIds);
     expectFrozenIds('routes', FROZEN_ROUTE_IDS, routeIds);
     expectFrozenIds('home visits', FROZEN_HOME_VISIT_IDS, homeVisitIds);
+    expectFrozenIds('escort encounters', FROZEN_ESCORT_ENCOUNTER_IDS, escortEncounterIds);
     expectFrozenIds('collab recipes', FROZEN_COLLAB_RECIPE_IDS, collabRecipeIds);
     expectFrozenIds('layouts', FROZEN_LAYOUT_SUBREGION_IDS, layoutSubregionIds);
 

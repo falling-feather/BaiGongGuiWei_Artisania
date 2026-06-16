@@ -76,8 +76,7 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['苗银工艺', '茶马驿道', '东川铜矿采炼'],
     targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 3 },
     m1Actions: [
-      '补蜡染人物长线回访',
-      '继续扩展茶马会后续分支到岭南港口回访',
+      'M3：扩展银染茶马会到更多港口样客、天气与多轮价格',
     ],
   },
   {
@@ -88,9 +87,7 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['楚漆修复', '渡口水路', '湘绣与矿冶供料'],
     targetMinimums: { ...DEFAULT_MINIMUMS, layoutSubregionCount: 4 },
     m1Actions: [
-      '补湘绣楼人物回访与绣样订单差异',
-      '补楚漆修复订单与水路活动后续',
-      '让荆楚路线影响赣鄱/徽州材料流动',
+      'M3：扩展荆楚水路价格、湿气损耗和赣鄱/徽州材料联动',
     ],
   },
   {
@@ -114,9 +111,7 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['宣纸/徽墨/歙砚', '徽商信用', '文房荐藏'],
     targetMinimums: DEFAULT_MINIMUMS,
     m1Actions: [
-      '把文房荐藏续单接入徽商会馆信用',
-      '补宣纸、徽墨、歙砚的订单差异',
-      '补商会信用风险分支',
+      'M3：扩展徽商会馆多轮授信、违约与文房套单价格',
     ],
   },
   {
@@ -127,7 +122,7 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['景泰蓝/花丝宫造', '官署采办', '漕运路线'],
     targetMinimums: DEFAULT_MINIMUMS,
     m1Actions: [
-      '补更长漕运复验后续回访与多轮料账统计',
+      'M3：扩展多轮漕运复验统计、拒收返修与采办价格波动',
     ],
   },
   {
@@ -138,9 +133,7 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['推光漆器', '票号信用', '煤铁与老陈醋民生'],
     targetMinimums: DEFAULT_MINIMUMS,
     m1Actions: [
-      '扩展多轮本金/利钱统计到 M3 长线经济',
-      '持续复验煤铁窑塬与清徐醋坊街景 gate',
-      '把票号信用、煤铁保票和醋坊民生日用账纳入长局风险读数',
+      'M3：扩展多轮本金/利钱统计到长线经济',
     ],
   },
   {
@@ -151,9 +144,7 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['唐卡绘制', '雪山补给', '矿彩与银器'],
     targetMinimums: DEFAULT_MINIMUMS,
     m1Actions: [
-      '补颜料矿谷/银器帐房人物回访与材料状态反馈',
-      '让唐卡净室订单继续读取礼法、颜料和缺陷',
-      '补雪山驿路护商结果接入供展续单后日谈',
+      'M3：扩展雪口供给、矿彩价格与银器耐寒损耗',
     ],
   },
   {

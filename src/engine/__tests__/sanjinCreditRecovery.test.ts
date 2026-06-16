@@ -409,6 +409,12 @@ describe('Sanjin ticket-house credit recovery', () => {
     expect(coalSettled.flags).toContain('homevisit-referral-completed:yaoyuan-coal-iron-ledger-order');
     expect(coalSettled.flags).toContain('sanjin-coal-iron-ledger-settled');
     expect(coalSettled.flags).not.toContain('sanjin-credit-coal-vinegar-ledger-realized');
+    expect(coalSettled.economyLedgerRecords[0]).toMatchObject({
+      ledgerId: 'economy-ledger-sanjin-piaohao-credit',
+      event: 'coal-iron-ledger-settled',
+      status: 'settled',
+      npcId: 'sj-yaoyuan-han',
+    });
 
     const vinegarOpened = gameReducer(
       withSanjinLedgerItems(coalSettled),
@@ -435,6 +441,12 @@ describe('Sanjin ticket-house credit recovery', () => {
     expect(realized.flags).toContain('homevisit-referral-completed:cu-vinegar-ledger-order');
     expect(realized.flags).toContain('sanjin-vinegar-life-ledger-settled');
     expect(realized.flags).toContain('sanjin-credit-coal-vinegar-ledger-realized');
+    expect(realized.economyLedgerRecords[0]).toMatchObject({
+      ledgerId: 'economy-ledger-sanjin-piaohao-credit',
+      event: 'vinegar-ledger-settled',
+      status: 'settled',
+      npcId: 'sj-cu-langzhong',
+    });
 
     const report = reportFor({
       ...realized,
@@ -492,12 +504,27 @@ describe('Sanjin ticket-house credit recovery', () => {
     expect(opened.order.orderKind).toBe('credit');
     expect(opened.order.depositCoin).toBe(0);
     expect(opened.order.creditTrustScore).toBeGreaterThanOrEqual(62);
+    expect(opened.state.economyLedgerRecords[0]).toMatchObject({
+      ledgerId: 'economy-ledger-sanjin-piaohao-credit',
+      event: 'credit-created',
+      status: 'open',
+      npcId: 'sj-lei-zhanggui',
+      orderId: opened.order.id,
+    });
 
     const defaulted = expireOrder(opened.state, opened.order);
     expect(defaulted.activeOrders.find((item) => item.id === opened.order.id)?.status).toBe('expired');
     expect(defaulted.flags).toContain('credit-default:sj-lei-zhanggui');
     expect(defaulted.flags).toContain('credit-order-expired:sj-lei-zhanggui');
     expect(defaulted.regionReputation.sanjin).toBeLessThan(beforeDefaultReputation);
+    expect(defaulted.economyLedgerRecords[0]).toMatchObject({
+      ledgerId: 'economy-ledger-sanjin-piaohao-credit',
+      event: 'credit-defaulted',
+      status: 'defaulted',
+      npcId: 'sj-lei-zhanggui',
+      orderId: opened.order.id,
+      defaultCount: 1,
+    });
 
     const penalized = requestLeiOrder(defaulted);
     expect(penalized.order.creditTrustScore ?? 0).toBeLessThan(opened.order.creditTrustScore ?? 0);
@@ -551,6 +578,16 @@ describe('Sanjin ticket-house credit recovery', () => {
     expect(repeatDefaulted.flags).toContain('credit-repeat-default:sj-lei-zhanggui');
     expect(repeatDefaulted.flags).toContain('sanjin-credit-interest-accrued');
     expect(repeatDefaulted.flags).toContain('sanjin-credit-ledger-aftertalk-open');
+    expect(repeatDefaulted.economyLedgerRecords[0]).toMatchObject({
+      ledgerId: 'economy-ledger-sanjin-piaohao-credit',
+      event: 'credit-repeat-defaulted',
+      status: 'defaulted',
+      npcId: 'sj-lei-zhanggui',
+      orderId: restored.order.id,
+      defaultCount: 2,
+    });
+    expect(repeatDefaulted.economyLedgerRecords[0].interest).toBeGreaterThan(0);
+    expect(repeatDefaulted.economyLedgerRecords[0].balance).toBeGreaterThan(restored.order.rewardCoin);
 
     const interestOrder = requestLeiOrder({
       ...repeatDefaulted,
@@ -619,6 +656,14 @@ describe('Sanjin ticket-house credit recovery', () => {
     expect(settled.flags).toContain('sanjin-credit-interest-settled');
     expect(settled.flags).toContain('sanjin-credit-ledger-aftertalk-settled');
     expect(settled.flags).toContain('credit-repeat-default-settled:sj-lei-zhanggui');
+    expect(settled.economyLedgerRecords[0]).toMatchObject({
+      ledgerId: 'economy-ledger-sanjin-piaohao-credit',
+      event: 'credit-interest-settled',
+      status: 'settled',
+      npcId: 'sj-lei-zhanggui',
+      orderId: settlementOrder.id,
+      balance: 0,
+    });
 
     const clearedOrder = requestLeiOrder({
       ...settled,
