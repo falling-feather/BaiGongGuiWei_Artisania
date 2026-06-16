@@ -1615,6 +1615,10 @@ function expireOrdersForDay(state: GameState, content: GameContent, day: number)
         flags.add('sanjin-credit-ledger-aftertalk-open');
       }
     }
+    if (order.orderKind === 'palace' && order.npcId === 'jj-song-yasi') {
+      flags.add('jingji-official-permit-backer-damaged');
+      flags.add('jingji-palace-procurement-expired');
+    }
     if (order.sourceHomeVisitRecordId) flags.add(`homevisit-order-expired:${order.sourceHomeVisitRecordId}`);
     if (order.sourceHomeVisitChoiceId) flags.add(`homevisit-referral-expired:${order.sourceHomeVisitChoiceId}`);
   }
@@ -1636,7 +1640,7 @@ function expireOrdersForDay(state: GameState, content: GameContent, day: number)
           `「${order.title}」已过交期，${depositNote}${creditNote}${resourceName(content, order.resourceId)}订单作废。`,
         ),
       };
-      if (order.orderKind !== 'consignment' && order.orderKind !== 'credit') return logged;
+      if (order.orderKind !== 'consignment' && order.orderKind !== 'credit' && order.orderKind !== 'palace') return logged;
       const npc = (content.npcs ?? []).find((item) => item.id === order.npcId);
       return grantRegionReputation(
         logged,
@@ -5335,8 +5339,13 @@ function npcOrderTerms(
       state.flags.includes('jingji-official-permit');
     const canalCleared = state.flags.includes('jingji-canal-tribute-cleared');
     const canalStalled = state.flags.includes('jingji-canal-tribute-stalled') && !canalCleared;
-    const canalTrustDelta = (canalCleared ? 8 : 0) - (canalStalled ? 10 : 0);
+    const backerDamaged =
+      state.flags.includes('jingji-official-permit-backer-damaged') ||
+      state.flags.includes('palace-order-expired:jj-song-yasi');
+    const canalTrustDelta = (canalCleared ? 8 : 0) - (canalStalled ? 10 : 0) - (backerDamaged ? 12 : 0);
     const canalNote = canalCleared ? '漕运料账已清，' : canalStalled ? '漕运料账滞着，' : '';
+    const backerNote = backerDamaged ? '门房担保折损，' : '';
+    const trustNote = `${canalNote}${backerNote}`;
     const permitTrust = Math.min(100, Math.max(0, trust + (palaceBacker ? 14 : 0) + canalTrustDelta));
     const formalPermit = permitTrust >= 72;
     const depositCoin = formalPermit ? 0 : permitTrust >= 48 ? 8 : 16;
@@ -5345,8 +5354,8 @@ function npcOrderTerms(
       titleSuffix: formalPermit ? '官样采办许可单' : '官样采办预审单',
       descLead: '官署门房先审名帖、商誉与担保。',
       creditNote: depositCoin > 0
-        ? `${canalNote}采办商誉 ${permitTrust}，先押 ${depositCoin} 文名帖保金；误期会折损门房担保。`
-        : `${canalNote}采办商誉 ${permitTrust}，宋押司愿免押名帖，只按宫样验收结果结账；误期仍会折损门房担保。`,
+        ? `${trustNote}采办商誉 ${permitTrust}，先押 ${depositCoin} 文名帖保金；误期会折损门房担保。`
+        : `${trustNote}采办商誉 ${permitTrust}，宋押司愿免押名帖，只按宫样验收结果结账；误期仍会折损门房担保。`,
       depositCoin,
       rewardPremium: depositCoin + (formalPermit ? 18 : 10),
       minQualityDelta: formalPermit ? 0.08 : 0.12,

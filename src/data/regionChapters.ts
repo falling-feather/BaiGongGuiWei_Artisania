@@ -392,7 +392,7 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
       { npcId: 'jj-meng-zhangyan', role: 'lifeCulture', note: '都门鉴宝文化入口。' },
     ],
     orderHooks: [
-      { source: 'activity', id: 'jj-official-gate', note: '官署门房活动生成官样采办单，并读取景泰蓝作品质量。', readsItemState: true },
+      { source: 'activity', id: 'jj-official-gate', note: '官署门房活动生成官样采办单，读取景泰蓝作品质量、商誉与过期担保折损。', readsItemState: true },
       { source: 'activity', id: 'jj-appraisal-market', note: '都门市口活动生成官样背书单，并读取景泰蓝作品与漕运路线状态。', readsItemState: true },
       { source: 'homeVisit', id: 'homevisit-lan-palace-return', note: '宫样采办藏客回访读取作品。', readsItemState: true },
       { source: 'collab', id: 'collab-lan-cloisonne-blue', note: '景泰蓝宫造联作。', readsItemState: true },
@@ -402,8 +402,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-lan-cloisonne-blue'],
     escortEncounterIds: ['escort-jingji-canal-tribute'],
     smokeScenarioIds: ['chapter-jingji-palace-procurement'],
-    nextActions: ['内置浏览器复验都门市口、市口到官署门房、官署到江南漕运 gate', '扩展采办许可的过期担保折损与市口背书后日谈', '补更长漕运复验后续回访与多轮料账统计'],
-    gaps: ['官署门房已有活动即时订单、宋押司 palace 采办商誉门槛、宫样回访续单、都门市口人工 JSON 与市口背书订单；仍缺 M3 级更长漕运复验回访和多轮料账统计。'],
+    nextActions: ['内置浏览器复验都门市口、市口到官署门房、官署到江南漕运 gate', '补更长漕运复验后续回访与多轮料账统计'],
+    gaps: ['官署门房已有活动即时订单、宋押司 palace 采办商誉门槛、采办许可过期担保折损、宫样回访续单、都门市口人工 JSON 与市口背书订单；仍缺 M3 级更长漕运复验回访和多轮料账统计。'],
   },
   {
     id: 'chapter-sanjin-piaohao-lacquer',

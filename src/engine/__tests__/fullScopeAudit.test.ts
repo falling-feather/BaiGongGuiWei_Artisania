@@ -67,6 +67,7 @@ describe('full scope audit', () => {
     const jingchu = audit.rows.find((row) => row.regionId === 'jingchu');
     const ganpo = audit.rows.find((row) => row.regionId === 'ganpo');
     const huizhou = audit.rows.find((row) => row.regionId === 'huizhou');
+    const jingji = audit.rows.find((row) => row.regionId === 'jingji');
     const xiyu = audit.rows.find((row) => row.regionId === 'xiyu');
 
     expect(jiangnan?.counts.layoutSubregions).toBe(6);
@@ -100,6 +101,10 @@ describe('full scope audit', () => {
     expect(huizhou?.m1Actions).toContain('补宣纸、徽墨、歙砚的订单差异');
     expect(huizhou?.m1Actions).not.toContain('补歙石山坑运行入口');
     expect(huizhou?.m1Actions).not.toContain('补墨砚深巷或歙石山坑运行入口');
+    expect(jingji?.m1Actions).toContain('补更长漕运复验后续回访与多轮料账统计');
+    expect(jingji?.m1Actions).not.toContain('补都门市口运行入口');
+    expect(jingji?.m1Actions).not.toContain('让官署门房采办许可读取地区声望和商誉');
+    expect(jingji?.m1Actions).not.toContain('补宫造订单的拒收、返修和藏客回访');
     expect(xiyu?.gaps).not.toContain('layout-subregion:3/4');
     expect(xiyu?.signatureCraftsWithoutInteraction).not.toContain('atlas-silk');
     expect(xiyu?.signatureCraftsWithoutInteraction).toEqual(expect.arrayContaining(['carpet', 'copperware']));

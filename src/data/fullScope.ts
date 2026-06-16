@@ -128,9 +128,8 @@ export const FULL_SCOPE_REGION_REQUIREMENTS: FullScopeRegionRequirement[] = [
     playPillars: ['景泰蓝/花丝宫造', '官署采办', '漕运路线'],
     targetMinimums: DEFAULT_MINIMUMS,
     m1Actions: [
-      '补都门市口运行入口',
-      '让官署门房采办许可读取地区声望和商誉',
-      '补宫造订单的拒收、返修和藏客回访',
+      '补更长漕运复验后续回访与多轮料账统计',
+      '扩展京畿多入口 smokeBindings',
     ],
   },
   {

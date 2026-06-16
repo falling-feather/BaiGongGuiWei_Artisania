@@ -104,6 +104,17 @@ function requestSongProcurement(state: GameState): { state: GameState; order: Ac
   return { state: next, order };
 }
 
+function expireOrder(state: GameState, order: ActiveOrder): GameState {
+  return gameReducer(
+    {
+      ...state,
+      calendar: { ...state.calendar, day: (order.expiresDay ?? state.calendar.day) + 1 },
+    },
+    { type: 'FULFILL_ORDER', orderId: order.id },
+    content,
+  );
+}
+
 function procurementItem(order: ActiveOrder, state: GameState, index: number): ItemInstance {
   return {
     id: `jingji-procurement-${index}`,
@@ -133,7 +144,8 @@ describe('Jingji palace procurement gating', () => {
         expect.objectContaining({ source: 'collab', id: 'collab-lan-cloisonne-blue', readsItemState: true }),
       ]),
     );
-    expect(chapter?.nextActions.some((item) => item.includes('采办许可'))).toBe(true);
+    expect(chapter?.orderHooks.find((hook) => hook.id === 'jj-official-gate')?.note).toContain('担保折损');
+    expect(chapter?.nextActions.some((item) => item.includes('采办许可'))).toBe(false);
   });
 
   it('uses reputation and palace backer flags to upgrade pre-review into a formal permit order', () => {
@@ -192,6 +204,34 @@ describe('Jingji palace procurement gating', () => {
     expect(cleared.order.creditNote).toContain('漕运料账已清');
     expect(stalled.order.creditTrustScore ?? 0).toBeLessThan(neutral.order.creditTrustScore ?? 0);
     expect(stalled.order.creditNote).toContain('漕运料账滞着');
+  });
+
+  it('damages Song Yasi backing when a palace procurement permit expires', () => {
+    const opened = requestSongProcurement(
+      withProcurementTrust(jingjiState(), {
+        reputation: 34,
+        commerce: 18,
+        people: 10,
+        affinity: 24,
+      }),
+    );
+    const beforeRep = opened.state.regionReputation.jingji ?? 0;
+    const expired = expireOrder(opened.state, opened.order);
+    const renewed = requestSongProcurement({
+      ...expired,
+      calendar: { ...expired.calendar, day: expired.calendar.day + 1 },
+    });
+
+    expect(opened.order.orderKind).toBe('palace');
+    expect(opened.order.depositCoin).toBeGreaterThan(0);
+    expect(expired.activeOrders.find((item) => item.id === opened.order.id)?.status).toBe('expired');
+    expect(expired.flags).toContain('palace-order-expired:jj-song-yasi');
+    expect(expired.flags).toContain('deposit-forfeited:jj-song-yasi');
+    expect(expired.flags).toContain('jingji-official-permit-backer-damaged');
+    expect(expired.flags).toContain('jingji-palace-procurement-expired');
+    expect(expired.regionReputation.jingji).toBeLessThan(beforeRep);
+    expect(renewed.order.creditTrustScore ?? 0).toBeLessThan(opened.order.creditTrustScore ?? 0);
+    expect(renewed.order.creditNote).toContain('门房担保折损');
   });
 
   it('lets high-reputation formal palace procurement complete through clean tracked work', () => {
