@@ -7,6 +7,7 @@ import {
   DEFAULT_CRAFT_TECHNIQUE_CHOICE,
   METRIC_LABELS,
   activeTechniqueStages,
+  craftInteractionFor,
   craftFocusCheckOption,
   craftTechniqueOption,
   orderPrice,
@@ -51,7 +52,10 @@ export function CraftExperienceModal({
   // 汇总当前勾选下本次开工的物料与人力成本
   const skipSet = new Set(skipIds);
   const activeSteps = def.processChain.filter((s) => !(skipSet.has(s.id) && s.skippable));
-  const interactionSpec = content.craftInteractions?.find((spec) => spec.craftId === craftId) ?? null;
+  const interactionSpec = craftInteractionFor(content, craftId, {
+    regionId: currentRegion,
+    subregionId: currentSubregion,
+  });
   const techniqueStages = activeTechniqueStages(interactionSpec, activeSteps.map((step) => step.id));
   const techniqueChoices = techniqueStages.map((stage) => ({
     stageId: stage.id,

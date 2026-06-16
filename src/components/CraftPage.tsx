@@ -8,6 +8,7 @@ import {
   MAX_WORKSHOP_CAPACITY,
   METRIC_LABELS,
   activeTechniqueStages,
+  craftInteractionFor,
   craftFocusCheckOption,
   craftTechniqueOption,
   itemDefectSummary,
@@ -68,7 +69,10 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
 
   const skipSet = new Set(skipIds);
   const activeSteps = def.processChain.filter((s) => !(skipSet.has(s.id) && s.skippable));
-  const interactionSpec = content.craftInteractions?.find((spec) => spec.craftId === craftId) ?? null;
+  const interactionSpec = craftInteractionFor(content, craftId, {
+    regionId: currentRegion,
+    subregionId: currentSubregion,
+  });
   const techniqueStages = activeTechniqueStages(interactionSpec, activeSteps.map((step) => step.id));
   const techniqueChoices = techniqueStages.map((stage) => ({
     stageId: stage.id,

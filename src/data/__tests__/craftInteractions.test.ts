@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ALL_NPCS, CRAFTS, CRAFT_INTERACTIONS, REGIONS, RESOURCE_INDEX, WORKSHOP_UPGRADES } from '..';
+import { craftInteractionFor } from '../../engine';
 
 describe('工艺交互规格数据', () => {
   const craftById = new Map(CRAFTS.map((craft) => [craft.id, craft]));
@@ -64,6 +65,93 @@ describe('工艺交互规格数据', () => {
       'atlas-tighten-selvedge',
     ]);
     expect(spec?.orderHooks?.join('')).toContain('巴扎织物复单');
+  });
+
+  it('江南蓝染和竹编拥有专属工艺阶段、缺陷与返修方案', () => {
+    const indigo = craftInteractionFor(
+      { craftInteractions: CRAFT_INTERACTIONS },
+      'indigo-dyeing',
+      { regionId: 'jiangnan', subregionId: 'jiangnan-suhang' },
+    );
+    const bamboo = craftInteractionFor(
+      { craftInteractions: CRAFT_INTERACTIONS },
+      'bamboo-weaving',
+      { regionId: 'jiangnan', subregionId: 'jiangnan-suhang' },
+    );
+
+    expect(indigo).toMatchObject({
+      id: 'interaction-jiangnan-indigo-dyeing',
+      regionId: 'jiangnan',
+      workshopSubregionId: 'jiangnan-suhang',
+      mentorNpcIds: ['jn-indigo-keeper'],
+    });
+    expect(indigo?.stages.map((stage) => stage.id)).toEqual([
+      'indigo-test-color',
+      'indigo-build-vat',
+      'indigo-tie-resist',
+      'indigo-dip-oxidize',
+    ]);
+    expect(indigo?.stages.flatMap((stage) => stage.processStepIds)).toEqual([
+      'harvest-indigo',
+      'build-vat',
+      'tie-resist',
+      'dip-dye',
+    ]);
+    expect(indigo?.defects.map((defect) => defect.id)).toEqual([
+      'indigo-muddy-vat',
+      'indigo-blurred-resist',
+      'indigo-floating-color',
+    ]);
+    expect(indigo?.repairOptions.map((option) => option.id)).toEqual([
+      'indigo-reset-vat',
+      'indigo-retie-resist',
+      'indigo-rinse-redye',
+    ]);
+    expect(indigo?.orderHooks?.join('')).toContain('阿蓝');
+
+    expect(bamboo).toMatchObject({
+      id: 'interaction-jiangnan-bamboo-weaving',
+      regionId: 'jiangnan',
+      workshopSubregionId: 'jiangnan-suhang',
+      mentorNpcIds: ['jn-bamboo-master'],
+    });
+    expect(bamboo?.stages.map((stage) => stage.id)).toEqual([
+      'jiangnan-bamboo-select',
+      'jiangnan-bamboo-split',
+      'jiangnan-bamboo-weave',
+    ]);
+    expect(bamboo?.stages.flatMap((stage) => stage.processStepIds)).toEqual([
+      'select-bamboo',
+      'split-strips',
+      'weave',
+    ]);
+    expect(bamboo?.defects.map((defect) => defect.id)).toEqual([
+      'jiangnan-bamboo-uneven-strip',
+      'jiangnan-bamboo-loose-weave',
+      'jiangnan-bamboo-rough-rim',
+    ]);
+    expect(bamboo?.repairOptions.map((option) => option.id)).toEqual([
+      'jiangnan-bamboo-resplit-strip',
+      'jiangnan-bamboo-tighten-weave',
+      'jiangnan-bamboo-trim-rim',
+    ]);
+    expect(bamboo?.orderHooks?.join('')).toContain('周伯');
+  });
+
+  it('共享 craftId 的工艺交互按地区选择，避免黔滇蓝染误用江南文本', () => {
+    const jiangnan = craftInteractionFor(
+      { craftInteractions: CRAFT_INTERACTIONS },
+      'indigo-dyeing',
+      { regionId: 'jiangnan', subregionId: 'jiangnan-baigongyuan' },
+    );
+    const qiandian = craftInteractionFor(
+      { craftInteractions: CRAFT_INTERACTIONS },
+      'indigo-dyeing',
+      { regionId: 'qiandian', subregionId: 'qiandian-miao-village' },
+    );
+
+    expect(jiangnan?.id).toBe('interaction-jiangnan-indigo-dyeing');
+    expect(qiandian).toBeNull();
   });
 
   it('缺陷都能找到对应返修方案', () => {

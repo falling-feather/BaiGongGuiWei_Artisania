@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gameReducer, type GameContent } from '../reducer';
+import { craftInteractionFor, gameReducer, type GameContent } from '../reducer';
 import { craftFocusCheckPlan, craftTechniquePlan } from '../craftTechniques';
 import { createInitialState } from '../state';
 import type { GameState } from '../types';
@@ -61,6 +61,45 @@ function readyAtlasState() {
 
 function latestAtlasSilk(state: GameState) {
   return state.itemInstances.find((item) => item.resourceId === 'atlasSilk');
+}
+
+function readyJiangnanSuhangState(seed = 24682) {
+  const state = createInitialState(content.crafts, content.apprentices, seed, undefined, content.regions);
+  return {
+    ...state,
+    currentRegion: 'jiangnan',
+    currentSubregion: 'jiangnan-suhang',
+    unlockedRegions: [...new Set([...state.unlockedRegions, 'jiangnan'])],
+    resources: {
+      ...state.resources,
+      indigoVat: 8,
+      bambooSplit: 8,
+      labor: 30,
+    },
+  };
+}
+
+function readyQiandianMiaoState() {
+  const state = createInitialState(content.crafts, content.apprentices, 24684, undefined, content.regions);
+  return {
+    ...state,
+    currentRegion: 'qiandian',
+    currentSubregion: 'qiandian-miao-village',
+    unlockedRegions: [...new Set([...state.unlockedRegions, 'qiandian'])],
+    resources: {
+      ...state.resources,
+      indigoVat: 8,
+      labor: 30,
+    },
+  };
+}
+
+function latestIndigoCloth(state: GameState) {
+  return state.itemInstances.find((item) => item.resourceId === 'indigoCloth');
+}
+
+function latestBambooWare(state: GameState) {
+  return state.itemInstances.find((item) => item.resourceId === 'bambooWare');
 }
 
 describe('craft technique choices', () => {
@@ -261,6 +300,159 @@ describe('craft technique choices', () => {
       defectId: 'atlas-muddy-dye',
       optionId: 'atlas-rinse-redye',
     });
+  });
+
+  it('runs Jiangnan indigo dyeing through local stage diagnostics and repair loop', () => {
+    const indigoSpec = craftInteractionFor(content, 'indigo-dyeing', {
+      regionId: 'jiangnan',
+      subregionId: 'jiangnan-suhang',
+    })!;
+    const plan = craftTechniquePlan(
+      indigoSpec,
+      [
+        { stageId: 'indigo-build-vat', choiceId: 'careful' },
+        { stageId: 'indigo-dip-oxidize', choiceId: 'rushed' },
+      ],
+      ['build-vat', 'dip-dye'],
+    );
+
+    expect(plan.stageOutcomes.map((outcome) => outcome.stageId)).toEqual([
+      'indigo-build-vat',
+      'indigo-dip-oxidize',
+    ]);
+    expect(plan.stageOutcomes.some((outcome) => outcome.stageId === 'indigo-test-color')).toBe(false);
+
+    let state = gameReducer(
+      readyJiangnanSuhangState(),
+      {
+        type: 'RUN_PROCESS',
+        craftId: 'indigo-dyeing',
+        skipStepIds: ['harvest-indigo', 'tie-resist'],
+        techniqueChoices: [
+          { stageId: 'indigo-build-vat', choiceId: 'rushed' },
+          { stageId: 'indigo-dip-oxidize', choiceId: 'rushed' },
+        ],
+      },
+      content,
+    );
+    const flawed = latestIndigoCloth(state)!;
+    const defects = flawed.defects ?? [];
+
+    expect(flawed.originRegionId).toBe('jiangnan');
+    expect(flawed.originSubregionId).toBe('jiangnan-suhang');
+    expect(defects.map((defect) => defect.id)).toEqual(
+      expect.arrayContaining(['indigo-muddy-vat', 'indigo-blurred-resist']),
+    );
+    expect(defects.find((defect) => defect.id === 'indigo-muddy-vat')).toMatchObject({
+      sourceStageId: 'indigo-test-color',
+      sourceStageName: '调靛试色',
+    });
+    expect(defects.find((defect) => defect.id === 'indigo-blurred-resist')).toMatchObject({
+      sourceStageId: 'indigo-tie-resist',
+      sourceStageName: '扎结防染',
+    });
+
+    state = gameReducer(
+      state,
+      {
+        type: 'REPAIR_ITEM',
+        itemId: flawed.id,
+        defectId: 'indigo-muddy-vat',
+        repairOptionId: 'indigo-reset-vat',
+      },
+      content,
+    );
+    const repaired = state.itemInstances.find((item) => item.id === flawed.id)!;
+    expect(repaired.defects?.some((entry) => entry.id === 'indigo-muddy-vat')).toBe(false);
+    expect(repaired.repairHistory?.[0]).toMatchObject({
+      defectId: 'indigo-muddy-vat',
+      optionId: 'indigo-reset-vat',
+      sourceStageId: 'indigo-test-color',
+    });
+  });
+
+  it('runs Jiangnan bamboo weaving through local stage diagnostics and repair loop', () => {
+    const bambooSpec = craftInteractionFor(content, 'bamboo-weaving', {
+      regionId: 'jiangnan',
+      subregionId: 'jiangnan-suhang',
+    })!;
+    const plan = craftTechniquePlan(
+      bambooSpec,
+      [
+        { stageId: 'jiangnan-bamboo-split', choiceId: 'careful' },
+        { stageId: 'jiangnan-bamboo-weave', choiceId: 'balanced' },
+      ],
+      ['split-strips', 'weave'],
+    );
+
+    expect(plan.stageOutcomes.map((outcome) => outcome.stageId)).toEqual([
+      'jiangnan-bamboo-split',
+      'jiangnan-bamboo-weave',
+    ]);
+
+    let state = gameReducer(
+      readyJiangnanSuhangState(24683),
+      {
+        type: 'RUN_PROCESS',
+        craftId: 'bamboo-weaving',
+        skipStepIds: ['select-bamboo'],
+        techniqueChoices: [
+          { stageId: 'jiangnan-bamboo-split', choiceId: 'rushed' },
+          { stageId: 'jiangnan-bamboo-weave', choiceId: 'rushed' },
+        ],
+      },
+      content,
+    );
+    const flawed = latestBambooWare(state)!;
+    const unevenStrip = flawed.defects?.find((entry) => entry.id === 'jiangnan-bamboo-uneven-strip');
+
+    expect(flawed.originSubregionId).toBe('jiangnan-suhang');
+    expect(unevenStrip).toMatchObject({
+      id: 'jiangnan-bamboo-uneven-strip',
+      sourceStageId: 'jiangnan-bamboo-select',
+      sourceStageName: '选篾试手',
+    });
+
+    state = gameReducer(
+      state,
+      {
+        type: 'REPAIR_ITEM',
+        itemId: flawed.id,
+        defectId: 'jiangnan-bamboo-uneven-strip',
+        repairOptionId: 'jiangnan-bamboo-resplit-strip',
+      },
+      content,
+    );
+    const repaired = state.itemInstances.find((item) => item.id === flawed.id)!;
+    expect(repaired.defects?.some((entry) => entry.id === 'jiangnan-bamboo-uneven-strip')).toBe(false);
+    expect(repaired.repairHistory?.[0]).toMatchObject({
+      defectId: 'jiangnan-bamboo-uneven-strip',
+      optionId: 'jiangnan-bamboo-resplit-strip',
+      sourceStageId: 'jiangnan-bamboo-select',
+    });
+  });
+
+  it('does not apply Jiangnan indigo diagnostics to Qiandian indigo cloth before a local spec exists', () => {
+    const state = gameReducer(
+      readyQiandianMiaoState(),
+      {
+        type: 'RUN_PROCESS',
+        craftId: 'indigo-dyeing',
+        skipStepIds: ['harvest-indigo', 'tie-resist'],
+        techniqueChoices: [
+          { stageId: 'indigo-build-vat', choiceId: 'rushed' },
+          { stageId: 'indigo-dip-oxidize', choiceId: 'rushed' },
+        ],
+      },
+      content,
+    );
+    const cloth = latestIndigoCloth(state)!;
+
+    expect(cloth.originRegionId).toBe('qiandian');
+    expect(cloth.originSubregionId).toBe('qiandian-miao-village');
+    expect(cloth.defects).toEqual([]);
+    expect(cloth.craftStageOutcomes).toEqual([]);
+    expect(state.flags).not.toContain('craft-technique-used:indigo-dyeing');
   });
 
   it('plans focus checks only for active stages and falls back unknown choices to observe', () => {

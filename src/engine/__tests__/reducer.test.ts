@@ -5948,9 +5948,38 @@ describe('gameReducer', () => {
       demoContent,
     );
     expect(s.resources.indigoCloth).toBeGreaterThanOrEqual(1);
-    const coinAfterCraft = s.resources.coin ?? 0;
+    const flawedIndigo = s.itemInstances.find((item) => item.resourceId === 'indigoCloth')!;
+    expect(flawedIndigo.defects?.map((defect) => defect.id)).toEqual(
+      expect.arrayContaining(['indigo-muddy-vat', 'indigo-blurred-resist']),
+    );
+    const coinBeforeRejectedOrder = s.resources.coin ?? 0;
     s = gameReducer(s, { type: 'TAKE_ORDER', craftId: 'indigo-dyeing' }, demoContent);
-    expect(s.resources.coin).toBeGreaterThan(coinAfterCraft);
+    expect(s.resources.coin).toBe(coinBeforeRejectedOrder);
+    s = gameReducer(
+      s,
+      {
+        type: 'REPAIR_ITEM',
+        itemId: flawedIndigo.id,
+        defectId: 'indigo-muddy-vat',
+        repairOptionId: 'indigo-reset-vat',
+      },
+      demoContent,
+    );
+    s = gameReducer(
+      s,
+      {
+        type: 'REPAIR_ITEM',
+        itemId: flawedIndigo.id,
+        defectId: 'indigo-blurred-resist',
+        repairOptionId: 'indigo-retie-resist',
+      },
+      demoContent,
+    );
+    const repairedIndigo = s.itemInstances.find((item) => item.id === flawedIndigo.id)!;
+    expect(repairedIndigo.defects?.some((defect) => defect.severity >= 2)).toBe(false);
+    const coinAfterRepair = s.resources.coin ?? 0;
+    s = gameReducer(s, { type: 'TAKE_ORDER', craftId: 'indigo-dyeing' }, demoContent);
+    expect(s.resources.coin).toBeGreaterThan(coinAfterRepair);
 
     s = gameReducer(s, { type: 'GATHER_RESOURCE', industryId: 'harvest-bamboo', quality: 1 }, demoContent);
     expect(s.resources.bambooRaw).toBeGreaterThanOrEqual(1);

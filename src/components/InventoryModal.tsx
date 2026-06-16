@@ -1,6 +1,6 @@
 import { useGameStore } from '../store/gameStore';
 import { RESOURCES, RESOURCE_INDEX } from '../data';
-import { itemEffectiveQuality, itemSaleValue } from '../engine';
+import { craftInteractionFor, itemEffectiveQuality, itemSaleValue } from '../engine';
 import type { CraftRepairOptionDef, CraftStageOutcome, ItemDefect, ItemInstance, ItemQualityDimension, PlayerAttributeKey, ResourcePool, ResourceTier } from '../engine';
 
 const TIER_LABEL: Record<ResourceTier, string> = {
@@ -108,7 +108,10 @@ export function InventoryModal({ open, onClose }: { open: boolean; onClose: () =
   }
   const totalKinds = owned.length;
   const repairOptionsFor = (item: ItemInstance, defect: ItemDefect): CraftRepairOptionDef[] => {
-    const spec = content.craftInteractions?.find((entry) => entry.craftId === item.sourceCraftId);
+    const spec = craftInteractionFor(content, item.sourceCraftId, {
+      regionId: item.originRegionId,
+      subregionId: item.originSubregionId,
+    });
     return spec?.repairOptions.filter((option) => defect.repairOptionIds.includes(option.id)) ?? [];
   };
 

@@ -397,9 +397,33 @@ const DIMENSION_METRIC: Record<ItemQualityDimension, keyof Metrics> = {
   merchantTrust: 'market',
 };
 
-function craftInteractionFor(content: GameContent, craftId: string | undefined): CraftInteractionSpec | null {
+export interface CraftInteractionLookupContext {
+  regionId?: string | null;
+  subregionId?: string | null;
+}
+
+export function craftInteractionFor(
+  content: Pick<GameContent, 'craftInteractions'>,
+  craftId: string | undefined,
+  context: CraftInteractionLookupContext = {},
+): CraftInteractionSpec | null {
   if (!craftId) return null;
-  return content.craftInteractions?.find((spec) => spec.craftId === craftId) ?? null;
+  const candidates = (content.craftInteractions ?? []).filter((spec) => spec.craftId === craftId);
+  if (candidates.length === 0) return null;
+
+  const { regionId, subregionId } = context;
+  if (subregionId) {
+    const subregionMatch = candidates.find((spec) => spec.workshopSubregionId === subregionId);
+    if (subregionMatch) return subregionMatch;
+  }
+
+  if (regionId) {
+    const regionMatch = candidates.find((spec) => spec.regionId === regionId);
+    if (regionMatch) return regionMatch;
+    return null;
+  }
+
+  return candidates[0];
 }
 
 type CraftMentorLesson = {
@@ -749,7 +773,10 @@ function repairOptionFor(
   item: ItemInstance,
   repairOptionId: string,
 ): { spec: CraftInteractionSpec; option: CraftRepairOptionDef } | null {
-  const spec = craftInteractionFor(content, item.sourceCraftId);
+  const spec = craftInteractionFor(content, item.sourceCraftId, {
+    regionId: item.originRegionId,
+    subregionId: item.originSubregionId,
+  });
   const option = spec?.repairOptions.find((entry) => entry.id === repairOptionId);
   return spec && option ? { spec, option } : null;
 }
@@ -777,7 +804,10 @@ function createItemInstance(
   context: ItemSourceContext = {},
 ): ItemInstance {
   const rule = descriptorRuleFor(content.itemDescriptorRules, resourceId, sourceCraftId, tags);
-  const spec = craftInteractionFor(content, sourceCraftId);
+  const spec = craftInteractionFor(content, sourceCraftId, {
+    regionId: state.currentRegion,
+    subregionId: state.currentSubregion,
+  });
   const descriptors = rule
     ? Object.values(rule.dimensions)
         .map((words) => pickDescriptorTier(words, quality))
@@ -1178,7 +1208,10 @@ function runProcess(
     (step) => skipSet.has(step.id) && step.skippable,
   );
   const workshopBonus = craftWorkshopBonusForCraft(state, content, craftId);
-  const interactionSpec = craftInteractionFor(content, craftDef.id);
+  const interactionSpec = craftInteractionFor(content, craftDef.id, {
+    regionId: state.currentRegion,
+    subregionId: state.currentSubregion,
+  });
   const techniquePlan = craftTechniquePlan(
     interactionSpec,
     techniqueChoices,

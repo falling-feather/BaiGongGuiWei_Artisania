@@ -60,7 +60,7 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
       'jiangnan-baigongyuan',
     ],
     playPillars: [
-      { kind: 'craft', label: '龙泉剑瓷与云锦伞作', activityIds: ['jn-longquan-sword-forge', 'jn-celadon-kiln', 'jn-cloud-brocade-office', 'jn-paper-umbrella-shop'], craftIds: ['longquan-sword', 'celadon', 'kesi', 'oilpaper-umbrella'] },
+      { kind: 'craft', label: '苏杭蓝染竹编、龙泉剑瓷与云锦伞作', activityIds: ['jn-longquan-sword-forge', 'jn-celadon-kiln', 'jn-cloud-brocade-office', 'jn-paper-umbrella-shop'], craftIds: ['indigo-dyeing', 'bamboo-weaving', 'longquan-sword', 'celadon', 'kesi', 'oilpaper-umbrella'] },
       { kind: 'life', label: '百工院田圃与湖畔茶肆', activityIds: ['jn-yard-fields', 'jn-lake-tea-house'] },
       { kind: 'tradeRoute', label: '秦淮灯市与纸墨商路', activityIds: ['jn-qinhuai-lantern'], routeIds: ['route-jiangnan-huizhou-paper', 'route-jiangnan-ganpo-kiln', 'route-jiangnan-jingji-canal'] },
     ],
@@ -69,6 +69,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
       { npcId: 'jn-fang-jiheng', role: 'trade', note: '码头商人，承接跨区物流。' },
       { npcId: 'jn-lin-yuqiao', role: 'artisan', note: '临安油纸伞师，承接雨季伞单。' },
       { npcId: 'jn-shen-yunsuo', role: 'artisan', note: '太湖织造师，承接缂丝与云锦织埠。' },
+      { npcId: 'jn-indigo-keeper', role: 'artisan', note: '苏杭染坊阿蓝，承接蓝染调靛、养缸、扎结与返修。' },
+      { npcId: 'jn-bamboo-master', role: 'artisan', note: '苏杭篾匠周伯，承接竹编选篾、理篾、收口与日用验货。' },
       { npcId: 'jn-su-xiaocha', role: 'lifeCulture', note: '湖畔茶师，承接临安茶肆与纸路消息。' },
       { npcId: 'jn-xiaoman', role: 'lifeCulture', note: '百工院田圃与生活教学入口。' },
     ],
@@ -96,8 +98,8 @@ export const REGION_CHAPTERS: RegionChapterSpec[] = [
     collabRecipeIds: ['collab-yunjin-pick-weft'],
     escortEncounterIds: ['escort-jingji-canal-tribute'],
     smokeScenarioIds: ['chapter-jiangnan-baigong-homecoming'],
-    nextActions: ['补蓝染/竹编基础工艺的专属交互深度', '补江南章节多入口 smokeBindings', '让灯市后续单继续读取作品与 NPC 关系'],
-    gaps: ['M1.26 已接入苏小茶临安茶席留闻 / 纸路回访续单；江南剩余转向蓝染 / 竹编专属工艺深度、多入口 smokeBindings、灯市后续单关系读数与最终美术摆位。'],
+    nextActions: ['补江南章节多入口 smokeBindings', '让灯市后续单继续读取作品与 NPC 关系'],
+    gaps: ['M1.27 已接入江南蓝染 / 竹编专属工艺阶段、缺陷、返修和地区选择守卫；江南剩余转向多入口 smokeBindings、灯市后续单关系读数与最终美术摆位。'],
   },
   {
     id: 'chapter-bashu-tea-horse-brocade',
