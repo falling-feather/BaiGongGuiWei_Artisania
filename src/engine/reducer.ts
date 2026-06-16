@@ -3374,6 +3374,24 @@ function relationshipOutcomeAddendum(state: GameState, npc: NpcDef): string {
       return '煤铁重货账清过后，他开始把清徐醋坊的日用送达也接进票号街账本。';
     }
   }
+  if (npc.id === 'jn-lin-yuqiao') {
+    return collectorReputationAddendum(
+      state,
+      'collector-reputation-umbrella-renewed',
+      'homevisit-lin-rain-client-return-resolved',
+      '临安雨巷熟客已经按急伞续账续订油纸伞，她把伞骨、纸面和雨季交付信用都写进百工院日用声誉。',
+      '雨巷熟客完成复看后，她把原样、复单和雨票凭据都留进临安伞铺声誉档。',
+    );
+  }
+  if (npc.id === 'jn-shen-yunsuo') {
+    return collectorReputationAddendum(
+      state,
+      'collector-reputation-brocade-renewed',
+      'homevisit-shen-brocade-collector-return-resolved',
+      '太湖织埠藏客已经按花本续簿续订缂丝织样，她把经纬、花本和复织信用都接进百工院织造名声。',
+      '织埠藏客完成复看后，她把原样、复单和织样凭记都写进太湖花本档。',
+    );
+  }
   if (npc.id === 'ln-he-yunsha') {
     return collectorReputationAddendum(
       state,

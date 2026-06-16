@@ -182,6 +182,10 @@ const FROZEN_ROUTE_IDS = [
 ];
 
 const FROZEN_HOME_VISIT_IDS = [
+  'homevisit-lin-rain-umbrella-gallery',
+  'homevisit-lin-rain-client-return',
+  'homevisit-shen-cloud-brocade-gallery',
+  'homevisit-shen-brocade-collector-return',
   'homevisit-alan-silver-ritual-case',
   'homevisit-alan-tea-road-client-return',
   'homevisit-pingyao-polish-room',

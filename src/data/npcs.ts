@@ -151,7 +151,7 @@ export const NPCS: NpcDef[] = [
     profession: '织造师',
     personality: 'precise',
     knowledgeTags: ['silk', 'brocade', 'loom'],
-    functions: ['mentor', 'spar', 'order', 'collab'],
+    functions: ['mentor', 'spar', 'order', 'collab', 'homeVisit'],
     schedule: [
       { phase: 'morning', subregionId: 'jiangnan-taihu', note: '织埠查线' },
       { phase: 'afternoon', subregionId: 'jiangnan-jinling', note: '云锦局联作' },
