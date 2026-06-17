@@ -1,0 +1,370 @@
+{
+  "date": "2026-06-14",
+  "node": "A5 art-team building/prop edge cleanup",
+  "targets": [
+    "public/assets/game/buildings/art_team/all_regions",
+    "public/assets/game/props/art_team/all_regions"
+  ],
+  "changedCount": 29,
+  "changes": [
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_bashu_building_regional_gate.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_bashu_building_regional_gate.png",
+      "removedFragments": [],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_ganpo_building_regional_gate.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_ganpo_building_regional_gate.png",
+      "removedFragments": [],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_huizhou_building_expansion_paper_ink_drying_hall.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_huizhou_building_expansion_paper_ink_drying_hall.png",
+      "removedFragments": [
+        {
+          "bbox": [
+            86,
+            45,
+            96,
+            82
+          ],
+          "area": 206
+        }
+      ],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_huizhou_building_regional_gate.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_huizhou_building_regional_gate.png",
+      "removedFragments": [],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_huizhou_building_signature_horsehead_paper_ink_house.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_huizhou_building_signature_horsehead_paper_ink_house.png",
+      "removedFragments": [
+        {
+          "bbox": [
+            95,
+            68,
+            96,
+            72
+          ],
+          "area": 4
+        }
+      ],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_jiangnan_building_expansion_canal_dye_pavilion.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_jiangnan_building_expansion_canal_dye_pavilion.png",
+      "removedFragments": [
+        {
+          "bbox": [
+            0,
+            69,
+            1,
+            71
+          ],
+          "area": 2
+        },
+        {
+          "bbox": [
+            1,
+            73,
+            2,
+            75
+          ],
+          "area": 2
+        }
+      ],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_jiangnan_building_regional_gate.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_jiangnan_building_regional_gate.png",
+      "removedFragments": [],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_jiangnan_building_signature_water_workshop.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_jiangnan_building_signature_water_workshop.png",
+      "removedFragments": [
+        {
+          "bbox": [
+            0,
+            71,
+            1,
+            73
+          ],
+          "area": 2
+        }
+      ],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_jingchu_building_expansion_riverside_lacquer_stall.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_jingchu_building_expansion_riverside_lacquer_stall.png",
+      "removedFragments": [],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_jingchu_building_regional_gate.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_jingchu_building_regional_gate.png",
+      "removedFragments": [],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_jingji_building_expansion_enamel_bureau_hall.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_jingji_building_expansion_enamel_bureau_hall.png",
+      "removedFragments": [],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_jingji_building_regional_gate.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_jingji_building_regional_gate.png",
+      "removedFragments": [],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_lingnan_building_expansion_qilou_cargo_office.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_lingnan_building_expansion_qilou_cargo_office.png",
+      "removedFragments": [
+        {
+          "bbox": [
+            94,
+            40,
+            96,
+            55
+          ],
+          "area": 19
+        },
+        {
+          "bbox": [
+            93,
+            61,
+            96,
+            67
+          ],
+          "area": 14
+        }
+      ],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_lingnan_building_regional_gate.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_lingnan_building_regional_gate.png",
+      "removedFragments": [],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_qiandian_building_regional_gate.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_qiandian_building_regional_gate.png",
+      "removedFragments": [],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_qiandian_building_signature_stilt_silver_dye_house.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_qiandian_building_signature_stilt_silver_dye_house.png",
+      "removedFragments": [
+        {
+          "bbox": [
+            95,
+            62,
+            96,
+            64
+          ],
+          "area": 2
+        }
+      ],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_sanjin_building_regional_gate.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_sanjin_building_regional_gate.png",
+      "removedFragments": [],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_xiyu_building_regional_gate.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_xiyu_building_regional_gate.png",
+      "removedFragments": [],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_xiyu_building_signature_oasis_jade_bazaar.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_xiyu_building_signature_oasis_jade_bazaar.png",
+      "removedFragments": [
+        {
+          "bbox": [
+            93,
+            38,
+            96,
+            49
+          ],
+          "area": 18
+        },
+        {
+          "bbox": [
+            95,
+            81,
+            96,
+            84
+          ],
+          "area": 3
+        }
+      ],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_xueyu_building_expansion_thangka_pigment_atelier.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_xueyu_building_expansion_thangka_pigment_atelier.png",
+      "removedFragments": [
+        {
+          "bbox": [
+            95,
+            70,
+            96,
+            71
+          ],
+          "area": 1
+        }
+      ],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/buildings/art_team/all_regions/at_xueyu_building_regional_gate.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_xueyu_building_regional_gate.png",
+      "removedFragments": [],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/props/art_team/all_regions/at_huizhou_prop_inkstone_paper_rack.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_huizhou_prop_inkstone_paper_rack.png",
+      "removedFragments": [
+        {
+          "bbox": [
+            94,
+            19,
+            96,
+            24
+          ],
+          "area": 9
+        },
+        {
+          "bbox": [
+            90,
+            37,
+            96,
+            56
+          ],
+          "area": 91
+        }
+      ],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/props/art_team/all_regions/at_jiangnan_prop_willow_wet_bank.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_jiangnan_prop_willow_wet_bank.png",
+      "removedFragments": [
+        {
+          "bbox": [
+            63,
+            87,
+            64,
+            88
+          ],
+          "area": 1
+        }
+      ],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/props/art_team/all_regions/at_jingji_prop_cloisonne_sample_table.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_jingji_prop_cloisonne_sample_table.png",
+      "removedFragments": [],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/props/art_team/all_regions/at_lingnan_prop_cargo_scale_crates.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_lingnan_prop_cargo_scale_crates.png",
+      "removedFragments": [
+        {
+          "bbox": [
+            93,
+            48,
+            96,
+            54
+          ],
+          "area": 12
+        }
+      ],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/props/art_team/all_regions/at_lingnan_prop_silk_fan_drying_stand.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_lingnan_prop_silk_fan_drying_stand.png",
+      "removedFragments": [
+        {
+          "bbox": [
+            90,
+            16,
+            96,
+            45
+          ],
+          "area": 134
+        }
+      ],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/props/art_team/all_regions/at_qiandian_prop_indigo_silver_bench.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_qiandian_prop_indigo_silver_bench.png",
+      "removedFragments": [
+        {
+          "bbox": [
+            80,
+            24,
+            96,
+            53
+          ],
+          "area": 239
+        }
+      ],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/props/art_team/all_regions/at_xiyu_prop_jade_polishing_table.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_xiyu_prop_jade_polishing_table.png",
+      "removedFragments": [
+        {
+          "bbox": [
+            95,
+            15,
+            96,
+            17
+          ],
+          "area": 2
+        },
+        {
+          "bbox": [
+            85,
+            27,
+            96,
+            55
+          ],
+          "area": 174
+        }
+      ],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    },
+    {
+      "path": "public/assets/game/props/art_team/all_regions/at_xueyu_prop_pigment_grinding_table.png",
+      "before": "public/assets/art_sources/priority_art/2026-06-14/05_manifests/edge_artifact_before/at_xueyu_prop_pigment_grinding_table.png",
+      "removedFragments": [],
+      "note": "Removed edge-attached small fragments and green chroma fringe only."
+    }
+  ]
+}

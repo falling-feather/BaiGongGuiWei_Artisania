@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { NPC_INDEX, RESOURCE_INDEX, questsForNpc } from '../data';
 import {
@@ -252,8 +253,14 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
   const completed = useGameStore((s) => s.state.completedQuests);
   const state = useGameStore((s) => s.state);
   const content = useGameStore((s) => s.content);
+  const [mode, setMode] = useState<'intro' | 'menu'>('intro');
+
+  useEffect(() => {
+    setMode('intro');
+  }, [npcId]);
 
   if (!npcId) return null;
+  const resolvedNpcId = npcId;
   const npc = NPC_INDEX[npcId];
   if (!npc) return null;
 
@@ -304,13 +311,78 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
     return '';
   };
 
+  const bustSrc = `/assets/game/characters/${resolvedNpcId}/bust.png`;
+  const portraitSrc = `/assets/game/characters/${resolvedNpcId}/portrait.png`;
+  const npcSubtitle = npc.profession ?? (npc.role === 'vendor' ? '关联人物' : '游客');
+
+  function enterMenu(action?: 'talk') {
+    if (action === 'talk' && affinity < 100) dispatch({ type: 'TALK_NPC', npcId: resolvedNpcId });
+    setMode('menu');
+  }
+
+  if (mode === 'intro') {
+    return (
+      <div className="modal__backdrop npc-dialog-backdrop" onClick={onClose}>
+        <section className="npc-dialog-intro" onClick={(e) => e.stopPropagation()}>
+          <img className="npc-dialog-intro__frame" src="/assets/game/ui/hud_v2_dialogue_panel.png" alt="" draggable={false} />
+          <div className="npc-dialog-intro__portrait">
+            <img
+              src={bustSrc}
+              alt=""
+              draggable={false}
+              onError={(event) => {
+                event.currentTarget.onerror = null;
+                event.currentTarget.src = portraitSrc;
+              }}
+            />
+          </div>
+          <div className="npc-dialog-intro__copy">
+            <p className="npc-dialog-intro__eyebrow">{npcSubtitle}</p>
+            <h3>{npc.name}</h3>
+            <div className="npc-dialog-intro__meta">
+              <span>{STAGE_LABEL[stage]}</span>
+              <span>好感 {affinity}/100</span>
+              {npc.personality && <span>{npc.personality}</span>}
+            </div>
+            <p className="npc-dialog-intro__line">“{greeting}”</p>
+          </div>
+          <div className="npc-dialog-intro__choices" aria-label="对话选择">
+            <button type="button" onClick={() => enterMenu('talk')}>
+              <img src="/assets/game/ui/hud_v2_choice_button.png" alt="" draggable={false} />
+              <span>交流</span>
+            </button>
+            <button type="button" onClick={() => enterMenu()}>
+              <img src="/assets/game/ui/hud_v2_choice_button.png" alt="" draggable={false} />
+              <span>送礼</span>
+            </button>
+            <button type="button" onClick={() => enterMenu()}>
+              <img src="/assets/game/ui/hud_v2_choice_button.png" alt="" draggable={false} />
+              <span>互动</span>
+            </button>
+            <button type="button" onClick={() => enterMenu()}>
+              <img src="/assets/game/ui/hud_v2_choice_button.png" alt="" draggable={false} />
+              <span>委托</span>
+            </button>
+            <button type="button" onClick={onClose}>
+              <img src="/assets/game/ui/hud_v2_choice_button.png" alt="" draggable={false} />
+              <span>离开</span>
+            </button>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="modal__backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal modal--npc-menu" onClick={(e) => e.stopPropagation()}>
+        <button className="npc-menu-back" type="button" onClick={() => setMode('intro')}>
+          返回对白
+        </button>
         <h3 className="modal__title">
           {npc.name}{' '}
           <small style={{ fontSize: 12, color: 'var(--indigo-soft)' }}>
-            {npc.profession ?? (npc.role === 'vendor' ? '关联人物' : '游客')}
+            {npcSubtitle}
           </small>
         </h3>
         <p className="modal__desc">“{greeting}”</p>

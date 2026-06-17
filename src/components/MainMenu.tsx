@@ -172,6 +172,7 @@ export function MainMenu({
       <div className="menu__cover-focus" aria-hidden="true" />
       <div className="menu__mist menu__mist--far" aria-hidden="true" />
       <div className="menu__mist menu__mist--near" aria-hidden="true" />
+      <div className="menu__rain-layer" aria-hidden="true" />
       <div className="menu__waterlight" aria-hidden="true" />
       <div className="menu__embers" aria-hidden="true" />
       <div className="menu__scrim" />

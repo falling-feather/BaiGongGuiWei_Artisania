@@ -1,6 +1,6 @@
 import { useGameStore } from '../store/gameStore';
 import { RESOURCES, RESOURCE_INDEX } from '../data';
-import { craftInteractionFor, itemEffectiveQuality, itemSaleValue } from '../engine';
+import { METRIC_KEYS, METRIC_LABELS, craftInteractionFor, itemEffectiveQuality, itemSaleValue, zoneOf, type Metrics } from '../engine';
 import type { CraftRepairOptionDef, CraftStageOutcome, ItemDefect, ItemInstance, ItemQualityDimension, PlayerAttributeKey, ResourcePool, ResourceTier } from '../engine';
 
 const TIER_LABEL: Record<ResourceTier, string> = {
@@ -77,6 +77,7 @@ export function InventoryModal({ open, onClose }: { open: boolean; onClose: () =
   const content = useGameStore((s) => s.content);
   const dispatch = useGameStore((s) => s.dispatch);
   const resources = state.resources;
+  const metrics = state.metrics;
   const profile = state.profile;
   const calendar = state.calendar;
   const itemInstances = [...state.itemInstances].sort((a, b) => b.createdTurn - a.createdTurn).slice(0, 8);
@@ -133,6 +134,17 @@ export function InventoryModal({ open, onClose }: { open: boolean; onClose: () =
             </div>
             <div className="character-panel__meta">
               第 {calendar.day} 日 · {SEASON_LABEL[calendar.season]} · {PHASE_LABEL[calendar.phase]} · {WEATHER_LABEL[calendar.weather]}
+            </div>
+            <div className="bag-metrics" aria-label="城镇指数">
+              {METRIC_KEYS.map((key) => {
+                const value = metrics[key as keyof Metrics];
+                return (
+                  <div className="bag-metric" key={key}>
+                    <span>{METRIC_LABELS[key]}</span>
+                    <b className={`zone-${zoneOf(value)}`}>{value}</b>
+                  </div>
+                );
+              })}
             </div>
             <div className="character-stats">
               {ATTRIBUTE_ORDER.map((key) => (

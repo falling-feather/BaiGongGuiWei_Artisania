@@ -1,24 +1,14 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import {
   buildLoreTravelGuide,
   buildPriorityJourneyGuide,
-  METRIC_KEYS,
-  METRIC_LABELS,
   uniqueRoutesFromRegions,
-  zoneOf,
-  type Metrics,
 } from '../engine';
 import { PRIORITY_JOURNEY_STEPS, REGION_INDEX } from '../data';
 
 const UI_ROOT = '/assets/game/ui';
-
-const METRIC_ICONS: Record<string, string> = {
-  heritage: `${UI_ROOT}/icon_heritage.png`,
-  market: `${UI_ROOT}/icon_market.png`,
-  life: `${UI_ROOT}/icon_life.png`,
-  spirit: `${UI_ROOT}/icon_spirit.png`,
-};
+const HUD_CONTROLS_SEEN_KEY = 'artisania:hud-controls-hint-seen';
 
 const PHASE_LABEL = {
   dawn: '清晨',
@@ -34,7 +24,12 @@ const WEATHER_LABEL = {
   snow: '雪',
 } as const;
 
-/** 叠加在游戏画面上的 HUD：四维数值、场景提示和常用入口。 */
+function controlsHintInitiallyVisible() {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem(HUD_CONTROLS_SEEN_KEY) !== '1';
+}
+
+/** Overlay HUD for the Phaser street scene. */
 export function Hud({
   hint,
   onOpenPanel,
@@ -54,7 +49,6 @@ export function Hud({
   onOpenSettings: () => void;
   onInteractNearby: () => void;
 }) {
-  const metrics = useGameStore((s) => s.state.metrics);
   const calendar = useGameStore((s) => s.state.calendar);
   const playing = useGameStore((s) => s.state.status === 'playing');
   const state = useGameStore((s) => s.state);
@@ -69,6 +63,7 @@ export function Hud({
       s.state.pendingActivityStallClosing !== null,
   );
   const dispatch = useGameStore((s) => s.dispatch);
+  const [showControlsHint, setShowControlsHint] = useState(controlsHintInitiallyVisible);
   const region = REGION_INDEX[currentRegion];
   const subregion = region?.subregions.find((item) => item.id === currentSubregion);
   const routeSpecs = useMemo(() => uniqueRoutesFromRegions(content.regionContent), [content.regionContent]);
@@ -89,103 +84,131 @@ export function Hud({
     [content.loreEntries, content.regions, routeSpecs, state],
   );
 
-  const tools = [
-    { label: '大地图', icon: `${UI_ROOT}/icon_map.png`, frame: `${UI_ROOT}/hud_button.png`, onClick: onOpenMap },
-    { label: '背包', icon: `${UI_ROOT}/icon_bag.png`, frame: `${UI_ROOT}/hud_button.png`, onClick: onOpenBag },
-    {
-      label: '成就',
-      icon: `${UI_ROOT}/icon_achievement.png`,
-      frame: `${UI_ROOT}/hud_button.png`,
-      onClick: onOpenAchievements,
-    },
-    {
-      label: '百工志',
-      icon: `${UI_ROOT}/icon_panel.png`,
-      frame: `${UI_ROOT}/hud_button.png`,
-      onClick: onOpenLore,
-      disabled: !playing,
-    },
-    {
-      label: '镇务',
-      icon: `${UI_ROOT}/icon_panel.png`,
-      frame: `${UI_ROOT}/hud_button.png`,
-      onClick: onOpenPanel,
-      disabled: !playing,
-    },
+  useEffect(() => {
+    if (!playing || !showControlsHint) return undefined;
+    const timer = window.setTimeout(() => dismissControlsHint(), 7600);
+    return () => window.clearTimeout(timer);
+  }, [playing, showControlsHint]);
+
+  function dismissControlsHint() {
+    setShowControlsHint(false);
+    window.localStorage.setItem(HUD_CONTROLS_SEEN_KEY, '1');
+  }
+
+  const tools: Array<{
+    label: string;
+    icon: string;
+    onClick: () => void;
+    smokeId: string;
+    disabled?: boolean;
+    action?: boolean;
+  }> = [
+    { label: '大地图', icon: `${UI_ROOT}/icon_map.png`, onClick: onOpenMap, smokeId: 'map' },
+    { label: '背包', icon: `${UI_ROOT}/icon_bag.png`, onClick: onOpenBag, smokeId: 'bag' },
+    { label: '成就', icon: `${UI_ROOT}/icon_achievement.png`, onClick: onOpenAchievements, smokeId: 'achievements' },
+    { label: '百工志', icon: `${UI_ROOT}/icon_panel.png`, onClick: onOpenLore, smokeId: 'lore', disabled: !playing },
+    { label: '镇务', icon: `${UI_ROOT}/icon_panel.png`, onClick: onOpenPanel, smokeId: 'region', disabled: !playing },
     {
       label: '时辰',
       icon: `${UI_ROOT}/icon_season.png`,
-      frame: `${UI_ROOT}/hud_button_red.png`,
       onClick: () => dispatch({ type: 'ADVANCE_TIME' }),
+      smokeId: 'time',
       disabled: !playing || hasEvent,
+      action: true,
     },
   ];
-  const toolSmokeIds = ['map', 'bag', 'achievements', 'lore', 'region', 'time'] as const;
+
+  const guideCards = [
+    travelGuide
+      ? {
+          key: 'travel',
+          title: '行脚目标',
+          detail: travelGuide.detail,
+          body: travelGuide.instruction,
+          onClear: () => dispatch({ type: 'CLEAR_LORE_TRACKING' }),
+        }
+      : null,
+    playing && priorityJourneyGuide
+      ? {
+          key: 'priority',
+          title: `主轴目标 ${Math.min(priorityJourneyGuide.stepIndex + 1, priorityJourneyGuide.totalSteps)}/${priorityJourneyGuide.totalSteps}`,
+          detail: priorityJourneyGuide.detail,
+          body: priorityJourneyGuide.instruction,
+        }
+      : null,
+  ].filter(Boolean) as Array<{ key: string; title: string; body: string; detail?: string; onClear?: () => void }>;
 
   return (
     <>
-      <div className="hud hud--top">
-        <div className="hud__left">
-          <button
-            className="hud__settings"
-            onClick={onOpenSettings}
-            title="设置 (Esc)"
-            aria-label="设置"
-          >
-            <img className="hud__button-frame" src={`${UI_ROOT}/hud_button_gold.png`} alt="" draggable={false} />
-            <img className="hud__settings-icon" src={`${UI_ROOT}/icon_settings.png`} alt="" draggable={false} />
-            <span className="hud__sr-only">设置</span>
-          </button>
-          <div className="hud__metrics" aria-label="四维状态">
-            {METRIC_KEYS.map((key) => {
-              const value = metrics[key as keyof Metrics];
-              const zone = zoneOf(value);
-              return (
-                <div className="hud__metric" key={key}>
-                  <img className="hud__metric-frame" src={`${UI_ROOT}/hud_metric.png`} alt="" draggable={false} />
-                  <img className="hud__metric-icon" src={METRIC_ICONS[key]} alt="" draggable={false} />
-                  <span className="hud__metric-name">{METRIC_LABELS[key]}</span>
-                  <span className={`hud__metric-value zone-${zone}`}>{value}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="hud__right">
-          <div className="hud__location-plaque" data-smoke="hud-location" aria-label="当前位置">
-            <img className="hud__button-frame" src={`${UI_ROOT}/hud_button.png`} alt="" draggable={false} />
-            <img className="hud__season-icon" src={`${UI_ROOT}/icon_map.png`} alt="" draggable={false} />
-            <span>{region?.name ?? currentRegion} · {subregion?.name ?? currentSubregion}</span>
-          </div>
-          <div className="hud__season-plaque" aria-label={`第 ${calendar.day} 日，${PHASE_LABEL[calendar.phase]}，${WEATHER_LABEL[calendar.weather]}`}>
-            <img className="hud__button-frame" src={`${UI_ROOT}/hud_button_gold.png`} alt="" draggable={false} />
-            <img className="hud__season-icon" src={`${UI_ROOT}/icon_season.png`} alt="" draggable={false} />
-            <span>第 {calendar.day} 日 · {PHASE_LABEL[calendar.phase]} · {WEATHER_LABEL[calendar.weather]}</span>
-          </div>
-          <div className="hud__tools" aria-label="常用入口">
-            {tools.map((tool, index) => (
+      <div className="hud hud--top hud--top-v2">
+        <div className="hud__nav-v2" aria-label="常用入口">
+          <img className="hud__nav-frame" src={`${UI_ROOT}/hud_v2_top_bar.png`} alt="" draggable={false} />
+          <div className="hud__nav-tools">
+            {tools.map((tool) => (
               <button
-                className="hud__tool"
+                className={`hud__tool-v2${tool.action ? ' hud__tool-v2--action' : ''}`}
                 key={tool.label}
-                data-smoke={`hud-tool:${toolSmokeIds[index] ?? index}`}
+                data-smoke={`hud-tool:${tool.smokeId}`}
                 disabled={tool.disabled}
                 onClick={tool.onClick}
                 title={tool.label}
                 aria-label={tool.label}
               >
-                <img className="hud__button-frame" src={tool.frame} alt="" draggable={false} />
-                <img className="hud__tool-icon" src={tool.icon} alt="" draggable={false} />
-                <span className="hud__tool-text">{tool.label}</span>
+                <img
+                  className="hud__tool-frame-v2"
+                  src={`${UI_ROOT}/${tool.action ? 'hud_v2_action_button.png' : 'hud_v2_icon_button.png'}`}
+                  alt=""
+                  draggable={false}
+                />
+                <img className="hud__tool-icon-v2" src={tool.icon} alt="" draggable={false} />
+                <span>{tool.label}</span>
               </button>
             ))}
           </div>
         </div>
+
+        <div className="hud__status-v2">
+          <div className="hud__plaque-v2" data-smoke="hud-location" aria-label="当前位置">
+            <img src={`${UI_ROOT}/hud_v2_plaque.png`} alt="" draggable={false} />
+            <span>{region?.name ?? currentRegion} · {subregion?.name ?? currentSubregion}</span>
+          </div>
+          <div
+            className="hud__plaque-v2 hud__plaque-v2--time"
+            aria-label={`第 ${calendar.day} 日，${PHASE_LABEL[calendar.phase]}，${WEATHER_LABEL[calendar.weather]}`}
+          >
+            <img src={`${UI_ROOT}/hud_v2_plaque.png`} alt="" draggable={false} />
+            <span>第 {calendar.day} 日 · {PHASE_LABEL[calendar.phase]} · {WEATHER_LABEL[calendar.weather]}</span>
+          </div>
+        </div>
+
+        <button className="hud__settings-v2" onClick={onOpenSettings} title="设置 (Esc)" aria-label="设置">
+          <img src={`${UI_ROOT}/hud_v2_icon_button.png`} alt="" draggable={false} />
+          <img className="hud__settings-icon-v2" src={`${UI_ROOT}/icon_settings.png`} alt="" draggable={false} />
+        </button>
       </div>
 
+      {guideCards.length > 0 && (
+        <aside className="hud hud--task-rail" aria-label="任务与寻路">
+          <img className="hud__task-frame" src={`${UI_ROOT}/hud_v2_side_task_panel.png`} alt="" draggable={false} />
+          <div className="hud__task-scroll">
+            {guideCards.map((card) => (
+              <article className="hud__task-card" key={card.key} title={card.detail}>
+                <b>{card.title}</b>
+                <span>{card.body}</span>
+                {card.onClear && (
+                  <button type="button" onClick={card.onClear} aria-label="取消行脚目标">
+                    收起
+                  </button>
+                )}
+              </article>
+            ))}
+          </div>
+        </aside>
+      )}
+
       {hint && (
-        <div className="hud hud--hint">
-          <img className="hud__panel-frame" src={`${UI_ROOT}/hud_panel.png`} alt="" draggable={false} />
+        <div className="hud hud--hint hud--hint-v2">
+          <img className="hud__panel-frame" src={`${UI_ROOT}/hud_v2_hint_panel.png`} alt="" draggable={false} />
           <span>{hint}</span>
           <button className="hud__hint-action" data-smoke="hud-interact-nearby" type="button" onClick={onInteractNearby}>
             互动
@@ -193,43 +216,16 @@ export function Hud({
         </div>
       )}
 
-      {travelGuide && (
-        <div className="hud hud--travel-guide">
-          <img className="hud__panel-frame" src={`${UI_ROOT}/hud_panel.png`} alt="" draggable={false} />
-          <div className="hud__travel-copy">
-            <b>行脚目标</b>
-            <span>{travelGuide.instruction}</span>
-          </div>
-          <button
-            className="hud__travel-clear"
-            type="button"
-            onClick={() => dispatch({ type: 'CLEAR_LORE_TRACKING' })}
-            title="取消行脚目标"
-            aria-label="取消行脚目标"
-          >
-            ×
+      {playing && showControlsHint && (
+        <div className="hud hud--controls hud--controls-v2">
+          <img className="hud__panel-frame" src={`${UI_ROOT}/hud_v2_hint_panel.png`} alt="" draggable={false} />
+          <span>WASD / 方向键移动</span>
+          <span>E 进入交互</span>
+          <button type="button" onClick={dismissControlsHint}>
+            知道了
           </button>
         </div>
       )}
-
-      {playing && priorityJourneyGuide && (
-        <div className="hud hud--priority-guide" title={priorityJourneyGuide.detail}>
-          <img className="hud__panel-frame" src={`${UI_ROOT}/hud_panel.png`} alt="" draggable={false} />
-          <div className="hud__travel-copy">
-            <b>
-              主轴目标 {Math.min(priorityJourneyGuide.stepIndex + 1, priorityJourneyGuide.totalSteps)}/
-              {priorityJourneyGuide.totalSteps}
-            </b>
-            <span>{priorityJourneyGuide.instruction}</span>
-          </div>
-        </div>
-      )}
-
-      <div className="hud hud--controls">
-        <img className="hud__panel-frame" src={`${UI_ROOT}/hud_panel.png`} alt="" draggable={false} />
-        <span>WASD / 方向键移动</span>
-        <span>E 进入体验点</span>
-      </div>
     </>
   );
 }
