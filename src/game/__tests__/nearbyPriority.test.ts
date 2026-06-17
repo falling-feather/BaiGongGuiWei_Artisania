@@ -11,6 +11,11 @@ describe('nearby interaction priority', () => {
     expect(shouldReplaceNearbyCandidate('npc', 20, 'point', 24)).toBe(true);
   });
 
+  it('lets a close NPC take focus from a large point footprint', () => {
+    expect(shouldReplaceNearbyCandidate('npc', 36, 'point', 0)).toBe(true);
+    expect(shouldReplaceNearbyCandidate('point', 0, 'npc', 36)).toBe(false);
+  });
+
   it('lets a much closer map point beat a nearby NPC so craft and gate entries stay reachable', () => {
     expect(shouldReplaceNearbyCandidate('point', 12, 'npc', 78)).toBe(true);
     expect(shouldReplaceNearbyCandidate('npc', 82, 'point', 24)).toBe(false);
@@ -29,7 +34,7 @@ describe('nearby interaction priority', () => {
     expect(interactionRectDistance(368, 240, rect)).toBe(0);
   });
 
-  it('lets a footprint-close resource point beat a slightly closer wandering NPC tie zone', () => {
+  it('keeps a footprint-close resource point when a wandering NPC is outside the focus zone', () => {
     const resourceFootprintDistance = interactionRectDistance(320, 304, {
       left: 320,
       right: 416,
@@ -38,6 +43,6 @@ describe('nearby interaction priority', () => {
     });
 
     expect(resourceFootprintDistance).toBe(16);
-    expect(shouldReplaceNearbyCandidate('npc', 28, 'point', resourceFootprintDistance)).toBe(false);
+    expect(shouldReplaceNearbyCandidate('npc', 48, 'point', resourceFootprintDistance)).toBe(false);
   });
 });

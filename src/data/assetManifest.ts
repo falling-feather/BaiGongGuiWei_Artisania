@@ -41,7 +41,7 @@ function regionAssets(regionId: string, priority: ArtAssetPriority): ArtAssetMan
   }));
 }
 
-function npcAsset(npcId: string, priority: ArtAssetPriority, slot: 'portrait' | 'stand' = 'portrait'): ArtAssetManifestEntry {
+function npcAsset(npcId: string, priority: ArtAssetPriority, slot: 'portrait' | 'stand' | 'bust' = 'portrait'): ArtAssetManifestEntry {
   return {
     key: `npc.${npcId}.${slot}`,
     domain: 'npc',
@@ -77,6 +77,7 @@ export const PRIORITY_ART_ASSET_MANIFEST: ArtAssetManifestEntry[] = [
   ...PRIORITY_SCOPE_REQUIREMENTS.flatMap((requirement) =>
     requirement.requiredNpcIds.flatMap((npcId) => [
       npcAsset(npcId, requirement.tier),
+      ...(requirement.tier === 'anchor' ? [npcAsset(npcId, requirement.tier, 'bust')] : []),
       npcAsset(npcId, requirement.tier, 'stand'),
     ]),
   ),

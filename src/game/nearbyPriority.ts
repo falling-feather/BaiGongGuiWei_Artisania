@@ -1,5 +1,7 @@
 export type NearbyCandidateKind = 'point' | 'npc';
 
+const NPC_FOCUS_DISTANCE = 40;
+
 export interface InteractionRect {
   left: number;
   right: number;
@@ -28,9 +30,11 @@ export function shouldReplaceNearbyCandidate(
   if (currentKind === null) return true;
   if (candidateKind === currentKind) return candidateDistance < currentDistance;
   if (candidateKind === 'npc' && currentKind === 'point') {
+    if (candidateDistance <= NPC_FOCUS_DISTANCE) return true;
     return candidateDistance < currentDistance;
   }
   if (candidateKind === 'point' && currentKind === 'npc') {
+    if (currentDistance <= NPC_FOCUS_DISTANCE) return false;
     return candidateDistance <= currentDistance;
   }
   return false;

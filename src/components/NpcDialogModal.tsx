@@ -39,6 +39,41 @@ const STAGE_LABEL = {
   confidant: '知己',
 } as const;
 
+const PERSONALITY_LABEL: Record<string, string> = {
+  alert: '警觉',
+  blunt: '直率',
+  bright: '爽朗',
+  calculating: '精算',
+  careful: '谨慎',
+  cautious: '审慎',
+  curious: '好奇',
+  demanding: '严苛',
+  direct: '坦直',
+  expressive: '外放',
+  gentle: '温和',
+  measured: '持重',
+  meticulous: '细致',
+  nimble: '机敏',
+  patient: '耐心',
+  practical: '务实',
+  precise: '精确',
+  quiet: '寡言',
+  regional: '乡土',
+  reverent: '虔敬',
+  sharp: '敏锐',
+  shrewd: '精明',
+  steady: '沉稳',
+  stern: '严正',
+  stubborn: '执拗',
+  warm: '热络',
+  weathered: '老练',
+  worldly: '通达',
+};
+
+function personalityLabel(personality: string | undefined): string {
+  return personality ? PERSONALITY_LABEL[personality] ?? personality : '';
+}
+
 function preferenceMatches(
   preference: NpcGiftPreference,
   item: ItemInstance,
@@ -314,9 +349,9 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
   const bustSrc = `/assets/game/characters/${resolvedNpcId}/bust.png`;
   const portraitSrc = `/assets/game/characters/${resolvedNpcId}/portrait.png`;
   const npcSubtitle = npc.profession ?? (npc.role === 'vendor' ? '关联人物' : '游客');
+  const npcPersonalityLabel = personalityLabel(npc.personality);
 
-  function enterMenu(action?: 'talk') {
-    if (action === 'talk' && affinity < 100) dispatch({ type: 'TALK_NPC', npcId: resolvedNpcId });
+  function enterMenu() {
     setMode('menu');
   }
 
@@ -342,12 +377,12 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
             <div className="npc-dialog-intro__meta">
               <span>{STAGE_LABEL[stage]}</span>
               <span>好感 {affinity}/100</span>
-              {npc.personality && <span>{npc.personality}</span>}
+              {npcPersonalityLabel && <span>{npcPersonalityLabel}</span>}
             </div>
             <p className="npc-dialog-intro__line">“{greeting}”</p>
           </div>
           <div className="npc-dialog-intro__choices" aria-label="对话选择">
-            <button type="button" onClick={() => enterMenu('talk')}>
+            <button type="button" onClick={enterMenu}>
               <img src="/assets/game/ui/hud_v2_choice_button.png" alt="" draggable={false} />
               <span>交流</span>
             </button>
@@ -389,7 +424,7 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
         <div className="npc-profile-strip">
           <span>关系：{STAGE_LABEL[stage]}</span>
           <span>交谈：{runtime?.talks ?? 0} 次</span>
-          {npc.personality && <span>性格：{npc.personality}</span>}
+          {npcPersonalityLabel && <span>性格：{npcPersonalityLabel}</span>}
         </div>
 
         <div className="npc-affinity">

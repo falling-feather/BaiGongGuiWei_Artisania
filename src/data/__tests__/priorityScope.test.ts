@@ -137,6 +137,14 @@ describe('current priority scope guard', () => {
       }
     }
 
+    for (const requirement of PRIORITY_SCOPE_REQUIREMENTS) {
+      for (const npcId of requirement.requiredNpcIds) {
+        expect(keys.has(`npc.${npcId}.portrait`), `${npcId}:portrait`).toBe(true);
+        expect(keys.has(`npc.${npcId}.stand`), `${npcId}:stand`).toBe(true);
+        expect(keys.has(`npc.${npcId}.bust`), `${npcId}:bust`).toBe(requirement.tier === 'anchor');
+      }
+    }
+
     expect(errors).toEqual([]);
   });
 
