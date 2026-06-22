@@ -114,16 +114,17 @@ function githubPagesPublicAssetPaths(): Plugin {
   return {
     name: 'artisania-github-pages-public-asset-paths',
     apply: 'build',
-    generateBundle(_, bundle) {
+    enforce: 'pre',
+    transform(code, id) {
       if (githubPagesBase === '/') return;
+      if (id.includes('node_modules') || !code.includes('/assets/')) return;
 
-      for (const item of Object.values(bundle)) {
-        if (item.type === 'chunk') {
-          item.code = item.code.replace(/(["'`(])\/assets\//g, `$1${publicAssetsBase}`);
-        } else if (typeof item.source === 'string') {
-          item.source = item.source.replace(/(["'`(])\/assets\//g, `$1${publicAssetsBase}`);
-        }
-      }
+      const rewritten = code.replace(/(["'`(])\/assets\//g, `$1${publicAssetsBase}`);
+
+      return {
+        code: id.endsWith('.css') ? `${rewritten}\n:root{--artisania-pages-assets:1}` : rewritten,
+        map: null,
+      };
     },
   };
 }
