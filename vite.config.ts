@@ -7,6 +7,7 @@ import { fileURLToPath, URL } from 'node:url';
 
 const mapLayoutDir = fileURLToPath(new URL('./src/data/mapLayouts', import.meta.url));
 const githubPagesBase = process.env.GITHUB_PAGES === 'true' ? '/BaiGongGuiWei_Artisania/' : '/';
+const publicAssetsBase = `${githubPagesBase}assets/`;
 
 function sendJson(res: ServerResponse, statusCode: number, body: unknown) {
   res.statusCode = statusCode;
@@ -109,10 +110,28 @@ function devMapLayoutWriter(): Plugin {
   };
 }
 
+function githubPagesPublicAssetPaths(): Plugin {
+  return {
+    name: 'artisania-github-pages-public-asset-paths',
+    apply: 'build',
+    generateBundle(_, bundle) {
+      if (githubPagesBase === '/') return;
+
+      for (const item of Object.values(bundle)) {
+        if (item.type === 'chunk') {
+          item.code = item.code.replace(/(["'`(])\/assets\//g, `$1${publicAssetsBase}`);
+        } else if (typeof item.source === 'string') {
+          item.source = item.source.replace(/(["'`(])\/assets\//g, `$1${publicAssetsBase}`);
+        }
+      }
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
   base: githubPagesBase,
-  plugins: [react(), devMapLayoutWriter()],
+  plugins: [react(), devMapLayoutWriter(), githubPagesPublicAssetPaths()],
   resolve: {
     alias: {
       '@engine': fileURLToPath(new URL('./src/engine', import.meta.url)),
