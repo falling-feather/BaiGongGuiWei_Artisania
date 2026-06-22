@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { type CSSProperties, useEffect, useMemo, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import {
   buildLoreTravelGuide,
@@ -6,6 +6,7 @@ import {
   uniqueRoutesFromRegions,
 } from '../engine';
 import { PRIORITY_JOURNEY_STEPS, REGION_INDEX } from '../data';
+import { minigameRegionTheme } from './minigameUiTheme';
 
 const UI_ROOT = '/assets/game/ui';
 const HUD_CONTROLS_SEEN_KEY = 'artisania:hud-controls-hint-seen';
@@ -66,6 +67,11 @@ export function Hud({
   const [showControlsHint, setShowControlsHint] = useState(controlsHintInitiallyVisible);
   const region = REGION_INDEX[currentRegion];
   const subregion = region?.subregions.find((item) => item.id === currentSubregion);
+  const hudTheme = minigameRegionTheme(currentRegion);
+  const hudStyle = {
+    '--hud-accent': hudTheme.accent,
+    '--hud-accent-soft': hudTheme.accentSoft,
+  } as CSSProperties;
   const routeSpecs = useMemo(() => uniqueRoutesFromRegions(content.regionContent), [content.regionContent]);
   const trackedEntry = content.loreEntries?.find((entry) => entry.id === state.trackedLoreEntryId);
   const travelGuide = useMemo(
@@ -140,7 +146,8 @@ export function Hud({
 
   return (
     <>
-      <div className="hud hud--top hud--top-v2">
+      <div className={`hud hud--top hud--top-v2 hud--region-${hudTheme.regionId}`} style={hudStyle}>
+        <img className="hud__top-frame-v2" src={`${UI_ROOT}/hud_v2_top_bar.png`} alt="" draggable={false} />
         <div className="hud__nav-v2" aria-label="常用入口">
           <img className="hud__nav-frame" src={`${UI_ROOT}/hud_v2_top_bar.png`} alt="" draggable={false} />
           <div className="hud__nav-tools">
@@ -188,7 +195,7 @@ export function Hud({
       </div>
 
       {guideCards.length > 0 && (
-        <aside className="hud hud--task-rail" aria-label="任务与寻路">
+        <aside className="hud hud--task-rail" style={hudStyle} aria-label="任务与寻路">
           <img className="hud__task-frame" src={`${UI_ROOT}/hud_v2_side_task_panel.png`} alt="" draggable={false} />
           <div className="hud__task-scroll">
             {guideCards.map((card) => (
@@ -207,7 +214,7 @@ export function Hud({
       )}
 
       {hint && (
-        <div className="hud hud--hint hud--hint-v2">
+        <div className="hud hud--hint hud--hint-v2" style={hudStyle}>
           <img className="hud__panel-frame" src={`${UI_ROOT}/hud_v2_hint_panel.png`} alt="" draggable={false} />
           <span>{hint}</span>
           <button className="hud__hint-action" data-smoke="hud-interact-nearby" type="button" onClick={onInteractNearby}>
@@ -217,7 +224,7 @@ export function Hud({
       )}
 
       {playing && showControlsHint && (
-        <div className="hud hud--controls hud--controls-v2">
+        <div className="hud hud--controls hud--controls-v2" style={hudStyle}>
           <img className="hud__panel-frame" src={`${UI_ROOT}/hud_v2_hint_panel.png`} alt="" draggable={false} />
           <span>WASD / 方向键移动</span>
           <span>E 进入交互</span>

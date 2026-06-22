@@ -3,34 +3,288 @@
   "regionId": "qiandian",
   "subregionId": "qiandian-miao-village",
   "tileSize": 32,
-  "size": { "w": 60, "h": 30 },
+  "size": {
+    "w": 56,
+    "h": 30
+  },
   "roads": [
-    { "points": [{ "x": 2, "y": 7 }, { "x": 57, "y": 7 }] },
-    { "points": [{ "x": 2, "y": 15 }, { "x": 57, "y": 15 }] },
-    { "points": [{ "x": 2, "y": 24 }, { "x": 57, "y": 24 }] },
-    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
-    { "points": [{ "x": 30, "y": 3 }, { "x": 30, "y": 26 }] },
-    { "points": [{ "x": 50, "y": 3 }, { "x": 50, "y": 26 }] }
+    {
+      "points": [
+        {
+          "x": 2,
+          "y": 23
+        },
+        {
+          "x": 11,
+          "y": 21
+        },
+        {
+          "x": 27,
+          "y": 17
+        },
+        {
+          "x": 45,
+          "y": 7
+        },
+        {
+          "x": 53,
+          "y": 7
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 3,
+          "y": 7
+        },
+        {
+          "x": 15,
+          "y": 7
+        },
+        {
+          "x": 25,
+          "y": 14
+        },
+        {
+          "x": 45,
+          "y": 16
+        },
+        {
+          "x": 52,
+          "y": 16
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 11,
+          "y": 3
+        },
+        {
+          "x": 13,
+          "y": 9
+        },
+        {
+          "x": 24,
+          "y": 21
+        },
+        {
+          "x": 26,
+          "y": 27
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 45,
+          "y": 3
+        },
+        {
+          "x": 45,
+          "y": 23
+        }
+      ]
+    }
   ],
   "objects": [
-    { "itemId": "player_spawn", "x": 30, "y": 15 },
-    { "itemId": "industry_silver", "name": "silver ore washing table", "interaction": "industry", "targetId": "harvest-silver-ore", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "industry_silver", "name": "silver refining stove", "interaction": "industry", "targetId": "refine-silver", "x": 14, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "industry_indigo", "name": "indigo herb terrace", "interaction": "industry", "targetId": "harvest-indigo", "x": 23, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "industry_indigo", "name": "living indigo vat", "interaction": "industry", "targetId": "build-indigo", "x": 32, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "craft_silver", "name": "Miao silver shop", "interaction": "craft", "targetId": "miao-silver", "x": 8, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "craft_textile", "name": "batik yard", "interaction": "craft", "targetId": "batik", "x": 20, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "craft_metal", "name": "wutong silver bench", "interaction": "craft", "targetId": "wutong-silver", "x": 32, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "craft_textile", "name": "indigo dye vat", "interaction": "craft", "targetId": "indigo-dyeing", "x": 44, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "activity_silver", "name": "Miao silver practice", "interaction": "activity", "targetId": "qd-miao-silver-shop", "x": 40, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "activity_batik", "name": "batik pattern lesson", "interaction": "activity", "targetId": "qd-batik-yard", "x": 45, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to tea horse road", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "qiandian-tea-road", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to Dongchuan copper mine", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "qiandian-dongchuan-copper", "x": 20, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Bashu tea horse road", "interaction": "gate", "targetId": "bashu", "x": 53, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Lingnan harbor road", "interaction": "gate", "targetId": "lingnan", "x": 53, "y": 13, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Jingchu mine road", "interaction": "gate", "targetId": "jingchu", "x": 53, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "npc-qd-yinniang-alan", "name": "Yinniang Alan", "interaction": "npc", "npcId": "qd-yinniang-alan", "x": 12, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
-    { "itemId": "npc-qd-danqing-sao", "name": "Danqing Sao", "interaction": "npc", "npcId": "qd-danqing-sao", "x": 26, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
-    { "itemId": "drum-tower-a", "name": "village drum tower", "interaction": "decoration", "x": 36, "y": 22, "tileW": 4, "tileH": 3, "solid": true }
+    {
+      "itemId": "player_spawn",
+      "x": 5,
+      "y": 24,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "itemId": "industry_silver",
+      "name": "silver ore washing table",
+      "interaction": "industry",
+      "targetId": "harvest-silver-ore",
+      "x": 7,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "industry_silver",
+      "name": "silver refining stove",
+      "interaction": "industry",
+      "targetId": "refine-silver",
+      "x": 16,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "industry_indigo",
+      "name": "indigo herb terrace",
+      "interaction": "industry",
+      "targetId": "harvest-indigo",
+      "x": 25,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "industry_indigo",
+      "name": "living indigo vat",
+      "interaction": "industry",
+      "targetId": "build-indigo",
+      "x": 34,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "craft_silver",
+      "name": "Miao silver shop",
+      "interaction": "craft",
+      "targetId": "miao-silver",
+      "x": 43,
+      "y": 10,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "craft_textile",
+      "name": "batik yard",
+      "interaction": "craft",
+      "targetId": "batik",
+      "x": 34,
+      "y": 10,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "craft_metal",
+      "name": "wutong silver bench",
+      "interaction": "craft",
+      "targetId": "wutong-silver",
+      "x": 25,
+      "y": 10,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "craft_textile",
+      "name": "indigo dye vat",
+      "interaction": "craft",
+      "targetId": "indigo-dyeing",
+      "x": 16,
+      "y": 10,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "activity_silver",
+      "name": "Miao silver practice",
+      "interaction": "activity",
+      "targetId": "qd-miao-silver-shop",
+      "x": 7,
+      "y": 18,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "activity_batik",
+      "name": "batik pattern lesson",
+      "interaction": "activity",
+      "targetId": "qd-batik-yard",
+      "x": 16,
+      "y": 18,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to tea horse road",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "qiandian-tea-road",
+      "x": 19,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to Dongchuan copper mine",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "qiandian-dongchuan-copper",
+      "x": 37,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Bashu tea horse road",
+      "interaction": "gate",
+      "targetId": "bashu",
+      "x": 51,
+      "y": 3,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Lingnan harbor road",
+      "interaction": "gate",
+      "targetId": "lingnan",
+      "x": 51,
+      "y": 9,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Jingchu mine road",
+      "interaction": "gate",
+      "targetId": "jingchu",
+      "x": 51,
+      "y": 15,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "npc-qd-yinniang-alan",
+      "name": "Yinniang Alan",
+      "interaction": "npc",
+      "npcId": "qd-yinniang-alan",
+      "x": 4,
+      "y": 15,
+      "tileW": 1,
+      "tileH": 1,
+      "solid": false
+    },
+    {
+      "itemId": "npc-qd-danqing-sao",
+      "name": "Danqing Sao",
+      "interaction": "npc",
+      "npcId": "qd-danqing-sao",
+      "x": 11,
+      "y": 15,
+      "tileW": 1,
+      "tileH": 1,
+      "solid": false
+    }
   ]
 }

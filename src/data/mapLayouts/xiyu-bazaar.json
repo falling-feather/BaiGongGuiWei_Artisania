@@ -3,28 +3,204 @@
   "regionId": "xiyu",
   "subregionId": "xiyu-bazaar",
   "tileSize": 32,
-  "size": { "w": 52, "h": 28 },
+  "size": {
+    "w": 52,
+    "h": 28
+  },
   "roads": [
-    { "points": [{ "x": 2, "y": 8 }, { "x": 49, "y": 8 }] },
-    { "points": [{ "x": 2, "y": 15 }, { "x": 49, "y": 15 }] },
-    { "points": [{ "x": 2, "y": 21 }, { "x": 49, "y": 21 }] },
-    { "points": [{ "x": 9, "y": 4 }, { "x": 9, "y": 24 }] },
-    { "points": [{ "x": 26, "y": 4 }, { "x": 26, "y": 24 }] },
-    { "points": [{ "x": 43, "y": 4 }, { "x": 43, "y": 24 }] }
+    {
+      "points": [
+        {
+          "x": 2,
+          "y": 22
+        },
+        {
+          "x": 22,
+          "y": 22
+        },
+        {
+          "x": 29,
+          "y": 20
+        },
+        {
+          "x": 49,
+          "y": 20
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 3,
+          "y": 6
+        },
+        {
+          "x": 48,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 8,
+          "y": 3
+        },
+        {
+          "x": 8,
+          "y": 22
+        },
+        {
+          "x": 13,
+          "y": 22
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 27,
+          "y": 6
+        },
+        {
+          "x": 28,
+          "y": 22
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 43,
+          "y": 4
+        },
+        {
+          "x": 43,
+          "y": 21
+        }
+      ]
+    }
   ],
   "objects": [
-    { "itemId": "player_spawn", "x": 26, "y": 14 },
-    { "itemId": "industry_silk", "name": "oasis cocoon store", "interaction": "industry", "targetId": "harvest-cocoon", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "industry_silk", "name": "bazaar silk reeling frame", "interaction": "industry", "targetId": "sericulture", "x": 14, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "craft_textile", "name": "carpet knotting stall", "interaction": "craft", "targetId": "carpet", "x": 23, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "craft_metal", "name": "copperware stall", "interaction": "craft", "targetId": "copperware", "x": 32, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "activity_bazaar", "name": "oasis bazaar trade", "interaction": "activity", "targetId": "xiyu-bazaar-trade", "x": 41, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to Kunlun jade yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xiyu-jade-yard", "x": 4, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to caravan post", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xiyu-caravan-post", "x": 20, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to Atlas loom", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xiyu-atlas-loom", "x": 36, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Xueyu plateau road", "interaction": "gate", "targetId": "xueyu", "x": 46, "y": 13, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "npc-xu-sali", "name": "Xu Sali", "interaction": "npc", "npcId": "xu-sali", "x": 27, "y": 9, "tileW": 1, "tileH": 1, "solid": false },
-    { "itemId": "bazaar-awning-a", "name": "striped bazaar awning", "interaction": "decoration", "x": 34, "y": 16, "tileW": 4, "tileH": 2, "solid": true },
-    { "itemId": "jade-tray-a", "name": "jade trays", "interaction": "decoration", "x": 18, "y": 16, "tileW": 3, "tileH": 2, "solid": true }
+    {
+      "itemId": "player_spawn",
+      "x": 7,
+      "y": 21,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "itemId": "industry_silk",
+      "name": "oasis cocoon store",
+      "interaction": "industry",
+      "targetId": "harvest-cocoon",
+      "x": 5,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "industry_silk",
+      "name": "bazaar silk reeling frame",
+      "interaction": "industry",
+      "targetId": "sericulture",
+      "x": 14,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "craft_textile",
+      "name": "carpet knotting stall",
+      "interaction": "craft",
+      "targetId": "carpet",
+      "x": 41,
+      "y": 9,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "craft_metal",
+      "name": "copperware stall",
+      "interaction": "craft",
+      "targetId": "copperware",
+      "x": 32,
+      "y": 9,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "activity_bazaar",
+      "name": "oasis bazaar trade",
+      "interaction": "activity",
+      "targetId": "xiyu-bazaar-trade",
+      "x": 5,
+      "y": 17,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to Kunlun jade yard",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "xiyu-jade-yard",
+      "x": 13,
+      "y": 24,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to caravan post",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "xiyu-caravan-post",
+      "x": 26,
+      "y": 24,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to Atlas loom",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "xiyu-atlas-loom",
+      "x": 39,
+      "y": 24,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Xueyu plateau road",
+      "interaction": "gate",
+      "targetId": "xueyu",
+      "x": 47,
+      "y": 3,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "npc-xu-sali",
+      "name": "Xu Sali",
+      "interaction": "npc",
+      "npcId": "xu-sali",
+      "x": 4,
+      "y": 14,
+      "tileW": 1,
+      "tileH": 1,
+      "solid": false
+    }
   ]
 }

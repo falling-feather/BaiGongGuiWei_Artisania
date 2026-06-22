@@ -31,7 +31,9 @@ import {
   craftsForSubregion,
   localIndustriesForSubregion,
   npcsForRegion,
+  mapLayoutOverrideForSubregion,
   runtimeLayoutForSubregion,
+  runtimeLayoutFromEditorSnapshot,
 } from '../data';
 import { industryTierFor } from '../data/regionEconomy';
 import type { RegionMapSpec, IndustryTier, TerrainKind, WeatherKind, WeatherSeason } from './EventBus';
@@ -203,7 +205,10 @@ export function buildRegionSpec(regionId: string, state: GameState): RegionMapSp
   const subregion =
     region.subregions.find((item) => item.id === state.currentSubregion) ?? region.subregions[0];
   const subregionId = subregion?.id ?? region.id;
-  const layout = runtimeLayoutForSubregion(region.id, subregionId);
+  const layoutOverride = mapLayoutOverrideForSubregion(region.id, subregionId);
+  const layout = layoutOverride
+    ? runtimeLayoutFromEditorSnapshot(layoutOverride)
+    : runtimeLayoutForSubregion(region.id, subregionId);
   const overrides = devWeatherOverride();
   const season = overrides.season ?? state.calendar.season ?? seasonFromTurn(state.turn);
   const weather = overrides.weather ?? state.calendar.weather ?? weatherForSeason(season);

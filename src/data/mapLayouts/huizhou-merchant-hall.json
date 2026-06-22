@@ -3,27 +3,180 @@
   "regionId": "huizhou",
   "subregionId": "huizhou-merchant-hall",
   "tileSize": 32,
-  "size": { "w": 56, "h": 30 },
+  "size": {
+    "w": 56,
+    "h": 30
+  },
   "roads": [
-    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
-    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
-    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
-    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
-    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
-    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+    {
+      "points": [
+        {
+          "x": 9,
+          "y": 7
+        },
+        {
+          "x": 47,
+          "y": 7
+        },
+        {
+          "x": 47,
+          "y": 23
+        },
+        {
+          "x": 9,
+          "y": 23
+        },
+        {
+          "x": 9,
+          "y": 7
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 11,
+          "y": 15
+        },
+        {
+          "x": 45,
+          "y": 15
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 27,
+          "y": 2
+        },
+        {
+          "x": 27,
+          "y": 24
+        }
+      ]
+    }
   ],
   "objects": [
-    { "itemId": "player_spawn", "x": 28, "y": 15 },
-    { "itemId": "industry_tea", "name": "merchant tea store", "interaction": "industry", "targetId": "harvest-tea-leaf", "x": 8, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "industry_tea", "name": "tea accounts fixing table", "interaction": "industry", "targetId": "pick-tea", "x": 18, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "craft_lacquer", "name": "Hui carving desk", "interaction": "craft", "targetId": "hui-carving", "x": 12, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "activity_trade", "name": "merchant guild ledger", "interaction": "activity", "targetId": "hz-merchant-hall", "x": 28, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to paper valley", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "huizhou-paper-valley", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to ink alley", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "huizhou-ink-alley", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to She stone village", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "huizhou-she-stone", "x": 32, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Jiangnan paper route", "interaction": "gate", "targetId": "jiangnan", "x": 49, "y": 8, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Ganpo merchant route", "interaction": "gate", "targetId": "ganpo", "x": 49, "y": 18, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "npc-hz-cheng-yuanzhou", "name": "Cheng Yuanzhou", "interaction": "npc", "npcId": "hz-cheng-yuanzhou", "x": 31, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
-    { "itemId": "account-wall-a", "name": "guild account wall", "interaction": "decoration", "x": 37, "y": 16, "tileW": 4, "tileH": 2, "solid": true }
+    {
+      "itemId": "player_spawn",
+      "x": 5,
+      "y": 24,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "itemId": "industry_tea",
+      "name": "merchant tea store",
+      "interaction": "industry",
+      "targetId": "harvest-tea-leaf",
+      "x": 6,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "industry_tea",
+      "name": "tea accounts fixing table",
+      "interaction": "industry",
+      "targetId": "pick-tea",
+      "x": 15,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "craft_lacquer",
+      "name": "Hui carving desk",
+      "interaction": "craft",
+      "targetId": "hui-carving",
+      "x": 42,
+      "y": 10,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "activity_trade",
+      "name": "merchant guild ledger",
+      "interaction": "activity",
+      "targetId": "hz-merchant-hall",
+      "x": 6,
+      "y": 18,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to paper valley",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "huizhou-paper-valley",
+      "x": 14,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to ink alley",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "huizhou-ink-alley",
+      "x": 28,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to She stone village",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "huizhou-she-stone",
+      "x": 42,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Jiangnan paper route",
+      "interaction": "gate",
+      "targetId": "jiangnan",
+      "x": 51,
+      "y": 3,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Ganpo merchant route",
+      "interaction": "gate",
+      "targetId": "ganpo",
+      "x": 51,
+      "y": 9,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "npc-hz-cheng-yuanzhou",
+      "name": "Cheng Yuanzhou",
+      "interaction": "npc",
+      "npcId": "hz-cheng-yuanzhou",
+      "x": 4,
+      "y": 15,
+      "tileW": 1,
+      "tileH": 1,
+      "solid": false
+    }
   ]
 }

@@ -66,6 +66,16 @@ export {
   runtimeLayoutForSubregion,
   runtimeLayoutFromEditorSnapshot,
 } from './mapLayout';
+export {
+  MAP_LAYOUT_OVERRIDE_EVENT,
+  MAP_LAYOUT_OVERRIDE_STORAGE_KEY,
+  listMapLayoutOverrides,
+  mapLayoutOverrideForSubregion,
+  mapLayoutOverrideKey,
+  removeMapLayoutOverride,
+  saveMapLayoutOverride,
+  type RuntimeMapEditorOverrideSnapshot,
+} from './mapLayoutOverrides';
 export type {
   RuntimeMapEditorObject,
   RuntimeMapEditorSnapshot,

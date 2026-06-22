@@ -18,6 +18,7 @@ import type {
   Season,
 } from './types';
 import { aggregateTownMetrics } from './metrics';
+import { createRealTimeState } from './realTime';
 
 export const DEFAULT_MAX_TURNS = 12;
 
@@ -153,6 +154,7 @@ export function createInitialState(
     report: null,
     profile: createDefaultPlayerProfile(),
     calendar: createCalendar(1),
+    realTime: createRealTimeState(),
     farmPlots: createInitialFarmPlots(),
     itemInstances: [],
     unlockedRegions,

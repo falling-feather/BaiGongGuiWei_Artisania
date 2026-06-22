@@ -1,6 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { ACTIVITY_CHALLENGE_INDEX, RESOURCE_INDEX } from '../data';
 import { useGameStore } from '../store/gameStore';
+import {
+  WORKSHOP_TIMER_METER,
+  minigameRegionTheme,
+  workshopIconFor,
+  workshopRegionFrame,
+} from './minigameUiTheme';
+import { useRealTimeNow } from './useRealTimeNow';
+import {
+  formatRealTimeRemaining,
+  realTimeCooldownKey,
+  realTimeRemainingMs,
+} from '../engine';
 import type {
   ActivityChallengeChoice,
   ActivityChallengeDef,
@@ -100,6 +112,7 @@ export function ActivityModal({
   const content = useGameStore((s) => s.content);
   const state = useGameStore((s) => s.state);
   const dispatch = useGameStore((s) => s.dispatch);
+  const now = useRealTimeNow();
   const [selectedChoiceIds, setSelectedChoiceIds] = useState<Record<string, string>>({});
   const [selectedStallStrategyId, setSelectedStallStrategyId] = useState<string | null>(null);
 
@@ -113,6 +126,8 @@ export function ActivityModal({
   const activity = (content.activities ?? []).find((item) => item.id === activityId);
   if (!activity) return null;
 
+  const miniTheme = minigameRegionTheme(activity.regionId ?? state.currentRegion);
+  const workshopFrame = workshopRegionFrame(activity.regionId ?? state.currentRegion);
   const challenge = ACTIVITY_CHALLENGE_INDEX[activity.id] ?? null;
   const challengeRounds = getChallengeRounds(challenge);
   const selectedChoices = challengeRounds
@@ -120,6 +135,7 @@ export function ActivityModal({
     .filter((choice): choice is ActivityChallengeChoice => Boolean(choice));
   const challengeComplete = !challenge || selectedChoices.length === challengeRounds.length;
   const challengeQuality = challenge ? averageChallengeQuality(selectedChoices) : 0.82;
+  const challengeQualityPct = Math.round(challengeQuality * 100);
   const stallStrategies = activity.reward.stall?.strategies ?? [];
   const selectedStallStrategy = stallStrategies.find((strategy) => strategy.id === selectedStallStrategyId) ?? null;
   const completed = state.completedActivities.includes(activity.id);
@@ -131,6 +147,10 @@ export function ActivityModal({
   const materialShort = Object.entries(activity.resourceCost ?? {}).some(
     ([key, amount]) => (state.resources[key] ?? 0) < amount,
   );
+  const cooldownKey = realTimeCooldownKey('activity', activity.id);
+  const cooldownRemaining = realTimeRemainingMs({ realTime: state.realTime }, cooldownKey, now);
+  const cooldownBlocked = cooldownRemaining > 0;
+  const cooldownText = cooldownBlocked ? formatRealTimeRemaining(cooldownRemaining) : '';
   const routeRows = new Map(
     (content.regionContent?.flatMap((spec) => spec.routes) ?? []).map((route) => [route.id, route.name]),
   );
@@ -143,6 +163,7 @@ export function ActivityModal({
     !laborShort &&
     !phaseBlocked &&
     !materialShort &&
+    !cooldownBlocked &&
     !(activity.once && completed) &&
     challengeComplete &&
     (stallStrategies.length === 0 || Boolean(selectedStallStrategy));
@@ -158,6 +179,11 @@ export function ActivityModal({
     .filter((value) => value && value !== '无')
     .join('；') || '阅历';
 
+  const miniShellStyle = {
+    '--minigame-accent': miniTheme.accent,
+    '--minigame-accent-soft': miniTheme.accentSoft,
+  } as CSSProperties;
+
   const perform = () => {
     dispatch({
       type: 'PERFORM_ACTIVITY',
@@ -170,17 +196,25 @@ export function ActivityModal({
 
   return (
     <div className="modal__backdrop" onClick={onClose}>
-      <div className="modal modal--activity" onClick={(event) => event.stopPropagation()}>
+      <div
+        className={`modal modal--activity minigame-shell minigame-shell--${miniTheme.regionId}`}
+        onClick={(event) => event.stopPropagation()}
+        style={miniShellStyle}
+      >
+        <img aria-hidden="true" className="minigame-shell__frame" src={workshopFrame} alt="" />
         <h3 className="modal__title">
           {activity.name}
-          <small>{KIND_LABEL[activity.kind]}</small>
+          <small>{KIND_LABEL[activity.kind]} / {miniTheme.label}</small>
         </h3>
         <p className="modal__desc">{activity.blurb}</p>
         <p className="activity-detail">{activity.detail}</p>
 
         <div className="activity-tags">
           {activity.miniGames.map((miniGame) => (
-            <span key={miniGame}>{MINI_LABEL[miniGame]}</span>
+            <span key={miniGame}>
+              <img className="minigame-icon" src={workshopIconFor(miniGame)} alt="" />
+              {MINI_LABEL[miniGame]}
+            </span>
           ))}
         </div>
 
@@ -188,7 +222,10 @@ export function ActivityModal({
           <section className="activity-challenge">
             <div className="activity-challenge__head">
               <b>{challenge.title}</b>
-              <span>{MINI_LABEL[challenge.miniGame]}</span>
+              <span className="minigame-mode">
+                <img className="minigame-icon" src={workshopIconFor(challenge.miniGame)} alt="" />
+                {MINI_LABEL[challenge.miniGame]}
+              </span>
             </div>
             <div className="activity-round-list">
               {challengeRounds.map((round, index) => (
@@ -222,6 +259,13 @@ export function ActivityModal({
                 {selectedChoices.map((choice) => (
                   <p key={choice.id}>{choice.feedback}</p>
                 ))}
+              </div>
+            )}
+            {selectedChoices.length > 0 && (
+              <div className="minigame-quality">
+                <img aria-hidden="true" src={WORKSHOP_TIMER_METER} alt="" />
+                <i style={{ width: `${Math.min(100, challengeQualityPct)}%` }} />
+                <span>完成度 {challengeQualityPct}%</span>
               </div>
             )}
           </section>
@@ -267,6 +311,7 @@ export function ActivityModal({
 
         {activity.once && completed && <p className="craft-supply__warn">这项活动已经完成过。</p>}
         {pendingStallClosing && <p className="craft-supply__warn">先处理当前摊位收束，再安排新的地区活动。</p>}
+        {cooldownBlocked && <p className="craft-supply__warn">活动场景正在整备，还需等待 {cooldownText}。</p>}
         {(laborShort || materialShort || phaseBlocked) && state.status === 'playing' && (
           <p className="craft-supply__warn">
             {laborShort
@@ -284,7 +329,7 @@ export function ActivityModal({
             disabled={!canPerform}
             onClick={perform}
           >
-            完成体验
+            {cooldownBlocked ? `整备 ${cooldownText}` : '完成体验'}
           </button>
           <button className="btn btn--ghost" onClick={onClose}>
             离开

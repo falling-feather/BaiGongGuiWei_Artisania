@@ -3,27 +3,201 @@
   "regionId": "xueyu",
   "subregionId": "xueyu-pigment-valley",
   "tileSize": 32,
-  "size": { "w": 56, "h": 30 },
+  "size": {
+    "w": 56,
+    "h": 30
+  },
   "roads": [
-    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
-    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
-    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
-    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
-    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
-    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+    {
+      "points": [
+        {
+          "x": 2,
+          "y": 24
+        },
+        {
+          "x": 8,
+          "y": 22
+        },
+        {
+          "x": 27,
+          "y": 15
+        },
+        {
+          "x": 47,
+          "y": 6
+        },
+        {
+          "x": 53,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 3,
+          "y": 6
+        },
+        {
+          "x": 12,
+          "y": 6
+        },
+        {
+          "x": 25,
+          "y": 12
+        },
+        {
+          "x": 47,
+          "y": 14
+        },
+        {
+          "x": 52,
+          "y": 14
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 8,
+          "y": 3
+        },
+        {
+          "x": 10,
+          "y": 8
+        },
+        {
+          "x": 24,
+          "y": 22
+        },
+        {
+          "x": 26,
+          "y": 27
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 47,
+          "y": 3
+        },
+        {
+          "x": 47,
+          "y": 24
+        }
+      ]
+    }
   ],
   "objects": [
-    { "itemId": "player_spawn", "x": 28, "y": 15 },
-    { "itemId": "industry_harvest_pigment", "name": "mineral pigment seam", "interaction": "industry", "targetId": "harvest-pigment", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "industry_grind_pigment", "name": "pigment grinding table", "interaction": "industry", "targetId": "grind-pigment", "x": 15, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "activity_pigment", "name": "pigment valley appraisal", "interaction": "activity", "targetId": "xy-pigment-valley", "x": 28, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to snow pass", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xueyu-snow-pass", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to thangka court", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xueyu-thangka-court", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to silver tent", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xueyu-silver-tent", "x": 32, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Bashu snow road", "interaction": "gate", "targetId": "bashu", "x": 49, "y": 9, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Xiyu caravan road", "interaction": "gate", "targetId": "xiyu", "x": 49, "y": 19, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "npc-xy-shicai-tong", "name": "Pigment guide", "interaction": "npc", "npcId": "xy-shicai-tong", "x": 31, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
-    { "itemId": "ore-color-rack-a", "name": "ore color rack", "interaction": "decoration", "x": 36, "y": 16, "tileW": 4, "tileH": 2, "solid": true },
-    { "itemId": "snow-ore-marker-a", "name": "snow ore marker", "interaction": "decoration", "x": 22, "y": 4, "tileW": 3, "tileH": 2, "solid": true }
+    {
+      "itemId": "player_spawn",
+      "x": 5,
+      "y": 23,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "itemId": "industry_harvest_pigment",
+      "name": "mineral pigment seam",
+      "interaction": "industry",
+      "targetId": "harvest-pigment",
+      "x": 5,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "industry_grind_pigment",
+      "name": "pigment grinding table",
+      "interaction": "industry",
+      "targetId": "grind-pigment",
+      "x": 14,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "activity_pigment",
+      "name": "pigment valley appraisal",
+      "interaction": "activity",
+      "targetId": "xy-pigment-valley",
+      "x": 5,
+      "y": 18,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to snow pass",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "xueyu-snow-pass",
+      "x": 14,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to thangka court",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "xueyu-thangka-court",
+      "x": 28,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to silver tent",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "xueyu-silver-tent",
+      "x": 42,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Bashu snow road",
+      "interaction": "gate",
+      "targetId": "bashu",
+      "x": 51,
+      "y": 3,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Xiyu caravan road",
+      "interaction": "gate",
+      "targetId": "xiyu",
+      "x": 51,
+      "y": 9,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "npc-xy-shicai-tong",
+      "name": "Pigment guide",
+      "interaction": "npc",
+      "npcId": "xy-shicai-tong",
+      "x": 4,
+      "y": 15,
+      "tileW": 1,
+      "tileH": 1,
+      "solid": false
+    }
   ]
 }

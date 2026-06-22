@@ -45,17 +45,19 @@ export function MainMenu({
   onNew,
   onContinue,
   onDeleteSave,
+  onOpenMapEditor,
 }: {
   saveSlots: SaveSlotSummary[];
   activeSaveSlotId: string | null;
   onNew: (playerName: string, slotId?: string) => void | Promise<void>;
   onContinue: (slotId?: string) => void | Promise<void>;
   onDeleteSave: (slotId: string) => void | Promise<void>;
+  onOpenMapEditor: () => void;
 }) {
   const [name, setName] = useState('');
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(activeSaveSlotId ?? saveSlots[0]?.slotId ?? null);
   const [phase, setPhase] = useState<'splash' | 'menu'>('splash');
-  const [menuMode, setMenuMode] = useState<'home' | 'new' | 'saves'>(saveSlots.length > 0 ? 'home' : 'new');
+  const [menuMode, setMenuMode] = useState<'home' | 'new' | 'saves' | 'editor'>(saveSlots.length > 0 ? 'home' : 'new');
   const isDev = name.trim().toLowerCase() === DEV_NAME;
   const [coverIndex, setCoverIndex] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -205,6 +207,9 @@ export function MainMenu({
             <button className={menuMode === 'saves' ? 'is-active' : ''} type="button" onClick={() => setMenuMode('saves')}>
               存档
             </button>
+            <button className={menuMode === 'editor' ? 'is-active' : ''} type="button" onClick={() => setMenuMode('editor')}>
+              地图编辑器
+            </button>
           </nav>
 
           {menuMode === 'home' && (
@@ -226,6 +231,9 @@ export function MainMenu({
                 </button>
                 <button className="menu__ink-btn" type="button" onClick={() => setMenuMode('saves')}>
                   管理存档
+                </button>
+                <button className="menu__ink-btn" type="button" onClick={() => setMenuMode('editor')}>
+                  地图编辑器
                 </button>
               </div>
             </section>
@@ -295,6 +303,21 @@ export function MainMenu({
                   删除
                 </button>
               </div>
+            </section>
+          )}
+
+          {menuMode === 'editor' && (
+            <section className="menu__view" aria-label="地图编辑器入口">
+              <div className="menu__section-head">
+                <span>地图编辑器</span>
+                <small>自由编辑</small>
+              </div>
+              <p className="menu__quiet-note">
+                载入已实装地图，选择地块或元素，替换外观并保留原有交互属性。
+              </p>
+              <button className="menu__ink-btn menu__ink-btn--primary menu__wide-btn" type="button" onClick={onOpenMapEditor}>
+                进入地图编辑器
+              </button>
             </section>
           )}
         </main>

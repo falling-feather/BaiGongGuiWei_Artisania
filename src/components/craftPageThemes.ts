@@ -6,7 +6,7 @@
  *     使任何地区（江南、黔滇、西域、雪域……）新增的手艺都立即拥有自己的网页。
  *
  * 逐页精修：为某手艺在 CRAFT_PAGE_THEMES 增补一条即可覆盖默认主题，无需改动 App / 引擎。
- * 美术占位 art* 字段为将来替换真实立绘/背景的挂载点（见《美术资源设计》）。
+ * 可选 heroImage 用于绑定正式工坊场景图；未配置时使用地区通用工坊图。
  */
 import { CRAFT_INDEX } from '../data/crafts';
 
@@ -19,8 +19,10 @@ export interface CraftPageTheme {
   story: string[];
   /** 上手要诀 */
   tips: string[];
-  /** 美术占位说明（将来替换为立绘/背景图的位置标识） */
-  artHeroNote: string;
+  /** 工坊场景图，适配交互页左侧横幅 */
+  heroImage?: string;
+  /** 工坊场景的无障碍描述 */
+  heroAlt: string;
 }
 
 export const CRAFT_PAGE_THEMES: Record<string, CraftPageTheme> = {
@@ -37,7 +39,7 @@ export const CRAFT_PAGE_THEMES: Record<string, CraftPageTheme> = {
       '勾选「可省略」工序能提产增收，但会折损传承与精神。',
       '先「亲手制作」攒出成品库存，再「接订单」交付换取市场收入。',
     ],
-    artHeroNote: '蓝染工坊·主视觉（染缸/晾布立绘待绘）',
+    heroAlt: '蓝染工坊场景：染缸、晾布与染布架',
   },
   'bamboo-weaving': {
     accent: '#6f8b52',
@@ -52,7 +54,8 @@ export const CRAFT_PAGE_THEMES: Record<string, CraftPageTheme> = {
       '勾选「可省略」工序能提产增收，但会折损传承与精神。',
       '先「亲手制作」攒出成品库存，再「接订单」交付换取市场收入。',
     ],
-    artHeroNote: '竹编工坊·主视觉（立绘/背景待绘）',
+    heroImage: '/assets/game/ui/craft_page_bamboo_weaving_hero.png',
+    heroAlt: '竹编工坊场景：竹架、篾丝、编篮与工作台',
   },
 };
 
@@ -91,7 +94,7 @@ function buildDefaultTheme(craftId: string): CraftPageTheme | null {
       '勾选「可省略」工序能提产增收，但会折损传承与精神。',
       '先「亲手制作」攒出成品库存，再「接订单」交付换取市场收入。',
     ],
-    artHeroNote: `${def.name}工坊·主视觉（立绘/背景待绘）`,
+    heroAlt: `${def.name}工坊场景`,
   };
 }
 

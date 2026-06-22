@@ -3,26 +3,200 @@
   "regionId": "qiandian",
   "subregionId": "qiandian-tea-road",
   "tileSize": 32,
-  "size": { "w": 56, "h": 30 },
+  "size": {
+    "w": 56,
+    "h": 30
+  },
   "roads": [
-    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
-    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
-    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
-    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
-    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
-    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+    {
+      "points": [
+        {
+          "x": 2,
+          "y": 24
+        },
+        {
+          "x": 10,
+          "y": 22
+        },
+        {
+          "x": 30,
+          "y": 16
+        },
+        {
+          "x": 46,
+          "y": 6
+        },
+        {
+          "x": 53,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 3,
+          "y": 6
+        },
+        {
+          "x": 14,
+          "y": 6
+        },
+        {
+          "x": 28,
+          "y": 13
+        },
+        {
+          "x": 46,
+          "y": 15
+        },
+        {
+          "x": 52,
+          "y": 15
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 10,
+          "y": 3
+        },
+        {
+          "x": 12,
+          "y": 8
+        },
+        {
+          "x": 27,
+          "y": 22
+        },
+        {
+          "x": 29,
+          "y": 27
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 46,
+          "y": 3
+        },
+        {
+          "x": 46,
+          "y": 24
+        }
+      ]
+    }
   ],
   "objects": [
-    { "itemId": "player_spawn", "x": 28, "y": 15 },
-    { "itemId": "industry_tea", "name": "tea slope baskets", "interaction": "industry", "targetId": "harvest-tea-leaf", "x": 8, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "industry_tea", "name": "tea fixing hearth", "interaction": "industry", "targetId": "pick-tea", "x": 18, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "activity_route", "name": "tea horse road ledger", "interaction": "activity", "targetId": "qd-tea-horse-road", "x": 28, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to Miao silver village", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "qiandian-miao-village", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to Dongchuan copper mine", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "qiandian-dongchuan-copper", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Bashu tea horse road", "interaction": "gate", "targetId": "bashu", "x": 49, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Lingnan harbor road", "interaction": "gate", "targetId": "lingnan", "x": 49, "y": 13, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Jingchu mine road", "interaction": "gate", "targetId": "jingchu", "x": 49, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "npc-qd-mu-luozi", "name": "Mu Luozi", "interaction": "npc", "npcId": "qd-mu-luozi", "x": 31, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
-    { "itemId": "pack-saddle-a", "name": "pack saddle rack", "interaction": "decoration", "x": 37, "y": 16, "tileW": 4, "tileH": 2, "solid": true }
+    {
+      "itemId": "player_spawn",
+      "x": 8,
+      "y": 23,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "itemId": "industry_tea",
+      "name": "tea slope baskets",
+      "interaction": "industry",
+      "targetId": "harvest-tea-leaf",
+      "x": 6,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "industry_tea",
+      "name": "tea fixing hearth",
+      "interaction": "industry",
+      "targetId": "pick-tea",
+      "x": 15,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "activity_route",
+      "name": "tea horse road ledger",
+      "interaction": "activity",
+      "targetId": "qd-tea-horse-road",
+      "x": 6,
+      "y": 18,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to Miao silver village",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "qiandian-miao-village",
+      "x": 19,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to Dongchuan copper mine",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "qiandian-dongchuan-copper",
+      "x": 37,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Bashu tea horse road",
+      "interaction": "gate",
+      "targetId": "bashu",
+      "x": 51,
+      "y": 3,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Lingnan harbor road",
+      "interaction": "gate",
+      "targetId": "lingnan",
+      "x": 51,
+      "y": 9,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Jingchu mine road",
+      "interaction": "gate",
+      "targetId": "jingchu",
+      "x": 51,
+      "y": 15,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "npc-qd-mu-luozi",
+      "name": "Mu Luozi",
+      "interaction": "npc",
+      "npcId": "qd-mu-luozi",
+      "x": 4,
+      "y": 15,
+      "tileW": 1,
+      "tileH": 1,
+      "solid": false
+    }
   ]
 }

@@ -3,29 +3,215 @@
   "regionId": "lingnan",
   "subregionId": "lingnan-harbor",
   "tileSize": 32,
-  "size": { "w": 56, "h": 30 },
+  "size": {
+    "w": 56,
+    "h": 30
+  },
   "roads": [
-    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
-    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
-    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
-    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
-    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
-    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+    {
+      "points": [
+        {
+          "x": 2,
+          "y": 24
+        },
+        {
+          "x": 23,
+          "y": 24
+        },
+        {
+          "x": 30,
+          "y": 22
+        },
+        {
+          "x": 53,
+          "y": 22
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 3,
+          "y": 6
+        },
+        {
+          "x": 52,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 10,
+          "y": 3
+        },
+        {
+          "x": 10,
+          "y": 24
+        },
+        {
+          "x": 15,
+          "y": 24
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 28,
+          "y": 6
+        },
+        {
+          "x": 29,
+          "y": 24
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 45,
+          "y": 4
+        },
+        {
+          "x": 45,
+          "y": 23
+        }
+      ]
+    }
   ],
   "objects": [
-    { "itemId": "player_spawn", "x": 28, "y": 15 },
-    { "itemId": "industry_silk", "name": "harbor cocoon store", "interaction": "industry", "targetId": "harvest-cocoon", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "industry_silk", "name": "export silk reeling room", "interaction": "industry", "targetId": "sericulture", "x": 14, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "craft_textile", "name": "Canton embroidery frame", "interaction": "craft", "targetId": "canton-embroidery", "x": 23, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "craft_textile", "name": "Zhuang brocade stall", "interaction": "craft", "targetId": "zhuang-brocade", "x": 8, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "activity_trade", "name": "Pearl River cargo house", "interaction": "activity", "targetId": "ln-pearl-river-harbor", "x": 32, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "activity_market", "name": "qilou night market", "interaction": "activity", "targetId": "ln-qilou-night-market", "x": 41, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to gambiered silk yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "lingnan-gambiered-yard", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to Foshan forge", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "lingnan-forge", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to Duan stone pit", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "lingnan-duan-stone", "x": 32, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Qiandian harbor road", "interaction": "gate", "targetId": "qiandian", "x": 49, "y": 12, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "npc-ln-wu-haichao", "name": "Wu Haichao", "interaction": "npc", "npcId": "ln-wu-haichao", "x": 29, "y": 10, "tileW": 1, "tileH": 1, "solid": false },
-    { "itemId": "cargo-awning-a", "name": "cargo awning", "interaction": "decoration", "x": 36, "y": 16, "tileW": 4, "tileH": 2, "solid": true },
-    { "itemId": "dock-crates-a", "name": "dock crates", "interaction": "decoration", "x": 19, "y": 16, "tileW": 3, "tileH": 2, "solid": true }
+    {
+      "itemId": "player_spawn",
+      "x": 6,
+      "y": 23,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "itemId": "industry_silk",
+      "name": "harbor cocoon store",
+      "interaction": "industry",
+      "targetId": "harvest-cocoon",
+      "x": 7,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "industry_silk",
+      "name": "export silk reeling room",
+      "interaction": "industry",
+      "targetId": "sericulture",
+      "x": 16,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "craft_textile",
+      "name": "Canton embroidery frame",
+      "interaction": "craft",
+      "targetId": "canton-embroidery",
+      "x": 43,
+      "y": 10,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "craft_textile",
+      "name": "Zhuang brocade stall",
+      "interaction": "craft",
+      "targetId": "zhuang-brocade",
+      "x": 34,
+      "y": 10,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "activity_trade",
+      "name": "Pearl River cargo house",
+      "interaction": "activity",
+      "targetId": "ln-pearl-river-harbor",
+      "x": 7,
+      "y": 18,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "activity_market",
+      "name": "qilou night market",
+      "interaction": "activity",
+      "targetId": "ln-qilou-night-market",
+      "x": 16,
+      "y": 18,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to gambiered silk yard",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "lingnan-gambiered-yard",
+      "x": 14,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to Foshan forge",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "lingnan-forge",
+      "x": 28,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to Duan stone pit",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "lingnan-duan-stone",
+      "x": 42,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Qiandian harbor road",
+      "interaction": "gate",
+      "targetId": "qiandian",
+      "x": 51,
+      "y": 3,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "npc-ln-wu-haichao",
+      "name": "Wu Haichao",
+      "interaction": "npc",
+      "npcId": "ln-wu-haichao",
+      "x": 4,
+      "y": 15,
+      "tileW": 1,
+      "tileH": 1,
+      "solid": false
+    }
   ]
 }

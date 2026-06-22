@@ -3,27 +3,182 @@
   "regionId": "lingnan",
   "subregionId": "lingnan-forge",
   "tileSize": 32,
-  "size": { "w": 56, "h": 30 },
+  "size": {
+    "w": 56,
+    "h": 30
+  },
   "roads": [
-    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
-    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
-    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
-    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
-    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
-    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+    {
+      "points": [
+        {
+          "x": 2,
+          "y": 24
+        },
+        {
+          "x": 25,
+          "y": 24
+        },
+        {
+          "x": 32,
+          "y": 22
+        },
+        {
+          "x": 53,
+          "y": 22
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 3,
+          "y": 6
+        },
+        {
+          "x": 52,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 8,
+          "y": 3
+        },
+        {
+          "x": 8,
+          "y": 24
+        },
+        {
+          "x": 13,
+          "y": 24
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 30,
+          "y": 6
+        },
+        {
+          "x": 31,
+          "y": 24
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 45,
+          "y": 4
+        },
+        {
+          "x": 45,
+          "y": 23
+        }
+      ]
+    }
   ],
   "objects": [
-    { "itemId": "player_spawn", "x": 28, "y": 15 },
-    { "itemId": "industry_ore", "name": "Foshan ore rack", "interaction": "industry", "targetId": "harvest-iron-ore", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "industry_furnace", "name": "ancestral furnace", "interaction": "industry", "targetId": "smelt-iron", "x": 15, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "activity_forge", "name": "Foshan forge room", "interaction": "activity", "targetId": "ln-foshan-forge", "x": 34, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to Pearl River harbor", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "lingnan-harbor", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to gambiered silk yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "lingnan-gambiered-yard", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to Duan stone pit", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "lingnan-duan-stone", "x": 32, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Qiandian harbor road", "interaction": "gate", "targetId": "qiandian", "x": 49, "y": 12, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "npc-ln-liang-tiexian", "name": "Liang Tiexian", "interaction": "npc", "npcId": "ln-liang-tiexian", "x": 29, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
-    { "itemId": "ancestral-hall-step-a", "name": "ancestral hall step", "interaction": "decoration", "x": 23, "y": 4, "tileW": 4, "tileH": 2, "solid": true },
-    { "itemId": "iron-tool-rack-a", "name": "iron tool rack", "interaction": "decoration", "x": 39, "y": 4, "tileW": 3, "tileH": 2, "solid": true },
-    { "itemId": "clan-order-board-a", "name": "clan order board", "interaction": "decoration", "x": 19, "y": 17, "tileW": 3, "tileH": 2, "solid": true }
+    {
+      "itemId": "player_spawn",
+      "x": 8,
+      "y": 23,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "itemId": "industry_ore",
+      "name": "Foshan ore rack",
+      "interaction": "industry",
+      "targetId": "harvest-iron-ore",
+      "x": 7,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "industry_furnace",
+      "name": "ancestral furnace",
+      "interaction": "industry",
+      "targetId": "smelt-iron",
+      "x": 16,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "activity_forge",
+      "name": "Foshan forge room",
+      "interaction": "activity",
+      "targetId": "ln-foshan-forge",
+      "x": 7,
+      "y": 18,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to Pearl River harbor",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "lingnan-harbor",
+      "x": 14,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to gambiered silk yard",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "lingnan-gambiered-yard",
+      "x": 28,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to Duan stone pit",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "lingnan-duan-stone",
+      "x": 42,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Qiandian harbor road",
+      "interaction": "gate",
+      "targetId": "qiandian",
+      "x": 51,
+      "y": 3,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "npc-ln-liang-tiexian",
+      "name": "Liang Tiexian",
+      "interaction": "npc",
+      "npcId": "ln-liang-tiexian",
+      "x": 4,
+      "y": 15,
+      "tileW": 1,
+      "tileH": 1,
+      "solid": false
+    }
   ]
 }

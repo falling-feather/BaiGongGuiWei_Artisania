@@ -10,11 +10,14 @@ import Phaser from 'phaser';
 import {
   BUILDING_SNOW_TEXTURES,
   BUILDING_WEATHER_TEXTURES,
+  REGION_TERRAIN_TEXTURES,
+  REGION_TERRAIN_THEME_ALIASES,
   TILE,
   TEX,
   generatePlaceholderTextures,
   preloadArtTextures,
   type BuildingWeatherVariant,
+  type RegionTerrainTextures,
 } from '../textures';
 import {
   emitBus,
@@ -46,6 +49,7 @@ if (import.meta.hot) {
 }
 type PointKind = 'industry' | 'craft' | 'activity' | 'gate' | 'subregionGate';
 type ActivityPointKind = RegionMapSpec['activities'][number]['kind'];
+type LayoutEditorTile = NonNullable<NonNullable<RegionMapSpec['layout']>['tiles']>[number];
 
 interface MapPoint {
   kind: PointKind;
@@ -448,19 +452,27 @@ export class StreetScene extends Phaser.Scene {
     // 初始化可行走网格（全部可走，随后由地形/建筑标记阻挡）
     this.blocked = Array.from({ length: MAP_H }, () => new Array<boolean>(this.mapWTiles).fill(false));
     this.buildStreetNetwork(spec.layout);
+    this.reserveLayoutObjectFootprints(spec.layout);
 
+    const explicitLayoutTiles = this.layoutTileMap(spec.layout);
     for (let y = 0; y < MAP_H; y++) {
       for (let x = 0; x < this.mapWTiles; x++) {
-        const tex = this.isRoadTile(x, y) ? this.roadTextureAt(x, y) : this.groundTextureAt(x, y);
+        const explicitTile = explicitLayoutTiles?.get(this.tileKey(x, y));
+        const tex = explicitTile
+          ? this.textureForLayoutTile(explicitTile, x, y)
+          : this.isRoadTile(x, y)
+            ? this.roadTextureAt(x, y)
+            : this.groundTextureAt(x, y);
         const img = this.add.image(x * TILE + TILE / 2, y * TILE + TILE / 2, tex);
         img.setDepth(0);
         this.groundLayer.add(img);
+        if (explicitTile && (explicitTile.solid || explicitTile.layer === 'water')) this.markBlocked(x, y);
       }
     }
 
     // 地形地貌：按地区类型铺设河流/海岸/山石/街巷（替代单一横向街道）
     this.buildTerrain(spec.terrain);
-    this.decorateStreetProps(spec.terrain);
+    if (!explicitLayoutTiles) this.decorateStreetProps(spec.terrain);
     this.applyLayoutDecor(spec.layout);
 
     const slots = this.buildPointSlots(all.length, spec.layout);
@@ -477,7 +489,9 @@ export class StreetScene extends Phaser.Scene {
       const buildingTex = this.buildingTextureFor(item.tex);
 
       const img = this.add.image(px, py, buildingTex).setOrigin(0.5, 1).setDepth(py);
-      this.addBuildingWeatherOverlay(item.tex, px, py, buildingTex !== item.tex);
+      const fitScale = Math.min((footprint.w * TILE) / img.width, (footprint.h * TILE) / img.height);
+      img.setScale(fitScale);
+      this.addBuildingWeatherOverlay(item.tex, px, py, buildingTex !== item.tex, fitScale);
       const body = this.solids.create(px, py - TILE * 0.5) as Phaser.Physics.Arcade.Sprite;
       body.setVisible(false);
       body.setSize(footprint.w * TILE, TILE).refreshBody();
@@ -704,7 +718,21 @@ export class StreetScene extends Phaser.Scene {
     return weatherTex && this.textureExists(weatherTex) ? weatherTex : baseTex;
   }
 
+  private regionTerrainTheme(): RegionTerrainTextures | null {
+    const themeId = REGION_TERRAIN_THEME_ALIASES[this.activeRegionId];
+    const theme = themeId ? REGION_TERRAIN_TEXTURES[themeId] : null;
+    return theme && this.textureExists(theme.ground) ? theme : null;
+  }
+
   private roadTextureAt(tx: number, ty: number) {
+    const horizontal = this.isRoadTile(tx - 1, ty) || this.isRoadTile(tx + 1, ty);
+    const vertical = this.isRoadTile(tx, ty - 1) || this.isRoadTile(tx, ty + 1);
+    const regionTerrain = this.regionTerrainTheme();
+    if (regionTerrain) {
+      if (horizontal && vertical) return regionTerrain.roadCross;
+      if (vertical) return regionTerrain.roadVertical;
+      return regionTerrain.road;
+    }
     if (this.usesWeatherArt()) {
       if (this.activeSeason === 'winter' && this.textureExists(TEX.winterSnowRoad)) return TEX.winterSnowRoad;
       if (this.activeWeather === 'rain') {
@@ -714,8 +742,6 @@ export class StreetScene extends Phaser.Scene {
       }
       if (this.activeSeason === 'autumn' && this.textureExists(TEX.autumnLeafRoad)) return TEX.autumnLeafRoad;
     }
-    const horizontal = this.isRoadTile(tx - 1, ty) || this.isRoadTile(tx + 1, ty);
-    const vertical = this.isRoadTile(tx, ty - 1) || this.isRoadTile(tx, ty + 1);
     if (horizontal && vertical) return TEX.roadCross;
     if (vertical) return TEX.roadVertical;
     return TEX.road;
@@ -731,6 +757,15 @@ export class StreetScene extends Phaser.Scene {
     const nearCross =
       this.primaryRoadRows.some((row) => Math.abs(row - ty) <= 2) &&
       this.primaryRoadCols.some((col) => Math.abs(col - tx) <= 2);
+    const regionTerrain = this.regionTerrainTheme();
+    if (regionTerrain) {
+      const nearRoadBand =
+        this.primaryRoadRows.some((row) => Math.abs(row - ty) <= 1) ||
+        this.primaryRoadCols.some((col) => Math.abs(col - tx) <= 1);
+      if (nearCross && nearRoadBand) return regionTerrain.courtyard;
+      if ((tx * 5 + ty * 3) % 47 === 0) return regionTerrain.groundAlt;
+      return regionTerrain.ground;
+    }
     if (this.usesWeatherArt()) {
       if (this.activeSeason === 'winter' && this.textureExists(TEX.winterSnowGround)) return TEX.winterSnowGround;
       if (this.activeSeason === 'summer') {
@@ -749,18 +784,99 @@ export class StreetScene extends Phaser.Scene {
     return TEX.ground;
   }
 
+  private layoutTileMap(layout: RegionMapSpec['layout']) {
+    if (!layout?.tiles?.length) return null;
+    const tiles = new Map<string, LayoutEditorTile>();
+    for (const tile of layout.tiles) tiles.set(this.tileKey(tile.x, tile.y), tile);
+    return tiles;
+  }
+
+  private regionTextureForEditorTile(itemId: string) {
+    const match = /^region_([^_]+)_(.+)$/.exec(itemId);
+    if (!match) return null;
+    const themeId = REGION_TERRAIN_THEME_ALIASES[match[1]];
+    const theme = themeId ? REGION_TERRAIN_TEXTURES[themeId] : null;
+    if (!theme) return null;
+    switch (match[2]) {
+      case 'ground':
+        return theme.ground;
+      case 'ground_alt':
+        return theme.groundAlt;
+      case 'road':
+        return theme.road;
+      case 'road_vertical':
+        return theme.roadVertical;
+      case 'road_cross':
+        return theme.roadCross;
+      case 'water':
+        return theme.water;
+      case 'water_edge_left':
+        return theme.waterEdgeLeft;
+      case 'water_edge_right':
+        return theme.waterEdgeRight;
+      case 'vegetation':
+        return theme.vegetation;
+      case 'courtyard':
+        return theme.courtyard;
+      default:
+        return null;
+    }
+  }
+
+  private textureForLayoutTile(
+    tile: LayoutEditorTile,
+    tx: number,
+    ty: number,
+  ) {
+    const regionTexture = this.regionTextureForEditorTile(tile.itemId);
+    if (regionTexture && this.textureExists(regionTexture)) return regionTexture;
+    if (tile.layer === 'road' || /road|track|path|bridge|courtyard|brick/.test(tile.itemId)) {
+      return this.roadTextureAt(tx, ty);
+    }
+    if (tile.layer === 'water' || /water|pond|canal|lake|bank|edge/.test(tile.itemId)) {
+      if (/left/.test(tile.itemId)) return this.regionTerrainTheme()?.waterEdgeLeft ?? TEX.waterEdgeLeft;
+      if (/right/.test(tile.itemId)) return this.regionTerrainTheme()?.waterEdgeRight ?? TEX.waterEdgeRight;
+      return this.regionTerrainTheme()?.water ?? TEX.water;
+    }
+    switch (tile.itemId) {
+      case 'summer_lush_ground':
+      case 'meadow_grass':
+      case 'wildflower_grass':
+      case 'clover_moss':
+      case 'oasis_grass':
+      case 'desert_sand':
+      case 'dune_sand':
+      case 'gravel_plain':
+        return this.regionTerrainTheme()?.ground ?? TEX.summerLushGround;
+      case 'ground_stone':
+      case 'courtyard_brick':
+      case 'mosaic_courtyard':
+        return TEX.groundStone;
+      case 'packed_earth':
+      case 'tilled_soil_dry':
+      case 'tilled_soil_wet':
+      case 'vineyard_soil':
+        return TEX.groundSoil;
+      case 'snow_ground_open':
+        return TEX.winterSnowGround;
+      case 'ground':
+      default:
+        return this.regionTerrainTheme()?.ground ?? TEX.ground;
+    }
+  }
+
   private footprintFor(tex: string, tileW?: number, tileH?: number) {
     if (tileW && tileH) return { w: tileW, h: tileH };
     if (tex === TEX.gate) return { w: 3, h: 3 };
     return { w: BUILDING_TILE_W, h: BUILDING_TILE_H };
   }
 
-  private addBuildingWeatherOverlay(baseTex: string, px: number, py: number, hasFullVariant = false) {
+  private addBuildingWeatherOverlay(baseTex: string, px: number, py: number, hasFullVariant = false, scale = 1) {
     if (hasFullVariant) return;
     if (!this.usesWeatherArt() || this.activeSeason !== 'winter') return;
     const snowTex = BUILDING_SNOW_TEXTURES[baseTex];
     if (!snowTex || !this.textureExists(snowTex)) return;
-    const overlay = this.add.image(px, py, snowTex).setOrigin(0.5, 1).setDepth(py + 0.5);
+    const overlay = this.add.image(px, py, snowTex).setOrigin(0.5, 1).setDepth(py + 0.5).setScale(scale);
     this.decor.push(overlay);
   }
 
@@ -807,6 +923,17 @@ export class StreetScene extends Phaser.Scene {
       }
     }
     return occupied;
+  }
+
+  private reserveLayoutObjectFootprints(layout: RegionMapSpec['layout'] | undefined) {
+    for (const object of layout?.objects ?? []) {
+      if (object.interaction === 'decoration' || object.interaction === 'npc') continue;
+      const tileW = object.tileW ?? BUILDING_TILE_W;
+      const tileH = object.tileH ?? BUILDING_TILE_H;
+      for (let y = object.y; y < object.y + tileH; y++) {
+        for (let x = object.x; x < object.x + tileW; x++) this.markBlocked(x, y);
+      }
+    }
   }
 
   private slotOverlapsOccupied(
@@ -911,6 +1038,8 @@ export class StreetScene extends Phaser.Scene {
 
   private addDecorTile(tx: number, ty: number, tex: string, solid: boolean, angleDeg = 0) {
     if (tx < 0 || tx >= this.mapWTiles || ty < 0 || ty >= MAP_H) return;
+    if (this.blocked[ty]?.[tx]) return;
+    if (!solid && this.isRoadTile(tx, ty) && tex !== TEX.bridge) return;
     const cx = tx * TILE + TILE / 2;
     const cy = ty * TILE + TILE / 2;
     const img = this.add.image(cx, cy, tex).setDepth(solid ? cy : 1);
@@ -927,13 +1056,8 @@ export class StreetScene extends Phaser.Scene {
   private applyLayoutDecor(layout: RegionMapSpec['layout'] | undefined) {
     for (const object of layout?.objects ?? []) {
       if (object.interaction !== 'decoration') continue;
-      const tileW = object.tileW ?? 1;
-      const tileH = object.tileH ?? 1;
-      for (let y = object.y; y < object.y + tileH; y++) {
-        for (let x = object.x; x < object.x + tileW; x++) {
-          this.addDecorTile(x, y, TEX.rock, object.solid ?? true);
-        }
-      }
+      // Generic layout decorations used to materialize as rock tiles.
+      // Keep them out of the runtime map now that those placeholders are removed.
     }
   }
 
@@ -974,6 +1098,7 @@ export class StreetScene extends Phaser.Scene {
 
   private addForegroundCover(anchorTx: number, anchorTy: number, tex: string, tileW = 2, tileH = 2, scale = 1) {
     if (anchorTx < 0 || anchorTx >= this.mapWTiles || anchorTy < 0 || anchorTy >= MAP_H) return null;
+    if (!this.canPlaceProp(anchorTx, anchorTy, tileW, tileH)) return null;
     const px = anchorTx * TILE + TILE / 2;
     const py = (anchorTy + 1) * TILE;
     const image = this.add
@@ -1018,7 +1143,6 @@ export class StreetScene extends Phaser.Scene {
     if (this.activeSeason === 'winter') {
       if (tex === TEX.willow) return TEX.winterSnowWillowCap;
       if (tex === TEX.lanternPost) return TEX.winterSnowLanternCap;
-      if (tex === TEX.archBridge) return TEX.winterSnowBridgeCap;
       if (tex === TEX.dock) return TEX.winterSnowDockCap;
     }
     return null;
@@ -1074,10 +1198,15 @@ export class StreetScene extends Phaser.Scene {
 
   private decorateStreetProps(kind: TerrainKind) {
     const rows = this.primaryRoadRows.length ? this.primaryRoadRows : [...ROAD_ROWS];
+    const regionTerrain = this.regionTerrainTheme();
     rows.forEach((row, index) => {
       this.tryAddProp(3 + index * 2, row - 1, TEX.lanternPost, 1, 2);
       this.tryAddProp(this.mapWTiles - 5 - index * 2, row + 2, TEX.banner, 1, 2);
       this.tryAddProp(8 + index * 9, row + 2, TEX.noticeBoard, 2, 2);
+      if (regionTerrain) {
+        this.addDecorTile(5 + index * 10, row + 1, regionTerrain.vegetation, false);
+        this.addDecorTile(Math.floor(this.mapWTiles * 0.58) + index * 5, row - 2, regionTerrain.groundAlt, false);
+      }
     });
 
     const stallRow = rows[1] ?? ROAD_ROWS[1];
@@ -1104,6 +1233,7 @@ export class StreetScene extends Phaser.Scene {
 
   private buildTerrain(kind: TerrainKind) {
     const midRow = (ROAD_ROW_TOP + ROAD_ROW_BOTTOM) >> 1;
+    const regionTerrain = this.regionTerrainTheme();
     if (kind === 'water') {
       // 一条纵向河道，街道行处架石桥可通行。
       // 河列必须落在点位缝隙中心（避开交互点建筑列，不再压住手艺/产业点）。
@@ -1120,52 +1250,68 @@ export class StreetScene extends Phaser.Scene {
         return Phaser.Math.Clamp(riverCol + drift, 3, this.mapWTiles - 4);
       };
       const summerWater = this.usesWeatherArt() && this.activeSeason === 'summer';
+      const waterCenter = regionTerrain?.water ?? TEX.water;
+      const waterLeft = regionTerrain?.waterEdgeLeft ?? TEX.waterEdgeLeft;
+      const waterRight = regionTerrain?.waterEdgeRight ?? TEX.waterEdgeRight;
       for (let y = 0; y < MAP_H; y++) {
         const col = riverAt(y);
         const tiles = [
-          [col - 1, summerWater ? TEX.pondWaterGrassEdgeRight : TEX.waterEdgeRight],
-          [col, summerWater && (y * 5 + col) % 7 === 0 ? TEX.pondLotusDuckweed : summerWater ? TEX.pondWaterGrassCenter : TEX.water],
-          [col + 1, summerWater ? TEX.pondWaterGrassEdgeLeft : TEX.waterEdgeLeft],
+          [col - 1, summerWater && !regionTerrain ? TEX.pondWaterGrassEdgeRight : waterRight],
+          [
+            col,
+            summerWater && !regionTerrain && (y * 5 + col) % 7 === 0
+              ? TEX.pondLotusDuckweed
+              : summerWater && !regionTerrain
+                ? TEX.pondWaterGrassCenter
+                : waterCenter,
+          ],
+          [col + 1, summerWater && !regionTerrain ? TEX.pondWaterGrassEdgeLeft : waterLeft],
         ] as const;
         const onRoad = tiles.some(([x]) => this.isRoadTile(x, y));
         for (const [x, tex] of tiles) {
           this.addDecorTile(x, y, onRoad ? TEX.bridge : tex, !onRoad, onRoad ? this.bridgeAngleForRoadTile(x, y) : 0);
         }
       }
-      for (const row of this.primaryRoadRows) {
-        this.addProp(riverAt(row), row + 1, TEX.archBridge, false, 4, 2);
-      }
       this.tryAddProp(riverAt(ROAD_ROW_TOP + 2) - 5, ROAD_ROW_TOP + 2, TEX.willow, 2, 3);
       this.tryAddProp(riverAt(ROAD_ROW_TOP + 3) + 5, ROAD_ROW_TOP + 3, TEX.teaStall, 3, 2);
       this.tryAddProp(riverAt(ROAD_ROW_BOTTOM + 3) - 4, ROAD_ROW_BOTTOM + 3, TEX.dock, 3, 1);
-      this.addProp(riverAt(ROAD_ROW_BOTTOM + 3) + 5, ROAD_ROW_BOTTOM + 3, TEX.boat, false, 4, 1);
+      this.tryAddProp(riverAt(ROAD_ROW_BOTTOM + 3) + 5, ROAD_ROW_BOTTOM + 3, TEX.boat, 4, 1, false);
       if (summerWater) {
         this.addForegroundCover(riverAt(ROAD_ROW_TOP + 5) - 2, ROAD_ROW_TOP + 5, TEX.summerDenseReedClump, 3, 2);
-        this.addProp(riverAt(ROAD_ROW_BOTTOM - 2) + 2, ROAD_ROW_BOTTOM - 2, TEX.summerLotusPatch, false, 3, 2);
+        this.tryAddProp(riverAt(ROAD_ROW_BOTTOM - 2) + 2, ROAD_ROW_BOTTOM - 2, TEX.summerLotusPatch, 3, 2, false);
       }
     } else if (kind === 'coast') {
       // 底部两行为海面（不可通行），岸边点缀礁石
+      const coastWater = regionTerrain?.water ?? TEX.water;
+      const coastBank = regionTerrain?.waterEdgeLeft ?? TEX.groundStone;
       for (let y = MAP_H - 2; y < MAP_H; y++) {
-        for (let x = 0; x < this.mapWTiles; x++) this.addDecorTile(x, y, TEX.water, true);
+        for (let x = 0; x < this.mapWTiles; x++) this.addDecorTile(x, y, coastWater, true);
       }
-      for (let x = 2; x < this.mapWTiles; x += 6) this.addDecorTile(x, MAP_H - 3, TEX.rock, true);
+      for (let x = 2; x < this.mapWTiles; x += 6) this.addDecorTile(x, MAP_H - 3, coastBank, true);
       this.tryAddProp(7, MAP_H - 3, TEX.dock, 3, 1);
-      this.addProp(12, MAP_H - 2, TEX.boat, false, 4, 1);
+      this.tryAddProp(12, MAP_H - 2, TEX.boat, 4, 1, false);
       this.tryAddProp(this.mapWTiles - 8, MAP_H - 3, TEX.dock, 3, 1);
     } else if (kind === 'mountain') {
       // 山地：街道两侧错落林木与山石（避开街道行）
       for (let x = 2; x < this.mapWTiles - 1; x += 4) {
         const treeY = x % 8 === 2 ? ROAD_ROW_TOP - 3 : ROAD_ROW_BOTTOM + 2;
         if (treeY >= 0 && treeY < MAP_H && (treeY < ROAD_ROW_TOP || treeY > ROAD_ROW_BOTTOM)) {
-          this.addDecorTile(x, treeY, x % 3 === 0 ? TEX.rock : TEX.tree, true);
+          this.addDecorTile(x, treeY, regionTerrain ? (x % 3 !== 0 ? regionTerrain.vegetation : regionTerrain.groundAlt) : TEX.groundStone, true);
         }
       }
     } else {
       // 平原街巷：街道上下沿铺栅栏作地块边界（留出缺口便于通行）
       for (let x = 1; x < this.mapWTiles - 1; x++) {
         if (x % 4 === 0) continue; // 缺口
-        this.addDecorTile(x, ROAD_ROW_TOP - 1, TEX.fence, true);
-        this.addDecorTile(x, ROAD_ROW_BOTTOM + 1, TEX.fence, true);
+        if (regionTerrain) {
+          const topEdge = x % 11 === 1 ? regionTerrain.vegetation : regionTerrain.groundAlt;
+          const bottomEdge = x % 11 === 5 ? regionTerrain.vegetation : regionTerrain.groundAlt;
+          this.addDecorTile(x, ROAD_ROW_TOP - 1, topEdge, true);
+          this.addDecorTile(x, ROAD_ROW_BOTTOM + 1, bottomEdge, true);
+        } else {
+          this.addDecorTile(x, ROAD_ROW_TOP - 1, TEX.fence, true);
+          this.addDecorTile(x, ROAD_ROW_BOTTOM + 1, TEX.fence, true);
+        }
       }
     }
     // 留作未来扩展：midRow 仅用于潜在的中线地标

@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
+import type { SyntheticEvent } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { NPC_INDEX, RESOURCE_INDEX, questsForNpc } from '../data';
 import {
   NPC_FUNCTION_LABELS,
+  hasNpcTalkedToday,
   itemDefectSummary,
   itemEffectiveQuality,
   npcFunctionNeedsItem,
   npcFunctionRequirement,
   orderDeliveryIssue,
+  realDateKeyFromMs,
   routeRiskLabel,
 } from '../engine';
 import type {
@@ -24,6 +27,8 @@ import type {
   NpcGiftPreference,
   ResourcePool,
 } from '../engine';
+import { useRealTimeNow } from './useRealTimeNow';
+import { npcDialogLayoutToCssVars, useNpcDialogLayouts } from './npcDialogLayout';
 
 const ITEM_STATUS_LABEL = {
   held: '持有',
@@ -38,6 +43,56 @@ const STAGE_LABEL = {
   trusted: '信任',
   confidant: '知己',
 } as const;
+
+type NpcDialogMode = 'intro' | 'talk' | 'gift' | 'action' | 'quest';
+type NpcMenuMode = Exclude<NpcDialogMode, 'intro'>;
+
+const NPC_MENU_TABS: Array<{ mode: NpcMenuMode; label: string; desc: string }> = [
+  { mode: 'talk', label: '交流', desc: '攀谈近况、人物线与地方见闻' },
+  { mode: 'gift', label: '送礼', desc: '挑选作品与偏好线索' },
+  { mode: 'action', label: '互动', desc: '授艺、切磋、鉴评与协作' },
+  { mode: 'quest', label: '委托', desc: '接单、交付与人物委托' },
+];
+
+const KNOWLEDGE_TAG_LABEL: Record<string, string> = {
+  bamboo: '竹作',
+  bronze: '青铜',
+  calligraphy: '书法',
+  caravan: '商旅',
+  ceramics: '陶瓷',
+  dye: '染织',
+  festival: '节令',
+  kiln: '窑火',
+  lacquer: '漆作',
+  literati: '文人圈',
+  market: '市井',
+  metalwork: '金工',
+  paper: '纸作',
+  porcelain: '瓷作',
+  ritual: '礼制',
+  silk: '丝织',
+  stationery: '文房',
+  stone: '石作',
+  tea: '茶事',
+  textile: '织造',
+  timber: '木作',
+};
+
+function knowledgeTagLabel(tag: string): string {
+  return KNOWLEDGE_TAG_LABEL[tag] ?? tag;
+}
+
+const NPC_IMAGE_FALLBACK_ID: Record<string, string> = {
+  'jn-bamboo-master': 'jn-ye-qingzhan',
+  'jn-indigo-keeper': 'ln-he-yunsha',
+  'jn-shen-yunsuo': 'ln-he-yunsha',
+  'jn-gu-bojin': 'gp-wen-yaotou',
+  'jn-fang-jiheng': 'bs-mabang-ayue',
+  'jn-xiaoman': 'jn-qiao-zhaoye',
+  'tourist-scholar': 'jn-ning-ciqiu',
+  'tourist-merchant': 'bs-mabang-ayue',
+  'tourist-lady': 'bs-zhuo-jinniang',
+};
 
 const PERSONALITY_LABEL: Record<string, string> = {
   alert: '警觉',
@@ -288,7 +343,9 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
   const completed = useGameStore((s) => s.state.completedQuests);
   const state = useGameStore((s) => s.state);
   const content = useGameStore((s) => s.content);
-  const [mode, setMode] = useState<'intro' | 'menu'>('intro');
+  const now = useRealTimeNow();
+  const dialogLayouts = useNpcDialogLayouts();
+  const [mode, setMode] = useState<NpcDialogMode>('intro');
 
   useEffect(() => {
     setMode('intro');
@@ -300,6 +357,8 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
   if (!npc) return null;
 
   const affinity = affinityMap[npcId] ?? 0;
+  const talkedToday = hasNpcTalkedToday(state, npcId, now);
+  const todayKey = realDateKeyFromMs(now);
   const runtime = npcStates[npcId];
   const quests = questsForNpc(npcId);
   const activeOrders = (state.activeOrders ?? []).filter((order) => order.npcId === npcId && order.status === 'active');
@@ -348,60 +407,136 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
 
   const bustSrc = `/assets/game/characters/${resolvedNpcId}/bust.png`;
   const portraitSrc = `/assets/game/characters/${resolvedNpcId}/portrait.png`;
+  const fallbackCharacterId = NPC_IMAGE_FALLBACK_ID[resolvedNpcId] ?? 'jn-ning-ciqiu';
+  const fallbackBustSrc = `/assets/game/characters/${fallbackCharacterId}/bust.png`;
+  const fallbackPortraitSrc = `/assets/game/characters/${fallbackCharacterId}/portrait.png`;
   const npcSubtitle = npc.profession ?? (npc.role === 'vendor' ? '关联人物' : '游客');
   const npcPersonalityLabel = personalityLabel(npc.personality);
+  const activeMenuMode: NpcMenuMode = mode === 'intro' ? 'talk' : mode;
+  const activeMenuTab = NPC_MENU_TABS.find((tab) => tab.mode === activeMenuMode) ?? NPC_MENU_TABS[0];
+  const knowledgeLabels = (npc.knowledgeTags ?? []).slice(0, 4).map(knowledgeTagLabel);
+  const dialogLayout = mode === 'intro' ? dialogLayouts.intro : dialogLayouts.menu;
+  const dialogLayoutStyle = npcDialogLayoutToCssVars(dialogLayout);
 
-  function enterMenu() {
-    setMode('menu');
+  function handleNpcImageError(event: SyntheticEvent<HTMLImageElement>) {
+    const img = event.currentTarget;
+    const step = img.dataset.fallbackStep ?? 'bust';
+    if (step === 'bust') {
+      img.dataset.fallbackStep = 'portrait';
+      img.src = portraitSrc;
+      return;
+    }
+    if (step === 'portrait' && fallbackCharacterId !== resolvedNpcId) {
+      img.dataset.fallbackStep = 'fallback-bust';
+      img.src = fallbackBustSrc;
+      return;
+    }
+    if (step === 'fallback-bust') {
+      img.dataset.fallbackStep = 'fallback-portrait';
+      img.src = fallbackPortraitSrc;
+      return;
+    }
+    img.style.display = 'none';
+  }
+
+  function openMenu(nextMode: NpcMenuMode) {
+    setMode(nextMode);
+  }
+
+  function renderPortrait(className: string) {
+    return (
+      <div className={`npc-dialog-slot npc-dialog-slot--portrait ${className}`}>
+        <img
+          src={bustSrc}
+          alt=""
+          draggable={false}
+          data-fallback-step="bust"
+          onError={handleNpcImageError}
+        />
+      </div>
+    );
+  }
+
+  function renderProfile(className: string, options: { showReturn?: boolean } = {}) {
+    return (
+      <section className={`npc-dialog-slot npc-dialog-slot--profile ${className}`}>
+        <header className="npc-menu-header">
+          <div>
+            <p className="npc-menu-header__eyebrow">
+              {mode === 'intro' ? npcSubtitle : `${activeMenuTab.label} · ${npcSubtitle}`}
+            </p>
+            <h3 className="modal__title">{npc.name}</h3>
+          </div>
+          {options.showReturn && (
+            <button className="npc-menu-back" type="button" onClick={() => setMode('intro')}>
+              返回对白
+            </button>
+          )}
+        </header>
+        <div className="npc-profile-strip">
+          <span>关系：{STAGE_LABEL[stage]}</span>
+          <span>好感 {affinity}/100</span>
+          {mode !== 'intro' && <span>交谈：{runtime?.talks ?? 0} 次</span>}
+          {npcPersonalityLabel && <span>性格：{npcPersonalityLabel}</span>}
+          {knowledgeLabels.map((label) => <span key={label}>{label}</span>)}
+        </div>
+        {mode !== 'intro' && (
+          <div className="npc-affinity">
+            <span className="npc-affinity__label">好感度</span>
+            <div className="npc-affinity__bar">
+              <div className="npc-affinity__fill" style={{ width: `${affinity}%` }} />
+            </div>
+            <span className="npc-affinity__num">{affinity}/100</span>
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  function renderChoiceButton(label: string, onClick: () => void) {
+    return (
+      <button type="button" onClick={onClick}>
+        <img src="/assets/game/ui/hud_v2_choice_button.png" alt="" draggable={false} />
+        <span>{label}</span>
+      </button>
+    );
+  }
+
+  function renderMenuTabs() {
+    return (
+      <div className="npc-menu-tabs" aria-label="NPC 交互分类">
+        {NPC_MENU_TABS.map((tab) => (
+          <button
+            className={`npc-menu-tab ${activeMenuMode === tab.mode ? 'npc-menu-tab--active' : ''}`}
+            key={tab.mode}
+            type="button"
+            title={tab.desc}
+            onClick={() => setMode(tab.mode)}
+          >
+            <span>{tab.label}</span>
+            <small>{tab.desc}</small>
+          </button>
+        ))}
+      </div>
+    );
   }
 
   if (mode === 'intro') {
     return (
-      <div className="modal__backdrop npc-dialog-backdrop" onClick={onClose}>
-        <section className="npc-dialog-intro" onClick={(e) => e.stopPropagation()}>
+      <div className="modal__backdrop npc-dialog-backdrop" style={dialogLayoutStyle} onClick={onClose}>
+        <section className="npc-dialog-intro npc-dialog-panel" onClick={(e) => e.stopPropagation()}>
           <img className="npc-dialog-intro__frame" src="/assets/game/ui/hud_v2_dialogue_panel.png" alt="" draggable={false} />
-          <div className="npc-dialog-intro__portrait">
-            <img
-              src={bustSrc}
-              alt=""
-              draggable={false}
-              onError={(event) => {
-                event.currentTarget.onerror = null;
-                event.currentTarget.src = portraitSrc;
-              }}
-            />
-          </div>
-          <div className="npc-dialog-intro__copy">
-            <p className="npc-dialog-intro__eyebrow">{npcSubtitle}</p>
-            <h3>{npc.name}</h3>
-            <div className="npc-dialog-intro__meta">
-              <span>{STAGE_LABEL[stage]}</span>
-              <span>好感 {affinity}/100</span>
-              {npcPersonalityLabel && <span>{npcPersonalityLabel}</span>}
-            </div>
+          {renderPortrait('npc-dialog-intro__portrait')}
+          {renderProfile('npc-dialog-intro__copy')}
+          <div className="npc-dialog-slot npc-dialog-slot--conversation npc-dialog-intro__conversation">
             <p className="npc-dialog-intro__line">“{greeting}”</p>
-          </div>
-          <div className="npc-dialog-intro__choices" aria-label="对话选择">
-            <button type="button" onClick={enterMenu}>
-              <img src="/assets/game/ui/hud_v2_choice_button.png" alt="" draggable={false} />
-              <span>交流</span>
-            </button>
-            <button type="button" onClick={() => enterMenu()}>
-              <img src="/assets/game/ui/hud_v2_choice_button.png" alt="" draggable={false} />
-              <span>送礼</span>
-            </button>
-            <button type="button" onClick={() => enterMenu()}>
-              <img src="/assets/game/ui/hud_v2_choice_button.png" alt="" draggable={false} />
-              <span>互动</span>
-            </button>
-            <button type="button" onClick={() => enterMenu()}>
-              <img src="/assets/game/ui/hud_v2_choice_button.png" alt="" draggable={false} />
-              <span>委托</span>
-            </button>
-            <button type="button" onClick={onClose}>
-              <img src="/assets/game/ui/hud_v2_choice_button.png" alt="" draggable={false} />
-              <span>离开</span>
-            </button>
+            <div className="npc-dialog-intro__choices" aria-label="对话选择">
+              {renderChoiceButton('交流', () => openMenu('talk'))}
+              {renderChoiceButton('送礼', () => openMenu('gift'))}
+              {renderChoiceButton('互动', () => openMenu('action'))}
+              {renderChoiceButton('委托', () => openMenu('quest'))}
+              {renderChoiceButton('离开', onClose)}
+            </div>
           </div>
         </section>
       </div>
@@ -409,33 +544,42 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
   }
 
   return (
-    <div className="modal__backdrop" onClick={onClose}>
-      <div className="modal modal--npc-menu" onClick={(e) => e.stopPropagation()}>
-        <button className="npc-menu-back" type="button" onClick={() => setMode('intro')}>
-          返回对白
-        </button>
-        <h3 className="modal__title">
-          {npc.name}{' '}
-          <small style={{ fontSize: 12, color: 'var(--indigo-soft)' }}>
-            {npcSubtitle}
-          </small>
-        </h3>
-        <p className="modal__desc">“{greeting}”</p>
-        <div className="npc-profile-strip">
-          <span>关系：{STAGE_LABEL[stage]}</span>
-          <span>交谈：{runtime?.talks ?? 0} 次</span>
-          {npcPersonalityLabel && <span>性格：{npcPersonalityLabel}</span>}
-        </div>
-
-        <div className="npc-affinity">
-          <span className="npc-affinity__label">好感度</span>
-          <div className="npc-affinity__bar">
-            <div className="npc-affinity__fill" style={{ width: `${affinity}%` }} />
+    <div className="modal__backdrop npc-dialog-backdrop" style={dialogLayoutStyle} onClick={onClose}>
+      <div
+        className={`npc-dialog-panel modal--npc-menu npc-menu-shell npc-menu-shell--${activeMenuMode}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <img className="npc-menu-frame" src="/assets/game/ui/hud_v2_dialogue_panel.png" alt="" draggable={false} />
+        {renderPortrait('npc-menu-portrait')}
+        {renderProfile('npc-menu-profile', { showReturn: true })}
+        <section className="npc-dialog-slot npc-dialog-slot--conversation npc-menu-main">
+          <div className="npc-menu-dialogue-row">
+            <p className="npc-menu-dialogue-line">“{greeting}”</p>
+            <button className="npc-menu-back npc-menu-back--compact" type="button" onClick={() => setMode('intro')}>
+              返回对白
+            </button>
           </div>
-          <span className="npc-affinity__num">{affinity}/100</span>
-        </div>
+          {renderMenuTabs()}
+          <div className="npc-menu-content">
 
-        {(functions.length > 0 || preferences.length > 0 || npc.personalDilemma) && (
+        {activeMenuMode === 'talk' && (
+          <div className="npc-talk-card">
+            <div>
+              <h4>寒暄近况</h4>
+              <p>{activeMenuTab.desc}。{knowledgeLabels.length > 0 ? `他熟悉 ${knowledgeLabels.join('、')}。` : '先从近况说起。'}</p>
+              {talkedToday && <span className="npc-talk-card__timer">今日已攀谈（{todayKey}）</span>}
+            </div>
+            <button
+              className="btn btn--bamboo"
+              disabled={affinity >= 100 || talkedToday}
+              onClick={() => dispatch({ type: 'TALK_NPC', npcId })}
+            >
+              {affinity >= 100 ? '已至交' : talkedToday ? '明日再谈' : '攀谈 +好感'}
+            </button>
+          </div>
+        )}
+
+        {activeMenuMode === 'talk' && (functions.length > 0 || preferences.length > 0 || npc.personalDilemma) && (
           <div className="npc-quests npc-profile-card">
             <h4 className="npc-quests__title">人物线</h4>
             {functions.length > 0 && (
@@ -454,7 +598,7 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
           </div>
         )}
 
-        {visibleIntel.length > 0 && (
+        {activeMenuMode === 'talk' && visibleIntel.length > 0 && (
           <div className="npc-quests npc-intel">
             <h4 className="npc-quests__title">地方见闻</h4>
             {visibleIntel.map((intel) => {
@@ -474,7 +618,7 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
           </div>
         )}
 
-        {(directFunctions.length > 0 || itemFunctions.length > 0) && (
+        {activeMenuMode === 'action' && (directFunctions.length > 0 || itemFunctions.length > 0) && (
           <div className="npc-quests npc-actions">
             <h4 className="npc-quests__title">功能行动</h4>
             {directFunctions.length > 0 && (
@@ -583,7 +727,7 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
           </div>
         )}
 
-        {activeOrders.length > 0 && (
+        {activeMenuMode === 'quest' && activeOrders.length > 0 && (
           <div className="npc-quests npc-orders">
             <h4 className="npc-quests__title">接单</h4>
             {activeOrders.map((order) => {
@@ -627,7 +771,7 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
           </div>
         )}
 
-        {quests.length > 0 && (
+        {activeMenuMode === 'quest' && quests.length > 0 && (
           <div className="npc-quests">
             <h4 className="npc-quests__title">委托</h4>
             {quests.map((q) => {
@@ -670,7 +814,7 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
           </div>
         )}
 
-        {giftCandidates.length > 0 && (
+        {activeMenuMode === 'gift' && giftCandidates.length > 0 && (
           <div className="npc-quests npc-gifts">
             <h4 className="npc-quests__title">赠礼</h4>
             {giftCandidates.map((item) => {
@@ -706,18 +850,32 @@ export function NpcDialogModal({ npcId, onClose }: { npcId: string | null; onClo
           </div>
         )}
 
-        <div className="btn-row">
-          <button
-            className="btn btn--bamboo"
-            disabled={affinity >= 100}
-            onClick={() => dispatch({ type: 'TALK_NPC', npcId })}
-          >
-            攀谈{affinity >= 100 ? '（已至交）' : ' +好感'}
-          </button>
+        {activeMenuMode === 'gift' && giftCandidates.length === 0 && (
+          <div className="npc-empty">
+            <h4>暂无合适赠礼</h4>
+            <p>背包中没有可赠予的作品或资源。先完成工艺体验，或将作品带在身上再来。</p>
+          </div>
+        )}
+        {activeMenuMode === 'action' && directFunctions.length === 0 && itemFunctions.length === 0 && (
+          <div className="npc-empty">
+            <h4>暂无可用互动</h4>
+            <p>这个人物暂未开放授艺、切磋、鉴评或联作能力；提升关系后可再查看。</p>
+          </div>
+        )}
+        {activeMenuMode === 'quest' && activeOrders.length === 0 && quests.length === 0 && (
+          <div className="npc-empty">
+            <h4>暂无委托</h4>
+            <p>当前没有可接取或可交付的订单。继续探索本地产业点，新的委托会随进度出现。</p>
+          </div>
+        )}
+
+          </div>
+        <div className="btn-row npc-menu-footer">
           <button className="btn btn--ghost" onClick={onClose}>
             告辞
           </button>
         </div>
+        </section>
       </div>
     </div>
   );

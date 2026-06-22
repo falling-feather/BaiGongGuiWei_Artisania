@@ -81,6 +81,16 @@ import { addRegionReputation, regionReputationLabel, regionReputationOf } from '
 import { addRouteStability, routeRiskLabel, routeRiskScore, routeStabilityOf } from './routeStability';
 import { craftFocusCheckPlan, craftTechniquePlan } from './craftTechniques';
 import { isLoreEntryUnlocked } from './lore';
+import {
+  REAL_TIME_COOLDOWN_MS,
+  formatRealTimeRemaining,
+  hasNpcTalkedToday,
+  realTimeCooldownKey,
+  realTimeRemainingMs,
+  withNpcTalkDate,
+  withRealTimeCooldown,
+  withRealTimeTouch,
+} from './realTime';
 
 /** reducer 运行所需的内容包（由 store 层从 data 注入） */
 export interface GameContent {
@@ -213,6 +223,21 @@ function clampQuality(value: number) {
 
 function isHarvestIndustry(industry: IndustryDef) {
   return Object.keys(industry.input).length === 0;
+}
+
+function blockIfCoolingDown(
+  state: GameState,
+  key: string,
+  label: string,
+  now: number | undefined,
+): GameState | null {
+  if (now === undefined) return null;
+  const remaining = realTimeRemainingMs(state, key, now);
+  if (remaining <= 0) return null;
+  return {
+    ...withRealTimeTouch(state, now),
+    log: pushLog(state.log, `「${label}」仍在整备中，还需等待 ${formatRealTimeRemaining(remaining)}。`),
+  };
 }
 
 function gatherWeatherEffect(industry: IndustryDef, weather: GameWeather) {
@@ -1194,12 +1219,20 @@ function runProcess(
   skipStepIds: string[],
   techniqueChoices: CraftTechniqueSelection[] = [],
   focusChecks: CraftFocusCheckSelection[] = [],
+  now?: number,
 ): GameState {
   const craftDef = content.crafts.find((c) => c.id === craftId);
   const craftState = findCraftState(state, craftId);
   if (!craftDef || !craftState) return state;
   const locationFailure = localCraftAccessFailure(state, content, craftId);
   if (locationFailure) return { ...state, log: pushLog(state.log, locationFailure) };
+  const cooldownBlock = blockIfCoolingDown(
+    state,
+    realTimeCooldownKey('craft', craftId),
+    craftDef.name,
+    now,
+  );
+  if (cooldownBlock) return cooldownBlock;
 
   const skipSet = new Set(skipStepIds);
   const stepsToRun = craftDef.processChain.filter(
@@ -1385,7 +1418,7 @@ function runProcess(
       `「${craftDef.name}」完成一批出品${skipNote}${techniqueNote}${focusCheckNote}${productNote}，入账 ${incomeBase} 文。`,
     ),
   };
-  return recompute(
+  const settled = recompute(
     applyProfileXp(next, {
       craft: 2,
       mind:
@@ -1396,6 +1429,18 @@ function runProcess(
             focusCheckPlan.records.filter((record) => record.choiceId === 'observe' || record.choiceId === 'align').length,
     }),
   );
+  return now === undefined
+    ? settled
+    : withRealTimeCooldown(
+        settled,
+        {
+          kind: 'craft',
+          id: craftId,
+          label: craftDef.name,
+          durationMs: REAL_TIME_COOLDOWN_MS.craft,
+        },
+        now,
+      );
 }
 
 function workshopUpgradeRequirementFailure(
@@ -2003,6 +2048,7 @@ function gatherResource(
   content: GameContent,
   industryId: string,
   quality: number,
+  now?: number,
 ): GameState {
   const industries = content.industries ?? [];
   const regions = content.regions ?? [];
@@ -2040,6 +2086,15 @@ function gatherResource(
   }
 
   // 校验人力
+  const harvestIndustry = isHarvestIndustry(industry);
+  const cooldownBlock = blockIfCoolingDown(
+    state,
+    realTimeCooldownKey('industry', industryId),
+    industry.name,
+    now,
+  );
+  if (cooldownBlock) return cooldownBlock;
+
   if ((state.resources.labor ?? 0) < industry.laborCost) {
     return {
       ...state,
@@ -2079,7 +2134,7 @@ function gatherResource(
     { sourceIndustryId: industry.id },
   );
 
-  return applyProfileXp({
+  const settled = applyProfileXp({
     ...state,
     resources,
     itemInstances: [itemInstance, ...itemInstancesAfterCost].slice(0, 80),
@@ -2087,7 +2142,21 @@ function gatherResource(
       pushLog(state.log, itemInstance.appraisal),
       `「${industry.name}」产出 ${produced} 份${q >= 0.8 ? '上品' : ''}。${weatherEffect.note}`,
     ),
-  }, { stamina: 1, knowledge: isHarvestIndustry(industry) ? 1 : 0 });
+  }, { stamina: 1, knowledge: harvestIndustry ? 1 : 0 });
+  return now === undefined
+    ? settled
+    : withRealTimeCooldown(
+        settled,
+        {
+          kind: 'industry',
+          id: industryId,
+          label: industry.name,
+          durationMs: harvestIndustry
+            ? REAL_TIME_COOLDOWN_MS.industryHarvest
+            : REAL_TIME_COOLDOWN_MS.industryProcess,
+        },
+        now,
+      );
 }
 
 function isFarmSubregion(state: GameState, content: GameContent): boolean {
@@ -3038,6 +3107,7 @@ function performActivity(
   activityId: string,
   quality = 0.72,
   stallStrategyId?: string,
+  now?: number,
 ): GameState {
   const activity = (content.activities ?? []).find((item) => item.id === activityId);
   if (!activity) return state;
@@ -3060,6 +3130,14 @@ function performActivity(
   if (stallStrategyId && activity.reward.stall && !activityStallStrategy(activity.reward.stall, stallStrategyId)) {
     return { ...state, log: pushLog(state.log, `「${activity.name}」没有这条摊位策略。`) };
   }
+  const cooldownBlock = blockIfCoolingDown(
+    state,
+    realTimeCooldownKey('activity', activityId),
+    activity.name,
+    now,
+  );
+  if (cooldownBlock) return cooldownBlock;
+
   if ((state.resources.labor ?? 0) < activity.laborCost) {
     return { ...state, log: pushLog(state.log, `工时不足，无法体验「${activity.name}」。`) };
   }
@@ -3117,7 +3195,19 @@ function performActivity(
   const withEffect = activity.reward.metrics
     ? applyEffect(next, { metrics: activity.reward.metrics })
     : recompute(next);
-  return applyProfileXp(withEffect, profileXpFromAttributes(activity.reward.attributes));
+  const settled = applyProfileXp(withEffect, profileXpFromAttributes(activity.reward.attributes));
+  return now === undefined
+    ? settled
+    : withRealTimeCooldown(
+        settled,
+        {
+          kind: 'activity',
+          id: activityId,
+          label: activity.name,
+          durationMs: REAL_TIME_COOLDOWN_MS.activity,
+        },
+        now,
+      );
 }
 
 /** 前往一个已解锁的地区 */
@@ -3776,7 +3866,7 @@ function reduce(
 
     case 'RUN_PROCESS':
       if (state.status !== 'playing') return state;
-      return runProcess(state, content, action.craftId, action.skipStepIds, action.techniqueChoices, action.focusChecks);
+      return runProcess(state, content, action.craftId, action.skipStepIds, action.techniqueChoices, action.focusChecks, action.now);
 
     case 'UPGRADE_WORKSHOP':
       if (state.status !== 'playing') return state;
@@ -3880,11 +3970,11 @@ function reduce(
 
     case 'PERFORM_ACTIVITY':
       if (state.status !== 'playing') return state;
-      return performActivity(state, content, action.activityId, action.quality ?? 0.72, action.stallStrategyId);
+      return performActivity(state, content, action.activityId, action.quality ?? 0.72, action.stallStrategyId, action.now);
 
     case 'GATHER_RESOURCE':
       if (state.status !== 'playing') return state;
-      return gatherResource(state, content, action.industryId, action.quality ?? 1);
+      return gatherResource(state, content, action.industryId, action.quality ?? 1, action.now);
 
     case 'TRAVEL':
       if (state.status !== 'playing') return state;
@@ -3925,7 +4015,7 @@ function reduce(
 
     case 'TALK_NPC':
       if (state.status !== 'playing') return state;
-      return talkNpc(state, content, action.npcId);
+      return talkNpc(state, content, action.npcId, action.now);
 
     case 'COMPLETE_QUEST':
       if (state.status !== 'playing') return state;
@@ -4015,9 +4105,15 @@ function revealNpcIntel(
 }
 
 /** 与 NPC 对话一次：好感度上升（封顶 100），并记录寒暄日志 */
-function talkNpc(state: GameState, content: GameContent, npcId: string): GameState {
+function talkNpc(state: GameState, content: GameContent, npcId: string, now?: number): GameState {
   const npc = (content.npcs ?? []).find((n) => n.id === npcId);
   if (!npc) return state;
+  if (now !== undefined && hasNpcTalkedToday(state, npcId, now)) {
+    return {
+      ...withRealTimeTouch(state, now),
+      log: pushLog(state.log, `今日已经与「${npc.name}」攀谈过，明日再来更有新话。`),
+    };
+  }
   const runtime = state.npcStates[npcId] ?? emptyNpcState();
   const cur = runtime.affinity || state.npcAffinity[npcId] || 0;
   const peopleBonus = Math.max(0, Math.floor(((state.profile.attributes.people ?? 5) - 5) / 5));
@@ -4040,13 +4136,14 @@ function talkNpc(state: GameState, content: GameContent, npcId: string): GameSta
     usedFunctionDays: runtime.usedFunctionDays ?? {},
   };
   const intelLog = intel.newlyRevealed.length ? `；听得「${intel.newlyRevealed.join('」「')}」` : '';
-  return applyProfileXp({
+  const settled = applyProfileXp({
     ...state,
     flags: intel.flags,
     npcAffinity: { ...state.npcAffinity, [npcId]: nextAffinity },
     npcStates: { ...state.npcStates, [npcId]: npcState },
     log: pushLog(state.log, `与「${npc.name}」攀谈：${greeting}${intelLog}（好感 ${cur}→${nextAffinity}，关系：${npcState.stage}）`),
   }, { people: 1, knowledge: npc.knowledgeTags?.length ? 1 : 0 });
+  return now === undefined ? settled : withNpcTalkDate(settled, npcId, now);
 }
 
 function nameItem(

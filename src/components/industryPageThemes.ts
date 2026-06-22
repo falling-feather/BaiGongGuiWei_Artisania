@@ -17,7 +17,8 @@ export interface IndustryPageTheme {
   tagline: string;
   story: string[];
   tips: string[];
-  artHeroNote: string;
+  heroImage?: string;
+  heroAlt: string;
 }
 
 /** 定制主题（可选）：登记者覆盖自动生成。当前留空，全部走自动主题。 */
@@ -78,7 +79,7 @@ function buildDefaultTheme(industryId: string): IndustryPageTheme | null {
       '成色越高，单次产出越多（上品＞良品＞次品）。',
       '每次操作消耗工时，结束本季可恢复。',
     ],
-    artHeroNote: `${ind.name}·${TIER_LABEL[tier]}工坊·主视觉（立绘/背景待绘）`,
+    heroAlt: `${ind.name}工坊场景`,
   };
 }
 

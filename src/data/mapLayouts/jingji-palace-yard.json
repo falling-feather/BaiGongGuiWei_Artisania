@@ -3,31 +3,247 @@
   "regionId": "jingji",
   "subregionId": "jingji-palace-yard",
   "tileSize": 32,
-  "size": { "w": 60, "h": 30 },
+  "size": {
+    "w": 56,
+    "h": 30
+  },
   "roads": [
-    { "points": [{ "x": 2, "y": 7 }, { "x": 57, "y": 7 }] },
-    { "points": [{ "x": 2, "y": 15 }, { "x": 57, "y": 15 }] },
-    { "points": [{ "x": 2, "y": 24 }, { "x": 57, "y": 24 }] },
-    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
-    { "points": [{ "x": 30, "y": 3 }, { "x": 30, "y": 26 }] },
-    { "points": [{ "x": 50, "y": 3 }, { "x": 50, "y": 26 }] }
+    {
+      "points": [
+        {
+          "x": 8,
+          "y": 6
+        },
+        {
+          "x": 48,
+          "y": 6
+        },
+        {
+          "x": 48,
+          "y": 24
+        },
+        {
+          "x": 8,
+          "y": 24
+        },
+        {
+          "x": 8,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 10,
+          "y": 14
+        },
+        {
+          "x": 46,
+          "y": 14
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 27,
+          "y": 2
+        },
+        {
+          "x": 27,
+          "y": 25
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 15,
+          "y": 3
+        },
+        {
+          "x": 15,
+          "y": 24
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 42,
+          "y": 3
+        },
+        {
+          "x": 42,
+          "y": 24
+        }
+      ]
+    }
   ],
   "objects": [
-    { "itemId": "player_spawn", "x": 30, "y": 15 },
-    { "itemId": "industry_metal", "name": "iron billet store", "interaction": "industry", "targetId": "harvest-iron-ore", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "industry_pigment", "name": "enamel pigment store", "interaction": "industry", "targetId": "harvest-pigment", "x": 15, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "industry_forge", "name": "palace metal furnace", "interaction": "industry", "targetId": "smelt-iron", "x": 25, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "craft_cloisonne", "name": "cloisonne yard", "interaction": "craft", "targetId": "cloisonne", "x": 12, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "craft_metal", "name": "filigree shop", "interaction": "craft", "targetId": "filigree", "x": 26, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "craft_lacquer", "name": "carved lacquer room", "interaction": "craft", "targetId": "carved-lacquer", "x": 40, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "activity_cloisonne", "name": "cloisonne firing lesson", "interaction": "activity", "targetId": "jj-cloisonne-yard", "x": 36, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "activity_filigree", "name": "filigree wire lesson", "interaction": "activity", "targetId": "jj-filigree-shop", "x": 45, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to market gate", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jingji-market-gate", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to official gate", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jingji-official-gate", "x": 20, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Sanjin official road", "interaction": "gate", "targetId": "sanjin", "x": 53, "y": 9, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Jiangnan canal road", "interaction": "gate", "targetId": "jiangnan", "x": 53, "y": 19, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "npc-jj-lan-daqi", "name": "Lan Daqi", "interaction": "npc", "npcId": "jj-lan-daqi", "x": 17, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
-    { "itemId": "npc-jj-jin-suoniang", "name": "Jin Suoniang", "interaction": "npc", "npcId": "jj-jin-suoniang", "x": 31, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
-    { "itemId": "palace-wall-a", "name": "red palace wall", "interaction": "decoration", "x": 42, "y": 21, "tileW": 5, "tileH": 2, "solid": true }
+    {
+      "itemId": "player_spawn",
+      "x": 5,
+      "y": 23,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "itemId": "industry_metal",
+      "name": "iron billet store",
+      "interaction": "industry",
+      "targetId": "harvest-iron-ore",
+      "x": 5,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "industry_pigment",
+      "name": "enamel pigment store",
+      "interaction": "industry",
+      "targetId": "harvest-pigment",
+      "x": 14,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "industry_forge",
+      "name": "palace metal furnace",
+      "interaction": "industry",
+      "targetId": "smelt-iron",
+      "x": 23,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "craft_cloisonne",
+      "name": "cloisonne yard",
+      "interaction": "craft",
+      "targetId": "cloisonne",
+      "x": 41,
+      "y": 10,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "craft_metal",
+      "name": "filigree shop",
+      "interaction": "craft",
+      "targetId": "filigree",
+      "x": 32,
+      "y": 10,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "craft_lacquer",
+      "name": "carved lacquer room",
+      "interaction": "craft",
+      "targetId": "carved-lacquer",
+      "x": 23,
+      "y": 10,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "activity_cloisonne",
+      "name": "cloisonne firing lesson",
+      "interaction": "activity",
+      "targetId": "jj-cloisonne-yard",
+      "x": 5,
+      "y": 18,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "activity_filigree",
+      "name": "filigree wire lesson",
+      "interaction": "activity",
+      "targetId": "jj-filigree-shop",
+      "x": 14,
+      "y": 18,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to market gate",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "jingji-market-gate",
+      "x": 19,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to official gate",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "jingji-official-gate",
+      "x": 37,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Sanjin official road",
+      "interaction": "gate",
+      "targetId": "sanjin",
+      "x": 51,
+      "y": 3,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Jiangnan canal road",
+      "interaction": "gate",
+      "targetId": "jiangnan",
+      "x": 51,
+      "y": 9,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "npc-jj-lan-daqi",
+      "name": "Lan Daqi",
+      "interaction": "npc",
+      "npcId": "jj-lan-daqi",
+      "x": 4,
+      "y": 15,
+      "tileW": 1,
+      "tileH": 1,
+      "solid": false
+    },
+    {
+      "itemId": "npc-jj-jin-suoniang",
+      "name": "Jin Suoniang",
+      "interaction": "npc",
+      "npcId": "jj-jin-suoniang",
+      "x": 11,
+      "y": 15,
+      "tileW": 1,
+      "tileH": 1,
+      "solid": false
+    }
   ]
 }

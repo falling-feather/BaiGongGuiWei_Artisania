@@ -3,27 +3,169 @@
   "regionId": "huizhou",
   "subregionId": "huizhou-she-stone",
   "tileSize": 32,
-  "size": { "w": 56, "h": 30 },
+  "size": {
+    "w": 56,
+    "h": 30
+  },
   "roads": [
-    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
-    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
-    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
-    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
-    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
-    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+    {
+      "points": [
+        {
+          "x": 9,
+          "y": 7
+        },
+        {
+          "x": 48,
+          "y": 7
+        },
+        {
+          "x": 48,
+          "y": 23
+        },
+        {
+          "x": 9,
+          "y": 23
+        },
+        {
+          "x": 9,
+          "y": 7
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 11,
+          "y": 14
+        },
+        {
+          "x": 46,
+          "y": 14
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 27,
+          "y": 2
+        },
+        {
+          "x": 27,
+          "y": 24
+        }
+      ]
+    }
   ],
   "objects": [
-    { "itemId": "player_spawn", "x": 28, "y": 15 },
-    { "itemId": "industry_she_stone", "name": "She stone quarry face", "interaction": "industry", "targetId": "harvest-she-stone", "x": 6, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "craft_inkstone", "name": "She inkstone bench", "interaction": "craft", "targetId": "she-inkstone", "x": 26, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "activity_stone", "name": "stone sound appraisal", "interaction": "activity", "targetId": "hz-she-stone-pit", "x": 38, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to paper valley", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "huizhou-paper-valley", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to ink alley", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "huizhou-ink-alley", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to merchant hall", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "huizhou-merchant-hall", "x": 32, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Jiangnan paper route", "interaction": "gate", "targetId": "jiangnan", "x": 49, "y": 8, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Ganpo merchant route", "interaction": "gate", "targetId": "ganpo", "x": 49, "y": 18, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "npc-hz-xu-yanshi", "name": "Xu Yanshi", "interaction": "npc", "npcId": "hz-xu-yanshi", "x": 30, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
-    { "itemId": "quarry-tailings-a", "name": "quarry tailings", "interaction": "decoration", "x": 18, "y": 18, "tileW": 4, "tileH": 2, "solid": true },
-    { "itemId": "stream-ledge-a", "name": "stream ledge", "interaction": "decoration", "x": 41, "y": 4, "tileW": 3, "tileH": 2, "solid": true }
+    {
+      "itemId": "player_spawn",
+      "x": 5,
+      "y": 24,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "itemId": "industry_she_stone",
+      "name": "She stone quarry face",
+      "interaction": "industry",
+      "targetId": "harvest-she-stone",
+      "x": 5,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "craft_inkstone",
+      "name": "She inkstone bench",
+      "interaction": "craft",
+      "targetId": "she-inkstone",
+      "x": 41,
+      "y": 10,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "activity_stone",
+      "name": "stone sound appraisal",
+      "interaction": "activity",
+      "targetId": "hz-she-stone-pit",
+      "x": 5,
+      "y": 18,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to paper valley",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "huizhou-paper-valley",
+      "x": 14,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to ink alley",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "huizhou-ink-alley",
+      "x": 28,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to merchant hall",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "huizhou-merchant-hall",
+      "x": 42,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Jiangnan paper route",
+      "interaction": "gate",
+      "targetId": "jiangnan",
+      "x": 51,
+      "y": 3,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Ganpo merchant route",
+      "interaction": "gate",
+      "targetId": "ganpo",
+      "x": 51,
+      "y": 9,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "npc-hz-xu-yanshi",
+      "name": "Xu Yanshi",
+      "interaction": "npc",
+      "npcId": "hz-xu-yanshi",
+      "x": 4,
+      "y": 15,
+      "tileW": 1,
+      "tileH": 1,
+      "solid": false
+    }
   ]
 }

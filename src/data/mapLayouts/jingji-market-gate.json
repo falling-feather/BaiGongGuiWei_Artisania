@@ -3,24 +3,170 @@
   "regionId": "jingji",
   "subregionId": "jingji-market-gate",
   "tileSize": 32,
-  "size": { "w": 56, "h": 30 },
+  "size": {
+    "w": 56,
+    "h": 30
+  },
   "roads": [
-    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
-    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
-    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
-    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
-    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
-    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+    {
+      "points": [
+        {
+          "x": 7,
+          "y": 7
+        },
+        {
+          "x": 47,
+          "y": 7
+        },
+        {
+          "x": 47,
+          "y": 23
+        },
+        {
+          "x": 7,
+          "y": 23
+        },
+        {
+          "x": 7,
+          "y": 7
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 9,
+          "y": 15
+        },
+        {
+          "x": 45,
+          "y": 15
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 26,
+          "y": 2
+        },
+        {
+          "x": 26,
+          "y": 24
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 14,
+          "y": 3
+        },
+        {
+          "x": 14,
+          "y": 23
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 41,
+          "y": 3
+        },
+        {
+          "x": 41,
+          "y": 23
+        }
+      ]
+    }
   ],
   "objects": [
-    { "itemId": "player_spawn", "x": 28, "y": 15 },
-    { "itemId": "craft_painting", "name": "inner painting counter", "interaction": "craft", "targetId": "inner-painting", "x": 10, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "activity_trade", "name": "capital appraisal market", "interaction": "activity", "targetId": "jj-appraisal-market", "x": 28, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to palace yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jingji-palace-yard", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to official gate", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jingji-official-gate", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Sanjin official road", "interaction": "gate", "targetId": "sanjin", "x": 49, "y": 9, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Jiangnan canal road", "interaction": "gate", "targetId": "jiangnan", "x": 49, "y": 19, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "npc-jj-meng-zhangyan", "name": "Meng Zhangyan", "interaction": "npc", "npcId": "jj-meng-zhangyan", "x": 31, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
-    { "itemId": "appraisal-stall-a", "name": "appraisal ledgers", "interaction": "decoration", "x": 37, "y": 16, "tileW": 4, "tileH": 2, "solid": true }
+    {
+      "itemId": "player_spawn",
+      "x": 4,
+      "y": 24,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "itemId": "craft_painting",
+      "name": "inner painting counter",
+      "interaction": "craft",
+      "targetId": "inner-painting",
+      "x": 42,
+      "y": 10,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "activity_trade",
+      "name": "capital appraisal market",
+      "interaction": "activity",
+      "targetId": "jj-appraisal-market",
+      "x": 6,
+      "y": 18,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to palace yard",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "jingji-palace-yard",
+      "x": 19,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to official gate",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "jingji-official-gate",
+      "x": 37,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Sanjin official road",
+      "interaction": "gate",
+      "targetId": "sanjin",
+      "x": 51,
+      "y": 3,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Jiangnan canal road",
+      "interaction": "gate",
+      "targetId": "jiangnan",
+      "x": 51,
+      "y": 9,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "npc-jj-meng-zhangyan",
+      "name": "Meng Zhangyan",
+      "interaction": "npc",
+      "npcId": "jj-meng-zhangyan",
+      "x": 4,
+      "y": 15,
+      "tileW": 1,
+      "tileH": 1,
+      "solid": false
+    }
   ]
 }

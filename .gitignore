@@ -6,6 +6,9 @@ dist/
 dist-ssr/
 *.tsbuildinfo
 
+# Local organization files
+/百工/
+
 # Local env files
 .env
 .env.local

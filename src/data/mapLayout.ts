@@ -97,15 +97,19 @@ export interface RuntimeMapLayout {
   tileSize: number;
   size: { w: number; h: number };
   roads: RuntimeMapRoadPath[];
+  tiles?: RuntimeMapEditorTile[];
   objects: RuntimeMapObject[];
   playerStart?: { x: number; y: number };
 }
 
 export interface RuntimeMapEditorTile {
   itemId: string;
+  name?: string;
   x: number;
   y: number;
   layer?: string;
+  asset?: string;
+  solid?: boolean;
   interaction?: string;
 }
 
@@ -113,13 +117,24 @@ export interface RuntimeMapEditorObject {
   itemId: string;
   id?: string;
   name?: string;
+  category?: string;
   x: number;
   y: number;
   tileW?: number;
   tileH?: number;
   solid?: boolean;
+  asset?: string;
   layer?: string;
   interaction?: string;
+  allowSameCellStack?: boolean;
+  visualState?: string;
+  variants?: Record<string, string>;
+  direction?: string;
+  animated?: boolean;
+  sheetCols?: number;
+  sheetRows?: number;
+  frame?: number;
+  z?: number;
   /** Optional runtime override for editor interactions such as gate/travel markers. */
   runtimeInteraction?: string;
   /** craftId / industryId / activityId / regionId / subregionId, depending on interaction. */
@@ -136,6 +151,8 @@ export interface RuntimeMapEditorSnapshot {
   subregionId?: string;
   tileSize?: number;
   size: { w: number; h: number };
+  /** Optional custom palette definitions emitted by the visual map editor. */
+  modelDefinitions?: unknown[];
   /** Compact checked-in layout assets may provide road paths directly; raw editor exports can omit this. */
   roads?: RuntimeMapRoadPath[];
   tiles?: RuntimeMapEditorTile[];
@@ -146,6 +163,14 @@ export interface RuntimeMapImportOptions {
   subregionId?: string;
   playerStart?: { x: number; y: number };
 }
+
+type RuntimeMapEditorObjectInput = Omit<RuntimeMapEditorObject, 'gateKind'> & {
+  gateKind?: string;
+};
+
+type RuntimeMapEditorSnapshotInput = Omit<RuntimeMapEditorSnapshot, 'objects'> & {
+  objects?: RuntimeMapEditorObjectInput[];
+};
 
 const RUNTIME_INTERACTIONS = new Set<RuntimeMapInteraction>([
   'industry',
@@ -277,6 +302,13 @@ function normalizeEditorInteraction(object: RuntimeMapEditorObject): RuntimeMapI
 }
 
 function toRuntimeObject(object: RuntimeMapEditorObject): RuntimeMapObject | null {
+  if (
+    object.itemId === 'arch_bridge' ||
+    object.id === 'arch_bridge' ||
+    object.asset === '/assets/game/props/arch_bridge.png'
+  ) {
+    return null;
+  }
   const interaction = normalizeEditorInteraction(object);
   const base = {
     itemId: object.itemId,
@@ -317,13 +349,26 @@ export function runtimeLayoutFromEditorSnapshot(
     tileSize: snapshot.tileSize ?? 32,
     size: snapshot.size,
     roads: snapshot.roads?.length ? snapshot.roads : roadPathsFromTiles(snapshot.tiles),
+    tiles: snapshot.tiles,
     objects,
     playerStart,
   };
 }
 
+function normalizeRuntimeEditorSnapshotImport(snapshot: RuntimeMapEditorSnapshotInput): RuntimeMapEditorSnapshot {
+  return {
+    ...snapshot,
+    objects: snapshot.objects?.map((object) => ({
+      ...object,
+      gateKind: object.gateKind === 'region' || object.gateKind === 'subregion'
+        ? object.gateKind
+        : undefined,
+    })),
+  };
+}
+
 /** Editor-compatible first batch: runtime consumes these checked-in JSON assets through runtimeLayoutFromEditorSnapshot. */
-export const RUNTIME_MAP_EDITOR_SNAPSHOTS: RuntimeMapEditorSnapshot[] = [
+const RUNTIME_MAP_EDITOR_SNAPSHOT_IMPORTS: RuntimeMapEditorSnapshotInput[] = [
   jiangnanSuhangMap,
   jiangnanLongquanMap,
   jiangnanJinlingMap,
@@ -368,6 +413,9 @@ export const RUNTIME_MAP_EDITOR_SNAPSHOTS: RuntimeMapEditorSnapshot[] = [
   xiyuCaravanPostMap,
   xiyuAtlasLoomMap,
 ];
+
+export const RUNTIME_MAP_EDITOR_SNAPSHOTS: RuntimeMapEditorSnapshot[] =
+  RUNTIME_MAP_EDITOR_SNAPSHOT_IMPORTS.map(normalizeRuntimeEditorSnapshotImport);
 
 /** Runtime layouts consumed by StreetScene. Keep sources above editor-compatible. */
 export const RUNTIME_MAP_LAYOUTS: RuntimeMapLayout[] = RUNTIME_MAP_EDITOR_SNAPSHOTS.map((snapshot) =>

@@ -86,7 +86,6 @@ export const TEX = {
   tree: 'tex-tree',
   rock: 'tex-rock',
   willow: 'tex-willow',
-  archBridge: 'tex-arch-bridge',
   teaStall: 'tex-tea-stall',
   lanternPost: 'tex-lantern-post',
   banner: 'tex-banner',
@@ -156,6 +155,114 @@ const BUILDING_VARIANT_STEMS: Readonly<Record<string, string>> = {
 export const BUILDING_WEATHER_VARIANTS = ['summer', 'rain', 'autumn', 'winter'] as const;
 export type BuildingWeatherVariant = (typeof BUILDING_WEATHER_VARIANTS)[number];
 
+export type RegionTerrainThemeId = 'jiangnan' | 'bashu' | 'lingnan' | 'ganpo' | 'xiyu';
+
+export interface RegionTerrainTextures {
+  ground: string;
+  groundAlt: string;
+  road: string;
+  roadVertical: string;
+  roadCross: string;
+  water: string;
+  waterEdgeLeft: string;
+  waterEdgeRight: string;
+  vegetation: string;
+  courtyard: string;
+}
+
+export const REGION_TERRAIN_THEME_ALIASES: Readonly<Record<string, RegionTerrainThemeId>> = {
+  jiangnan: 'jiangnan',
+  huizhou: 'jiangnan',
+  bashu: 'bashu',
+  qiandian: 'bashu',
+  lingnan: 'lingnan',
+  jingchu: 'lingnan',
+  ganpo: 'ganpo',
+  jingji: 'ganpo',
+  xiyu: 'xiyu',
+  western: 'xiyu',
+  sanjin: 'xiyu',
+  xueyu: 'xiyu',
+};
+
+export const REGION_TERRAIN_TEXTURES: Readonly<Record<RegionTerrainThemeId, RegionTerrainTextures>> = {
+  jiangnan: {
+    ground: 'tex-region-jiangnan-ground',
+    groundAlt: 'tex-region-jiangnan-ground-alt',
+    road: 'tex-region-jiangnan-road',
+    roadVertical: 'tex-region-jiangnan-road-vertical',
+    roadCross: 'tex-region-jiangnan-road-cross',
+    water: 'tex-region-jiangnan-water',
+    waterEdgeLeft: 'tex-region-jiangnan-water-edge-left',
+    waterEdgeRight: 'tex-region-jiangnan-water-edge-right',
+    vegetation: 'tex-region-jiangnan-vegetation',
+    courtyard: 'tex-region-jiangnan-courtyard',
+  },
+  bashu: {
+    ground: 'tex-region-bashu-ground',
+    groundAlt: 'tex-region-bashu-ground-alt',
+    road: 'tex-region-bashu-road',
+    roadVertical: 'tex-region-bashu-road-vertical',
+    roadCross: 'tex-region-bashu-road-cross',
+    water: 'tex-region-bashu-water',
+    waterEdgeLeft: 'tex-region-bashu-water-edge-left',
+    waterEdgeRight: 'tex-region-bashu-water-edge-right',
+    vegetation: 'tex-region-bashu-vegetation',
+    courtyard: 'tex-region-bashu-courtyard',
+  },
+  lingnan: {
+    ground: 'tex-region-lingnan-ground',
+    groundAlt: 'tex-region-lingnan-ground-alt',
+    road: 'tex-region-lingnan-road',
+    roadVertical: 'tex-region-lingnan-road-vertical',
+    roadCross: 'tex-region-lingnan-road-cross',
+    water: 'tex-region-lingnan-water',
+    waterEdgeLeft: 'tex-region-lingnan-water-edge-left',
+    waterEdgeRight: 'tex-region-lingnan-water-edge-right',
+    vegetation: 'tex-region-lingnan-vegetation',
+    courtyard: 'tex-region-lingnan-courtyard',
+  },
+  ganpo: {
+    ground: 'tex-region-ganpo-ground',
+    groundAlt: 'tex-region-ganpo-ground-alt',
+    road: 'tex-region-ganpo-road',
+    roadVertical: 'tex-region-ganpo-road-vertical',
+    roadCross: 'tex-region-ganpo-road-cross',
+    water: 'tex-region-ganpo-water',
+    waterEdgeLeft: 'tex-region-ganpo-water-edge-left',
+    waterEdgeRight: 'tex-region-ganpo-water-edge-right',
+    vegetation: 'tex-region-ganpo-vegetation',
+    courtyard: 'tex-region-ganpo-courtyard',
+  },
+  xiyu: {
+    ground: 'tex-region-xiyu-ground',
+    groundAlt: 'tex-region-xiyu-ground-alt',
+    road: 'tex-region-xiyu-road',
+    roadVertical: 'tex-region-xiyu-road-vertical',
+    roadCross: 'tex-region-xiyu-road-cross',
+    water: 'tex-region-xiyu-water',
+    waterEdgeLeft: 'tex-region-xiyu-water-edge-left',
+    waterEdgeRight: 'tex-region-xiyu-water-edge-right',
+    vegetation: 'tex-region-xiyu-vegetation',
+    courtyard: 'tex-region-xiyu-courtyard',
+  },
+};
+
+const REGION_TERRAIN_IMAGE_TEXTURES = Object.entries(REGION_TERRAIN_TEXTURES).flatMap(
+  ([region, textures]) => [
+    [textures.ground, `/assets/game/terrain/regions/${region}/ground.png`],
+    [textures.groundAlt, `/assets/game/terrain/regions/${region}/ground_alt.png`],
+    [textures.road, `/assets/game/terrain/regions/${region}/road.png`],
+    [textures.roadVertical, `/assets/game/terrain/regions/${region}/road_vertical.png`],
+    [textures.roadCross, `/assets/game/terrain/regions/${region}/road_cross.png`],
+    [textures.water, `/assets/game/terrain/regions/${region}/water.png`],
+    [textures.waterEdgeLeft, `/assets/game/terrain/regions/${region}/water_edge_left.png`],
+    [textures.waterEdgeRight, `/assets/game/terrain/regions/${region}/water_edge_right.png`],
+    [textures.vegetation, `/assets/game/terrain/regions/${region}/vegetation.png`],
+    [textures.courtyard, `/assets/game/terrain/regions/${region}/courtyard.png`],
+  ] as const,
+);
+
 export const BUILDING_WEATHER_TEXTURES = Object.fromEntries(
   Object.entries(BUILDING_VARIANT_STEMS).map(([baseTex, stem]) => [
     baseTex,
@@ -174,6 +281,7 @@ const BUILDING_WEATHER_IMAGE_TEXTURES = Object.entries(BUILDING_VARIANT_STEMS).f
 );
 
 export const IMAGE_TEXTURES = [
+  ...REGION_TERRAIN_IMAGE_TEXTURES,
   [TEX.ground, '/assets/game/tiles/ground.png'],
   [TEX.groundMoss, '/assets/game/tiles/ground_moss.png'],
   [TEX.groundStone, '/assets/game/tiles/ground_stone.png'],
@@ -248,7 +356,6 @@ export const IMAGE_TEXTURES = [
   [TEX.tree, '/assets/game/tiles/tree.png'],
   [TEX.rock, '/assets/game/tiles/rock.png'],
   [TEX.willow, '/assets/game/props/willow.png'],
-  [TEX.archBridge, '/assets/game/props/arch_bridge.png'],
   [TEX.teaStall, '/assets/game/props/tea_stall.png'],
   [TEX.lanternPost, '/assets/game/props/lantern_post.png'],
   [TEX.banner, '/assets/game/props/banner.png'],

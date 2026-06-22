@@ -3,26 +3,160 @@
   "regionId": "xiyu",
   "subregionId": "xiyu-caravan-post",
   "tileSize": 32,
-  "size": { "w": 52, "h": 28 },
+  "size": {
+    "w": 52,
+    "h": 28
+  },
   "roads": [
-    { "points": [{ "x": 2, "y": 8 }, { "x": 49, "y": 8 }] },
-    { "points": [{ "x": 2, "y": 15 }, { "x": 49, "y": 15 }] },
-    { "points": [{ "x": 2, "y": 21 }, { "x": 49, "y": 21 }] },
-    { "points": [{ "x": 9, "y": 4 }, { "x": 9, "y": 24 }] },
-    { "points": [{ "x": 26, "y": 4 }, { "x": 26, "y": 24 }] },
-    { "points": [{ "x": 43, "y": 4 }, { "x": 43, "y": 24 }] }
+    {
+      "points": [
+        {
+          "x": 2,
+          "y": 22
+        },
+        {
+          "x": 23,
+          "y": 22
+        },
+        {
+          "x": 30,
+          "y": 20
+        },
+        {
+          "x": 49,
+          "y": 20
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 3,
+          "y": 6
+        },
+        {
+          "x": 48,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 10,
+          "y": 3
+        },
+        {
+          "x": 10,
+          "y": 22
+        },
+        {
+          "x": 15,
+          "y": 22
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 28,
+          "y": 6
+        },
+        {
+          "x": 29,
+          "y": 22
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 43,
+          "y": 4
+        },
+        {
+          "x": 43,
+          "y": 21
+        }
+      ]
+    }
   ],
   "objects": [
-    { "itemId": "player_spawn", "x": 26, "y": 14 },
-    { "itemId": "tea-store-a", "name": "caravan tea store", "interaction": "decoration", "x": 5, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "tea-hearth-a", "name": "pressed tea hearth", "interaction": "decoration", "x": 14, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "activity_route", "name": "caravan route table", "interaction": "activity", "targetId": "xiyu-caravan-post", "x": 25, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to oasis bazaar", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xiyu-bazaar", "x": 4, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to Kunlun jade yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xiyu-jade-yard", "x": 20, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to Atlas loom", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "xiyu-atlas-loom", "x": 36, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Xueyu plateau caravan road", "interaction": "gate", "targetId": "xueyu", "x": 46, "y": 13, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "npc-xu-tuoling-shu", "name": "Tuoling Shu", "interaction": "npc", "npcId": "xu-tuoling-shu", "x": 27, "y": 9, "tileW": 1, "tileH": 1, "solid": false },
-    { "itemId": "camel-pack-a", "name": "camel pack frame", "interaction": "decoration", "x": 34, "y": 16, "tileW": 4, "tileH": 2, "solid": true },
-    { "itemId": "water-sack-a", "name": "water sack rack", "interaction": "decoration", "x": 18, "y": 16, "tileW": 3, "tileH": 2, "solid": true }
+    {
+      "itemId": "player_spawn",
+      "x": 8,
+      "y": 21,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "itemId": "activity_route",
+      "name": "caravan route table",
+      "interaction": "activity",
+      "targetId": "xiyu-caravan-post",
+      "x": 5,
+      "y": 17,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to oasis bazaar",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "xiyu-bazaar",
+      "x": 13,
+      "y": 24,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to Kunlun jade yard",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "xiyu-jade-yard",
+      "x": 26,
+      "y": 24,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to Atlas loom",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "xiyu-atlas-loom",
+      "x": 39,
+      "y": 24,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Xueyu plateau caravan road",
+      "interaction": "gate",
+      "targetId": "xueyu",
+      "x": 47,
+      "y": 3,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "npc-xu-tuoling-shu",
+      "name": "Tuoling Shu",
+      "interaction": "npc",
+      "npcId": "xu-tuoling-shu",
+      "x": 4,
+      "y": 14,
+      "tileW": 1,
+      "tileH": 1,
+      "solid": false
+    }
   ]
 }

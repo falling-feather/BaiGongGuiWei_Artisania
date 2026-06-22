@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useGameStore } from '../store/gameStore';
 import {
   CRAFT_FOCUS_CHECK_OPTIONS,
@@ -10,11 +10,16 @@ import {
   craftInteractionFor,
   craftFocusCheckOption,
   craftTechniqueOption,
+  formatRealTimeRemaining,
   orderPrice,
+  realTimeCooldownKey,
+  realTimeRemainingMs,
   type CraftFocusCheckChoiceId,
   type CraftTechniqueChoiceId,
 } from '../engine';
 import { RESOURCE_INDEX } from '../data';
+import { minigameRegionTheme, workshopRegionFrame } from './minigameUiTheme';
+import { useRealTimeNow } from './useRealTimeNow';
 
 const RESOURCE_NAME_FALLBACK: Record<string, string> = {
   coin: '通货',
@@ -35,8 +40,10 @@ export function CraftExperienceModal({
   const workshopUpgradeRecords = useGameStore((s) => s.state.workshopUpgrades);
   const currentRegion = useGameStore((s) => s.state.currentRegion);
   const currentSubregion = useGameStore((s) => s.state.currentSubregion);
+  const realTime = useGameStore((s) => s.state.realTime);
   const playing = useGameStore((s) => s.state.status === 'playing');
   const dispatch = useGameStore((s) => s.dispatch);
+  const now = useRealTimeNow();
   const [skipIds, setSkipIds] = useState<string[]>([]);
   const [techniqueByStage, setTechniqueByStage] = useState<Record<string, CraftTechniqueChoiceId>>({});
   const [focusCheckByStage, setFocusCheckByStage] = useState<Record<string, CraftFocusCheckChoiceId>>({});
@@ -45,6 +52,13 @@ export function CraftExperienceModal({
   const def = content.crafts.find((c) => c.id === craftId);
   const state = craftStates.find((c) => c.craftId === craftId);
   if (!def || !state) return null;
+
+  const miniTheme = minigameRegionTheme(currentRegion);
+  const workshopFrame = workshopRegionFrame(currentRegion);
+  const miniShellStyle = {
+    '--minigame-accent': miniTheme.accent,
+    '--minigame-accent-soft': miniTheme.accentSoft,
+  } as CSSProperties;
 
   const toggleSkip = (id: string) =>
     setSkipIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -104,7 +118,11 @@ export function CraftExperienceModal({
     : `当前「${currentSubregionName}」没有开放「${def.name}」工坊，请经街景通道前往${
         targetSubregionNames.length > 0 ? `「${targetSubregionNames.join('」或「')}」` : '对应小地区'
       }。`;
-  const canCraft = playing && localCraftAvailable && !laborShort && !materialShort;
+  const cooldownKey = realTimeCooldownKey('craft', craftId);
+  const cooldownRemaining = realTimeRemainingMs({ realTime }, cooldownKey, now);
+  const cooldownBlocked = cooldownRemaining > 0;
+  const cooldownText = cooldownBlocked ? formatRealTimeRemaining(cooldownRemaining) : '';
+  const canCraft = playing && localCraftAvailable && !laborShort && !materialShort && !cooldownBlocked;
   const resName = (id: string) => RESOURCE_INDEX[id]?.name ?? RESOURCE_NAME_FALLBACK[id] ?? id;
 
   // 订单交付闭环：必须有成品库存才能接单，售价随该手艺传承品质浮动
@@ -130,9 +148,14 @@ export function CraftExperienceModal({
 
   return (
     <div className="modal__backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className={`modal minigame-shell minigame-shell--${miniTheme.regionId}`}
+        onClick={(e) => e.stopPropagation()}
+        style={miniShellStyle}
+      >
+        <img aria-hidden="true" className="minigame-shell__frame" src={workshopFrame} alt="" />
         <h3 className="modal__title">
-          {def.name} <small style={{ fontSize: 12, color: 'var(--indigo-soft)' }}>{def.region}</small>
+          {def.name} <small className="minigame-region-label">{def.region} / {miniTheme.label}</small>
         </h3>
         <p className="modal__desc">{def.blurb}</p>
 
@@ -252,6 +275,11 @@ export function CraftExperienceModal({
             <span className={`craft-supply__chip${laborShort ? ' craft-supply__chip--short' : ''}`}>
               工时 {resources.labor ?? 0}/{laborNeed}
             </span>
+            {cooldownBlocked && (
+              <span className="craft-supply__chip craft-supply__chip--time">
+                整备 {cooldownText}
+              </span>
+            )}
           </div>
           {def.outputResourceId && (
             <div className="craft-supply__row">
@@ -266,14 +294,18 @@ export function CraftExperienceModal({
           {!canCraft && playing && (
             <p className="craft-supply__warn">
               {locationWarning ||
-                (materialShort ? '物料不足，先去采料／精炼补足半成品。' : '人力不足，结束本季可恢复工时。')}
+                (cooldownBlocked
+                  ? `工坊正在整备，还需等待 ${cooldownText}。`
+                  : materialShort
+                    ? '物料不足，先去采料／精炼补足半成品。'
+                    : '人力不足，结束本季可恢复工时。')}
             </p>
           )}
         </div>
 
         <div className="btn-row">
           <button className="btn btn--bamboo" disabled={!canCraft} onClick={() => run('RUN_PROCESS')}>
-            亲手制作
+            {cooldownBlocked ? `整备 ${cooldownText}` : '亲手制作'}
           </button>
           <button
             className="btn btn--ghost"

@@ -261,6 +261,25 @@ export interface CalendarState {
   weather: GameWeather;
 }
 
+export type RealTimeCooldownKind = 'craft' | 'industry' | 'activity';
+
+export interface RealTimeCooldownRecord {
+  key: string;
+  kind: RealTimeCooldownKind;
+  id: string;
+  label: string;
+  startedAt: number;
+  readyAt: number;
+  durationMs: number;
+}
+
+export interface GameRealTimeState {
+  startedAt: number;
+  lastSeenAt: number;
+  cooldowns: Record<string, RealTimeCooldownRecord>;
+  npcTalkDates: Record<string, string>;
+}
+
 export type RelationshipStage = 'stranger' | 'familiar' | 'trusted' | 'confidant';
 
 export interface NpcRuntimeState {
@@ -958,6 +977,8 @@ export interface GameState {
   profile: PlayerProfile;
   /** 日 / 时段 / 季节 / 天气，服务江南 7 日生活切片 */
   calendar: CalendarState;
+  /** Real-world timers for cooldowns and once-per-day social actions. */
+  realTime: GameRealTimeState;
   /** 城郊百工院的轻量田圃槽位 */
   farmPlots: FarmPlot[];
   /** 可检查的成品/原料实例，用于古风描述、鉴别与后续赠礼/订单系统 */
@@ -1278,6 +1299,7 @@ export type GameAction =
       skipStepIds: string[];
       techniqueChoices?: CraftTechniqueSelection[];
       focusChecks?: CraftFocusCheckSelection[];
+      now?: number;
     }
   | { type: 'UPGRADE_WORKSHOP'; upgradeId: string }
   | { type: 'EXPAND_WORKSHOP_SPACE'; craftId: string }
@@ -1293,9 +1315,9 @@ export type GameAction =
   | { type: 'PLANT_CROP'; plotId: string; cropId: CropId }
   | { type: 'WATER_PLOT'; plotId: string }
   | { type: 'HARVEST_CROP'; plotId: string }
-  | { type: 'PERFORM_ACTIVITY'; activityId: string; quality?: number; stallStrategyId?: string }
+  | { type: 'PERFORM_ACTIVITY'; activityId: string; quality?: number; stallStrategyId?: string; now?: number }
   /** 在当前地区运行一项基础产业（手搓原料），quality 0–1 来自微交互 */
-  | { type: 'GATHER_RESOURCE'; industryId: string; quality?: number }
+  | { type: 'GATHER_RESOURCE'; industryId: string; quality?: number; now?: number }
   /** 前往一个已解锁的地区 */
   | { type: 'TRAVEL'; regionId: string; routeId?: string }
   /** 在当前大地区内切换小地区 */
@@ -1307,7 +1329,7 @@ export type GameAction =
   /** 标记一个剧情节点已阅读；choiceId 为分支选择时一并应用其标记/日志 */
   | { type: 'SEEN_STORY'; storyId: string; choiceId?: string }
   /** 与 NPC 对话一次（提升好感度） */
-  | { type: 'TALK_NPC'; npcId: string }
+  | { type: 'TALK_NPC'; npcId: string; now?: number }
   /** 交付/领取一个任务奖励 */
   | { type: 'COMPLETE_QUEST'; questId: string }
   /** 为一件高品质作品题名 */

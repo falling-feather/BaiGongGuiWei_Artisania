@@ -3,27 +3,182 @@
   "regionId": "lingnan",
   "subregionId": "lingnan-duan-stone",
   "tileSize": 32,
-  "size": { "w": 56, "h": 30 },
+  "size": {
+    "w": 56,
+    "h": 30
+  },
   "roads": [
-    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
-    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
-    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
-    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
-    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
-    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+    {
+      "points": [
+        {
+          "x": 2,
+          "y": 23
+        },
+        {
+          "x": 21,
+          "y": 23
+        },
+        {
+          "x": 28,
+          "y": 21
+        },
+        {
+          "x": 53,
+          "y": 21
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 3,
+          "y": 7
+        },
+        {
+          "x": 52,
+          "y": 8
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 11,
+          "y": 3
+        },
+        {
+          "x": 11,
+          "y": 23
+        },
+        {
+          "x": 16,
+          "y": 23
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 26,
+          "y": 7
+        },
+        {
+          "x": 27,
+          "y": 23
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 46,
+          "y": 4
+        },
+        {
+          "x": 46,
+          "y": 22
+        }
+      ]
+    }
   ],
   "objects": [
-    { "itemId": "player_spawn", "x": 28, "y": 15 },
-    { "itemId": "craft_stone", "name": "Duan inkstone bench", "interaction": "craft", "targetId": "duan-inkstone", "x": 14, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "craft_ceramic", "name": "Shiwan pottery shelf", "interaction": "craft", "targetId": "shiwan-pottery", "x": 24, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "activity_stone", "name": "Duan stone listening pit", "interaction": "activity", "targetId": "ln-duan-inkstone-pit", "x": 35, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to Pearl River harbor", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "lingnan-harbor", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to Foshan forge", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "lingnan-forge", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to gambiered silk yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "lingnan-gambiered-yard", "x": 32, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Qiandian harbor road", "interaction": "gate", "targetId": "qiandian", "x": 49, "y": 12, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "npc-ln-tan-yanbo", "name": "Tan Yanbo", "interaction": "npc", "npcId": "ln-tan-yanbo", "x": 30, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
-    { "itemId": "stone-sound-table-a", "name": "stone sound table", "interaction": "decoration", "x": 5, "y": 4, "tileW": 3, "tileH": 2, "solid": true },
-    { "itemId": "wet-pit-wall-a", "name": "wet pit wall", "interaction": "decoration", "x": 41, "y": 4, "tileW": 4, "tileH": 2, "solid": true },
-    { "itemId": "inkstone-water-trough-a", "name": "inkstone water trough", "interaction": "decoration", "x": 18, "y": 17, "tileW": 3, "tileH": 2, "solid": true }
+    {
+      "itemId": "player_spawn",
+      "x": 4,
+      "y": 24,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "itemId": "craft_stone",
+      "name": "Duan inkstone bench",
+      "interaction": "craft",
+      "targetId": "duan-inkstone",
+      "x": 42,
+      "y": 10,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "craft_ceramic",
+      "name": "Shiwan pottery shelf",
+      "interaction": "craft",
+      "targetId": "shiwan-pottery",
+      "x": 33,
+      "y": 10,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "activity_stone",
+      "name": "Duan stone listening pit",
+      "interaction": "activity",
+      "targetId": "ln-duan-inkstone-pit",
+      "x": 6,
+      "y": 18,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to Pearl River harbor",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "lingnan-harbor",
+      "x": 14,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to Foshan forge",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "lingnan-forge",
+      "x": 28,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to gambiered silk yard",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "lingnan-gambiered-yard",
+      "x": 42,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Qiandian harbor road",
+      "interaction": "gate",
+      "targetId": "qiandian",
+      "x": 51,
+      "y": 3,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "npc-ln-tan-yanbo",
+      "name": "Tan Yanbo",
+      "interaction": "npc",
+      "npcId": "ln-tan-yanbo",
+      "x": 4,
+      "y": 15,
+      "tileW": 1,
+      "tileH": 1,
+      "solid": false
+    }
   ]
 }

@@ -28,6 +28,7 @@ import { GameOverReport } from './components/GameOverReport';
 import { SettingsModal } from './components/SettingsModal';
 import { Minimap, type PlayerPos } from './components/Minimap';
 import { MapEditor } from './components/MapEditor';
+import { MAP_LAYOUT_OVERRIDE_EVENT, MAP_LAYOUT_OVERRIDE_STORAGE_KEY } from './data';
 
 const TUTORIAL_SEEN_KEY = 'artisania:tutorial-seen';
 
@@ -49,7 +50,7 @@ function GameApp() {
   const deleteSaveSlot = useGameStore((s) => s.deleteSaveSlot);
   const saveSlots = useGameStore((s) => s.saveSlots);
   const activeSaveSlotId = useGameStore((s) => s.activeSaveSlotId);
-  const [view, setView] = useState<'menu' | 'playing'>('menu');
+  const [view, setView] = useState<'menu' | 'playing' | 'editor'>('menu');
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
   const [activeCraftId, setActiveCraftId] = useState<string | null>(null);
@@ -84,6 +85,12 @@ function GameApp() {
   const smokeNpcId = import.meta.env.DEV
     ? new URLSearchParams(window.location.search).get('npc')
     : null;
+  const smokeActivityId = import.meta.env.DEV
+    ? new URLSearchParams(window.location.search).get('activity')
+    : null;
+  const smokeCraftId = import.meta.env.DEV
+    ? new URLSearchParams(window.location.search).get('craft')
+    : null;
 
   // 首次挂载：恢复存档并探测是否有可续的存档
   useEffect(() => {
@@ -97,6 +104,13 @@ function GameApp() {
     if (loadedChapterSmoke || loadedPrioritySmoke) {
       setView('playing');
       if (smokeNpcId) window.setTimeout(() => setActiveNpcId(smokeNpcId), 0);
+      if (smokeActivityId) window.setTimeout(() => setActiveActivityId(smokeActivityId), 0);
+      if (smokeCraftId) {
+        window.setTimeout(() => {
+          if (hasCraftPage(smokeCraftId)) setActiveCraftPageId(smokeCraftId);
+          else setActiveCraftId(smokeCraftId);
+        }, 0);
+      }
       lastSigRef.current = '';
       lastTargetSigRef.current = '';
       syncRegion();
@@ -111,6 +125,8 @@ function GameApp() {
     smokeScenarioId,
     smokeSubregionId,
     smokeNpcId,
+    smokeActivityId,
+    smokeCraftId,
   ]);
 
   // 主菜单入口
@@ -218,6 +234,20 @@ function GameApp() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  useEffect(() => {
+    function onMapLayoutOverrideChanged(event: Event) {
+      if (event instanceof StorageEvent && event.key !== MAP_LAYOUT_OVERRIDE_STORAGE_KEY) return;
+      lastSigRef.current = '';
+      syncRegion();
+    }
+    window.addEventListener('storage', onMapLayoutOverrideChanged);
+    window.addEventListener(MAP_LAYOUT_OVERRIDE_EVENT, onMapLayoutOverrideChanged);
+    return () => {
+      window.removeEventListener('storage', onMapLayoutOverrideChanged);
+      window.removeEventListener(MAP_LAYOUT_OVERRIDE_EVENT, onMapLayoutOverrideChanged);
+    };
+  }, []);
+
   // 状态变化时尝试同步地图（仅在地区/解锁集变化时真正重建），并探测新成就
   useEffect(() => {
     // 初始化已知成就集，避免加载存档时补弹
@@ -240,13 +270,16 @@ function GameApp() {
   return (
     <div className="stage">
       <PhaserGame />
-      {view === 'menu' ? (
+      {view === 'editor' ? (
+        <MapEditor onBackToMenu={() => setView('menu')} />
+      ) : view === 'menu' ? (
         <MainMenu
           saveSlots={saveSlots}
           activeSaveSlotId={activeSaveSlotId}
           onNew={startNew}
           onContinue={continueGame}
           onDeleteSave={deleteSave}
+          onOpenMapEditor={() => setView('editor')}
         />
       ) : (
         <>

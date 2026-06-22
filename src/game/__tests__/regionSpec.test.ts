@@ -35,6 +35,15 @@ function longquanWorkshopState() {
   };
 }
 
+type BuiltRegionSpec = NonNullable<ReturnType<typeof buildRegionSpec>>;
+
+function expectNpcPlaced(spec: BuiltRegionSpec | undefined | null, npcId: string) {
+  const npc = spec?.npcs.find((item) => item.id === npcId);
+  expect(npc).toBeTruthy();
+  expect(npc?.tileX).toEqual(expect.any(Number));
+  expect(npc?.tileY).toEqual(expect.any(Number));
+}
+
 describe('regionSpec workshop summaries', () => {
   it('marks craft points with workshop capacity and expansion readiness', () => {
     const spec = buildRegionSpec('jiangnan', longquanWorkshopState());
@@ -92,15 +101,12 @@ describe('runtime map layouts', () => {
     });
     expect(spec?.layout?.objects).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ interaction: 'craft', targetId: 'longquan-sword', x: 16, y: 16 }),
-        expect.objectContaining({ interaction: 'craft', targetId: 'celadon', x: 35, y: 16 }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'longquan-sword' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'celadon' }),
         expect.objectContaining({ interaction: 'subregionGate', targetId: 'jiangnan-suhang' }),
       ]),
     );
-    expect(spec?.npcs.find((npc) => npc.id === 'jn-ye-qingzhan')).toMatchObject({
-      tileX: 38,
-      tileY: 20,
-    });
+    expectNpcPlaced(spec, 'jn-ye-qingzhan');
   });
 
   it('attaches M1.17 Suhang and Baigongyuan layouts to Jiangnan street specs', () => {
@@ -157,10 +163,7 @@ describe('runtime map layouts', () => {
         expect.objectContaining({ interaction: 'subregionGate', targetId: 'huizhou-merchant-hall' }),
       ]),
     );
-    expect(inkAlley?.npcs.find((npc) => npc.id === 'hz-cheng-moshou')).toMatchObject({
-      tileX: 30,
-      tileY: 20,
-    });
+    expectNpcPlaced(inkAlley, 'hz-cheng-moshou');
     expect(inkAlley?.activities.some((activity) => activity.id === 'hz-ink-workshop')).toBe(true);
     expect(inkAlley?.crafts.some((craft) => craft.id === 'hui-ink')).toBe(true);
   });
@@ -187,10 +190,7 @@ describe('runtime map layouts', () => {
       ]),
     );
     expect(sheStone?.industries.some((industry) => industry.id === 'harvest-she-stone')).toBe(true);
-    expect(sheStone?.npcs.find((npc) => npc.id === 'hz-xu-yanshi')).toMatchObject({
-      tileX: 30,
-      tileY: 20,
-    });
+    expectNpcPlaced(sheStone, 'hz-xu-yanshi');
     expect(sheStone?.activities.some((activity) => activity.id === 'hz-she-stone-pit')).toBe(true);
     expect(sheStone?.crafts.some((craft) => craft.id === 'she-inkstone')).toBe(true);
   });
@@ -219,10 +219,7 @@ describe('runtime map layouts', () => {
     expect(linqiong?.industries.map((industry) => industry.id)).toEqual(
       expect.arrayContaining(['harvest-iron-ore', 'smelt-iron']),
     );
-    expect(linqiong?.npcs.find((npc) => npc.id === 'bs-deng-lusheng')).toMatchObject({
-      tileX: 30,
-      tileY: 20,
-    });
+    expectNpcPlaced(linqiong, 'bs-deng-lusheng');
     expect(linqiong?.activities.some((activity) => activity.id === 'bs-linqiong-forge')).toBe(true);
   });
 
@@ -257,10 +254,7 @@ describe('runtime map layouts', () => {
     expect(forge?.industries.map((industry) => industry.id)).toEqual(
       expect.arrayContaining(['harvest-iron-ore', 'smelt-iron']),
     );
-    expect(forge?.npcs.find((npc) => npc.id === 'ln-liang-tiexian')).toMatchObject({
-      tileX: 29,
-      tileY: 20,
-    });
+    expectNpcPlaced(forge, 'ln-liang-tiexian');
     expect(forge?.activities.some((activity) => activity.id === 'ln-foshan-forge')).toBe(true);
 
     expect(duanStone?.layout).toMatchObject({ subregionId: 'lingnan-duan-stone', size: { w: 56, h: 30 } });
@@ -278,10 +272,7 @@ describe('runtime map layouts', () => {
     expect(duanStone?.crafts.map((craft) => craft.id)).toEqual(
       expect.arrayContaining(['duan-inkstone', 'shiwan-pottery']),
     );
-    expect(duanStone?.npcs.find((npc) => npc.id === 'ln-tan-yanbo')).toMatchObject({
-      tileX: 30,
-      tileY: 20,
-    });
+    expectNpcPlaced(duanStone, 'ln-tan-yanbo');
     expect(duanStone?.activities.some((activity) => activity.id === 'ln-duan-inkstone-pit')).toBe(true);
   });
 
@@ -310,10 +301,7 @@ describe('runtime map layouts', () => {
       expect.arrayContaining(['harvest-copper-ore', 'smelt-copper']),
     );
     expect(dongchuan?.crafts.some((craft) => craft.id === 'jianshui-pottery')).toBe(true);
-    expect(dongchuan?.npcs.find((npc) => npc.id === 'qd-tongshan-ke')).toMatchObject({
-      tileX: 29,
-      tileY: 20,
-    });
+    expectNpcPlaced(dongchuan, 'qd-tongshan-ke');
     expect(dongchuan?.activities.some((activity) => activity.id === 'qd-dongchuan-mine')).toBe(true);
   });
 
@@ -350,10 +338,7 @@ describe('runtime map layouts', () => {
     expect(mineYard?.industries.map((industry) => industry.id)).toEqual(
       expect.arrayContaining(['harvest-copper-ore', 'harvest-iron-ore', 'smelt-copper', 'smelt-iron']),
     );
-    expect(mineYard?.npcs.find((npc) => npc.id === 'jc-yeshu')).toMatchObject({
-      tileX: 29,
-      tileY: 20,
-    });
+    expectNpcPlaced(mineYard, 'jc-yeshu');
     expect(mineYard?.activities.some((activity) => activity.id === 'jc-daye-mine')).toBe(true);
 
     expect(xiangEmbroidery?.layout).toMatchObject({
@@ -376,10 +361,7 @@ describe('runtime map layouts', () => {
       expect.arrayContaining(['harvest-cocoon', 'sericulture']),
     );
     expect(xiangEmbroidery?.crafts.some((craft) => craft.id === 'xiang-embroidery')).toBe(true);
-    expect(xiangEmbroidery?.npcs.find((npc) => npc.id === 'jc-wen-xiuniang')).toMatchObject({
-      tileX: 31,
-      tileY: 20,
-    });
+    expectNpcPlaced(xiangEmbroidery, 'jc-wen-xiuniang');
     expect(xiangEmbroidery?.activities.some((activity) => activity.id === 'jc-xiang-embroidery')).toBe(true);
   });
 
@@ -406,11 +388,11 @@ describe('runtime map layouts', () => {
         expect.objectContaining({ interaction: 'industry', targetId: 'pick-tea' }),
         expect.objectContaining({ interaction: 'industry', targetId: 'harvest-bamboo' }),
         expect.objectContaining({ interaction: 'industry', targetId: 'split-bamboo' }),
-        expect.objectContaining({ interaction: 'craft', targetId: 'oilpaper-umbrella', x: 12, y: 16 }),
-        expect.objectContaining({ interaction: 'activity', targetId: 'jn-lake-tea-house', x: 24, y: 16 }),
-        expect.objectContaining({ interaction: 'activity', targetId: 'jn-paper-umbrella-shop', x: 36, y: 16 }),
-        expect.objectContaining({ interaction: 'npc', npcId: 'jn-su-xiaocha', x: 24, y: 20 }),
-        expect.objectContaining({ interaction: 'npc', npcId: 'jn-lin-yuqiao', x: 36, y: 20 }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'oilpaper-umbrella' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'jn-lake-tea-house' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'jn-paper-umbrella-shop' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jn-su-xiaocha' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jn-lin-yuqiao' }),
         expect.objectContaining({ interaction: 'subregionGate', targetId: 'jiangnan-jinling' }),
         expect.objectContaining({ interaction: 'subregionGate', targetId: 'jiangnan-taihu' }),
       ]),
@@ -422,8 +404,8 @@ describe('runtime map layouts', () => {
     expect(linan?.activities.map((activity) => activity.id)).toEqual(
       expect.arrayContaining(['jn-lake-tea-house', 'jn-paper-umbrella-shop']),
     );
-    expect(linan?.npcs.find((npc) => npc.id === 'jn-su-xiaocha')).toMatchObject({ tileX: 24, tileY: 20 });
-    expect(linan?.npcs.find((npc) => npc.id === 'jn-lin-yuqiao')).toMatchObject({ tileX: 36, tileY: 20 });
+    expectNpcPlaced(linan, 'jn-su-xiaocha');
+    expectNpcPlaced(linan, 'jn-lin-yuqiao');
 
     expect(taihu?.layout).toMatchObject({ subregionId: 'jiangnan-taihu', size: { w: 58, h: 28 } });
     expect(taihu?.layout?.objects).toEqual(
@@ -431,10 +413,10 @@ describe('runtime map layouts', () => {
         expect.objectContaining({ interaction: 'industry', targetId: 'harvest-cocoon' }),
         expect.objectContaining({ interaction: 'industry', targetId: 'sericulture' }),
         expect.objectContaining({ interaction: 'industry', targetId: 'weave-brocade' }),
-        expect.objectContaining({ interaction: 'craft', targetId: 'kesi', x: 12, y: 16 }),
-        expect.objectContaining({ interaction: 'craft', targetId: 'oilpaper-umbrella', x: 24, y: 16 }),
-        expect.objectContaining({ interaction: 'activity', targetId: 'jn-cloud-brocade-office', x: 36, y: 16 }),
-        expect.objectContaining({ interaction: 'npc', npcId: 'jn-shen-yunsuo', x: 36, y: 20 }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'kesi' }),
+        expect.objectContaining({ interaction: 'craft', targetId: 'oilpaper-umbrella' }),
+        expect.objectContaining({ interaction: 'activity', targetId: 'jn-cloud-brocade-office' }),
+        expect.objectContaining({ interaction: 'npc', npcId: 'jn-shen-yunsuo' }),
         expect.objectContaining({ interaction: 'subregionGate', targetId: 'jiangnan-linan' }),
       ]),
     );
@@ -443,7 +425,7 @@ describe('runtime map layouts', () => {
     );
     expect(taihu?.crafts.map((craft) => craft.id)).toEqual(expect.arrayContaining(['kesi', 'oilpaper-umbrella']));
     expect(taihu?.activities.some((activity) => activity.id === 'jn-cloud-brocade-office')).toBe(true);
-    expect(taihu?.npcs.find((npc) => npc.id === 'jn-shen-yunsuo')).toMatchObject({ tileX: 36, tileY: 20 });
+    expectNpcPlaced(taihu, 'jn-shen-yunsuo');
   });
 
   it('only references live street targets from manual layouts', () => {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useGameStore } from '../store/gameStore';
 import {
   CRAFT_FOCUS_CHECK_OPTIONS,
@@ -11,9 +11,12 @@ import {
   craftInteractionFor,
   craftFocusCheckOption,
   craftTechniqueOption,
+  formatRealTimeRemaining,
   itemDefectSummary,
   itemEffectiveQuality,
   orderPrice,
+  realTimeCooldownKey,
+  realTimeRemainingMs,
   workshopCapacityForCraft,
   workshopExpansionCostForCraft,
   workshopUpgradeSpaceCost,
@@ -23,6 +26,8 @@ import {
 } from '../engine';
 import { RESOURCE_INDEX } from '../data';
 import { getCraftPageTheme } from './craftPageThemes';
+import { craftActionIcon, minigameRegionTheme, workshopRegionFrame } from './minigameUiTheme';
+import { useRealTimeNow } from './useRealTimeNow';
 
 const RESOURCE_NAME_FALLBACK: Record<string, string> = {
   coin: '通货',
@@ -53,8 +58,10 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
   const attributes = useGameStore((s) => s.state.profile.attributes);
   const currentRegion = useGameStore((s) => s.state.currentRegion);
   const currentSubregion = useGameStore((s) => s.state.currentSubregion);
+  const realTime = useGameStore((s) => s.state.realTime);
   const playing = useGameStore((s) => s.state.status === 'playing');
   const dispatch = useGameStore((s) => s.dispatch);
+  const now = useRealTimeNow();
   const [skipIds, setSkipIds] = useState<string[]>([]);
   const [techniqueByStage, setTechniqueByStage] = useState<Record<string, CraftTechniqueChoiceId>>({});
   const [focusCheckByStage, setFocusCheckByStage] = useState<Record<string, CraftFocusCheckChoiceId>>({});
@@ -63,6 +70,15 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
   const state = craftStates.find((c) => c.craftId === craftId);
   const theme = getCraftPageTheme(craftId);
   if (!def || !state || !theme) return null;
+  const miniTheme = minigameRegionTheme(currentRegion);
+  const workshopFrame = workshopRegionFrame(currentRegion);
+  const heroImage = theme.heroImage ?? workshopFrame;
+  const heroHasCustomArt = Boolean(theme.heroImage);
+  const pageStyle = {
+    '--page-accent': theme.accent,
+    '--minigame-accent': miniTheme.accent,
+    '--minigame-accent-soft': miniTheme.accentSoft,
+  } as CSSProperties;
 
   const toggleSkip = (id: string) =>
     setSkipIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -121,7 +137,11 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
     : `当前「${currentSubregionName}」没有开放「${def.name}」工坊，请经街景通道前往${
         targetSubregionNames.length > 0 ? `「${targetSubregionNames.join('」或「')}」` : '对应小地区'
       }。`;
-  const canCraft = playing && localCraftAvailable && !laborShort && !materialShort;
+  const cooldownKey = realTimeCooldownKey('craft', craftId);
+  const cooldownRemaining = realTimeRemainingMs({ realTime }, cooldownKey, now);
+  const cooldownBlocked = cooldownRemaining > 0;
+  const cooldownText = cooldownBlocked ? formatRealTimeRemaining(cooldownRemaining) : '';
+  const canCraft = playing && localCraftAvailable && !laborShort && !materialShort && !cooldownBlocked;
   const resName = (id: string) => RESOURCE_INDEX[id]?.name ?? RESOURCE_NAME_FALLBACK[id] ?? id;
 
   const outputId = def.outputResourceId;
@@ -190,7 +210,7 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
     .slice(0, 2);
 
   return (
-    <div className="craft-page" style={{ ['--page-accent' as string]: theme.accent }}>
+    <div className={`craft-page craft-page--minigame craft-page--workshop minigame-shell--${miniTheme.regionId}`} style={pageStyle}>
       <header className="craft-page__bar">
         <button className="btn btn--ghost" onClick={onClose}>
           ← 返回街市
@@ -200,6 +220,7 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
           <small> · {def.region}</small>
         </h2>
         <div className="craft-page__metrics">
+          {cooldownBlocked && <span className="craft-page__timer">整备 {cooldownText}</span>}
           {(Object.keys(METRIC_LABELS) as (keyof typeof METRIC_LABELS)[]).map((k) => (
             <span key={k}>
               {METRIC_LABELS[k]} {state.metrics[k]}
@@ -210,8 +231,12 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
 
       <div className="craft-page__body">
         <section className="craft-page__story">
-          <div className="craft-page__hero" aria-label={theme.artHeroNote}>
-            <span className="craft-page__hero-tag">{theme.artHeroNote}</span>
+          <div
+            className={`craft-page__hero${heroHasCustomArt ? ' craft-page__hero--art' : ''}`}
+            role="img"
+            aria-label={theme.heroAlt}
+          >
+            <img aria-hidden="true" className="craft-page__hero-frame" src={heroImage} alt="" />
           </div>
           <p className="craft-page__tagline">{theme.tagline}</p>
           {theme.story.map((p, i) => (
@@ -229,6 +254,11 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
         <section className="craft-page__work">
           <h3>工坊台 · {def.name}</h3>
           <p className="craft-page__work-desc">{def.blurb}</p>
+          <div className="craft-page__minigame-strip">
+            <img className="minigame-icon" src={craftActionIcon(def.name + def.blurb)} alt="" />
+            <span>{miniTheme.label}</span>
+            <b>{def.region}</b>
+          </div>
 
           <ul className="steps">
             {def.processChain.map((step) => (
@@ -392,6 +422,11 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
               <span className={`craft-supply__chip${laborShort ? ' craft-supply__chip--short' : ''}`}>
                 工时 {resources.labor ?? 0}/{laborNeed}
               </span>
+              {cooldownBlocked && (
+                <span className="craft-supply__chip craft-supply__chip--time">
+                  整备 {cooldownText}
+                </span>
+              )}
             </div>
             {outputId && (
               <div className="craft-supply__row">
@@ -406,7 +441,11 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
             {!canCraft && playing && (
               <p className="craft-supply__warn">
                 {locationWarning ||
-                  (materialShort ? '物料不足，先去采料／精炼补足半成品。' : '人力不足，结束本季可恢复工时。')}
+                  (cooldownBlocked
+                    ? `工坊正在整备，还需等待 ${cooldownText}。`
+                    : materialShort
+                      ? '物料不足，先去采料／精炼补足半成品。'
+                      : '人力不足，结束本季可恢复工时。')}
               </p>
             )}
           </div>
@@ -417,7 +456,7 @@ export function CraftPage({ craftId, onClose }: { craftId: string; onClose: () =
               disabled={!canCraft}
               onClick={() => dispatch({ type: 'RUN_PROCESS', craftId: def.id, skipStepIds: skipIds, techniqueChoices, focusChecks })}
             >
-              亲手制作
+              {cooldownBlocked ? `整备 ${cooldownText}` : '亲手制作'}
             </button>
             <button
               className="btn btn--ghost"

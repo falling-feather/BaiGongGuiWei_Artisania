@@ -3,30 +3,199 @@
   "regionId": "jingchu",
   "subregionId": "jingchu-xiang-embroidery",
   "tileSize": 32,
-  "size": { "w": 56, "h": 30 },
+  "size": {
+    "w": 56,
+    "h": 30
+  },
   "roads": [
-    { "points": [{ "x": 2, "y": 7 }, { "x": 53, "y": 7 }] },
-    { "points": [{ "x": 2, "y": 15 }, { "x": 53, "y": 15 }] },
-    { "points": [{ "x": 2, "y": 24 }, { "x": 53, "y": 24 }] },
-    { "points": [{ "x": 10, "y": 3 }, { "x": 10, "y": 26 }] },
-    { "points": [{ "x": 29, "y": 3 }, { "x": 29, "y": 26 }] },
-    { "points": [{ "x": 48, "y": 3 }, { "x": 48, "y": 26 }] }
+    {
+      "points": [
+        {
+          "x": 10,
+          "y": 15
+        },
+        {
+          "x": 28,
+          "y": 6
+        },
+        {
+          "x": 46,
+          "y": 15
+        },
+        {
+          "x": 28,
+          "y": 24
+        },
+        {
+          "x": 10,
+          "y": 15
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 2,
+          "y": 17
+        },
+        {
+          "x": 10,
+          "y": 17
+        },
+        {
+          "x": 46,
+          "y": 14
+        },
+        {
+          "x": 53,
+          "y": 14
+        }
+      ]
+    },
+    {
+      "points": [
+        {
+          "x": 28,
+          "y": 3
+        },
+        {
+          "x": 28,
+          "y": 27
+        }
+      ]
+    }
   ],
   "objects": [
-    { "itemId": "player_spawn", "x": 28, "y": 15 },
-    { "itemId": "industry_cocoon", "name": "mulberry cocoon room", "interaction": "industry", "targetId": "harvest-cocoon", "x": 7, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "industry_sericulture", "name": "reeling bench", "interaction": "industry", "targetId": "sericulture", "x": 16, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "craft_embroidery", "name": "Xiang embroidery frame", "interaction": "craft", "targetId": "xiang-embroidery", "x": 28, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "activity_embroidery", "name": "needle blending room", "interaction": "activity", "targetId": "jc-xiang-embroidery", "x": 38, "y": 16, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to lake market", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jingchu-lake-market", "x": 4, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to Chu lacquer yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jingchu-chu-lacquer", "x": 18, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "to copper iron mine yard", "interaction": "gate", "runtimeInteraction": "subregionGate", "targetId": "jingchu-mine-yard", "x": 32, "y": 25, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Bashu river gorge", "interaction": "gate", "targetId": "bashu", "x": 49, "y": 4, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Qiandian mine road", "interaction": "gate", "targetId": "qiandian", "x": 49, "y": 13, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "gate", "name": "Ganpo lake kiln road", "interaction": "gate", "targetId": "ganpo", "x": 49, "y": 22, "tileW": 3, "tileH": 3, "solid": true },
-    { "itemId": "npc-jc-wen-xiuniang", "name": "Wen Xiuniang", "interaction": "npc", "npcId": "jc-wen-xiuniang", "x": 31, "y": 20, "tileW": 1, "tileH": 1, "solid": false },
-    { "itemId": "thread-shelf-a", "name": "dyed silk thread shelf", "interaction": "decoration", "x": 20, "y": 18, "tileW": 3, "tileH": 2, "solid": true },
-    { "itemId": "river-silk-rack-a", "name": "river silk drying rack", "interaction": "decoration", "x": 39, "y": 4, "tileW": 3, "tileH": 2, "solid": true },
-    { "itemId": "embroidery-frame-a", "name": "standing embroidery frame", "interaction": "decoration", "x": 6, "y": 17, "tileW": 4, "tileH": 2, "solid": true }
+    {
+      "itemId": "player_spawn",
+      "x": 6,
+      "y": 23,
+      "tileW": 1,
+      "tileH": 1
+    },
+    {
+      "itemId": "industry_cocoon",
+      "name": "mulberry cocoon room",
+      "interaction": "industry",
+      "targetId": "harvest-cocoon",
+      "x": 6,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "industry_sericulture",
+      "name": "reeling bench",
+      "interaction": "industry",
+      "targetId": "sericulture",
+      "x": 15,
+      "y": 2,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "craft_embroidery",
+      "name": "Xiang embroidery frame",
+      "interaction": "craft",
+      "targetId": "xiang-embroidery",
+      "x": 42,
+      "y": 10,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "activity_embroidery",
+      "name": "needle blending room",
+      "interaction": "activity",
+      "targetId": "jc-xiang-embroidery",
+      "x": 6,
+      "y": 18,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to lake market",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "jingchu-lake-market",
+      "x": 14,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to Chu lacquer yard",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "jingchu-chu-lacquer",
+      "x": 28,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "to copper iron mine yard",
+      "interaction": "gate",
+      "runtimeInteraction": "subregionGate",
+      "targetId": "jingchu-mine-yard",
+      "x": 42,
+      "y": 26,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Bashu river gorge",
+      "interaction": "gate",
+      "targetId": "bashu",
+      "x": 51,
+      "y": 3,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Qiandian mine road",
+      "interaction": "gate",
+      "targetId": "qiandian",
+      "x": 51,
+      "y": 9,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "gate",
+      "name": "Ganpo lake kiln road",
+      "interaction": "gate",
+      "targetId": "ganpo",
+      "x": 51,
+      "y": 15,
+      "tileW": 3,
+      "tileH": 3,
+      "solid": true
+    },
+    {
+      "itemId": "npc-jc-wen-xiuniang",
+      "name": "Wen Xiuniang",
+      "interaction": "npc",
+      "npcId": "jc-wen-xiuniang",
+      "x": 4,
+      "y": 15,
+      "tileW": 1,
+      "tileH": 1,
+      "solid": false
+    }
   ]
 }

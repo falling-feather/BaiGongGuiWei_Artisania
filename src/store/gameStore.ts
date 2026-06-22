@@ -94,6 +94,18 @@ function bootstrapState(): GameState {
   );
 }
 
+function stampRealTimeAction(action: GameAction): GameAction {
+  switch (action.type) {
+    case 'RUN_PROCESS':
+    case 'PERFORM_ACTIVITY':
+    case 'GATHER_RESOURCE':
+    case 'TALK_NPC':
+      return { ...action, now: Date.now() };
+    default:
+      return action;
+  }
+}
+
 export const useGameStore = create<GameStore>((set, get) => ({
   state: bootstrapState(),
   content,
@@ -103,7 +115,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   dispatch: (action) => {
     const smokeMode = get().smokeMode;
-    const next = gameReducer(get().state, action, get().content);
+    const next = gameReducer(get().state, stampRealTimeAction(action), get().content);
     set({ state: next });
     if (smokeMode) return;
     void localStorageAdapter.save(next, get().activeSaveSlotId ?? undefined).then((slotId) => {

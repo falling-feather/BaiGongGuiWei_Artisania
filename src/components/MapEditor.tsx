@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type MouseEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import {
   REGION_ART_ASSET_REGIONS,
   REGION_ART_BUILDING_DEFS,
@@ -7,9 +7,20 @@ import {
   REGION_ART_TILE_DEFS,
   type RegionArtAssetRegionId,
 } from '../data/regionArtAssets.generated';
+import { RUNTIME_MAP_EDITOR_SNAPSHOTS, type RuntimeMapEditorSnapshot, type RuntimeMapRoadPath } from '../data/mapLayout';
+import {
+  removeMapLayoutOverride,
+  saveMapLayoutOverride,
+  type RuntimeMapEditorOverrideSnapshot,
+} from '../data/mapLayoutOverrides';
+import { REGION_INDEX } from '../data/regions';
+import { buildRegionSpec } from '../game/regionSpec';
+import { buildStreetMapEditorSnapshot } from '../game/streetMapSnapshot';
+import { useGameStore } from '../store/gameStore';
+import { NpcDialogLayoutEditor } from './NpcDialogLayoutEditor';
 
-type EditorCategory = 'terrain' | 'road' | 'water' | 'building' | 'prop' | 'actor' | 'marker';
-type EditorLayer = 'terrain' | 'road' | 'water' | 'structure' | 'prop' | 'actor' | 'foreground' | 'marker';
+type EditorCategory = 'background' | 'terrain' | 'road' | 'water' | 'building' | 'prop' | 'actor' | 'marker';
+type EditorLayer = 'background' | 'terrain' | 'road' | 'water' | 'structure' | 'prop' | 'actor' | 'foreground' | 'marker';
 type EditorTool = 'paint' | 'select' | 'erase';
 type EditorRegionId = RegionArtAssetRegionId;
 type SerializedRegionId = EditorRegionId | 'western';
@@ -20,6 +31,7 @@ type InteractionKind =
   | 'gate'
   | 'npc'
   | 'decoration'
+  | 'activity'
   | 'marker'
   | 'sword_practice'
   | 'archery_practice'
@@ -73,6 +85,10 @@ interface PaletteItem {
   frame?: number;
   modelLayers?: ModelLayer[];
   isCustomModel?: boolean;
+  runtimeInteraction?: string;
+  targetId?: string;
+  npcId?: string;
+  gateKind?: 'region' | 'subregion';
 }
 
 interface PlacedObject extends PaletteItem {
@@ -89,6 +105,19 @@ interface TilePaint {
   asset: string;
   solid: boolean;
   interaction: InteractionKind;
+}
+
+interface RenderableAsset {
+  asset: string;
+  name: string;
+  variants?: Partial<Record<VisualState, string>>;
+  visualState?: VisualState;
+  modelLayers?: ModelLayer[];
+  sheetCols?: number;
+  sheetRows?: number;
+  frame?: number;
+  direction?: SpriteDirection;
+  animated?: boolean;
 }
 
 interface PaintDraft {
@@ -144,6 +173,14 @@ interface MapObjectSeed {
   animated?: boolean;
   frame?: number;
   z?: number;
+  layer?: EditorLayer;
+  category?: EditorCategory;
+  asset?: string;
+  name?: string;
+  runtimeInteraction?: string;
+  targetId?: string;
+  npcId?: string;
+  gateKind?: 'region' | 'subregion';
 }
 
 type SerializedTile = MapTileSeed & Partial<TilePaint>;
@@ -156,16 +193,22 @@ type SerializedObject = MapObjectSeed &
     sheetCols?: number;
     sheetRows?: number;
     isCustomModel?: boolean;
+    runtimeInteraction?: string;
+    targetId?: string;
+    npcId?: string;
+    gateKind?: 'region' | 'subregion';
   };
 
 interface EditorMapSnapshot {
   schema?: string;
   regionId: SerializedRegionId;
+  subregionId?: string;
   tileSize?: number;
   size: { w: number; h: number };
   modelDefinitions?: Array<Partial<PaletteItem>>;
-  tiles: SerializedTile[];
-  objects: SerializedObject[];
+  roads?: RuntimeMapRoadPath[];
+  tiles?: SerializedTile[];
+  objects?: SerializedObject[];
 }
 
 interface EditorMapTemplate {
@@ -173,6 +216,7 @@ interface EditorMapTemplate {
   name: string;
   description: string;
   regionId: EditorRegionId;
+  subregionId?: string;
   size: { w: number; h: number };
   tiles: MapTileSeed[];
   objects: MapObjectSeed[];
@@ -189,6 +233,8 @@ interface SavedMapDraft {
 const DISPLAY_TILE = 24;
 const DEFAULT_W = 32;
 const DEFAULT_H = 22;
+const GATE_TILE_W = 5;
+const GATE_TILE_H = 4;
 const MODEL_CANVAS = { w: 96, h: 88 };
 const MAP_DRAFT_STORAGE_KEY = 'artisania:map-editor:drafts:v1';
 
@@ -376,6 +422,62 @@ const WESTERN_TILE_DEFS = [
   ['irrigation_canal', '灌渠水道', 'water', true],
 ] as const;
 
+const REGION_TERRAIN_EDITOR_REGIONS = [
+  ['jiangnan', '江南'],
+  ['bashu', '巴蜀'],
+  ['lingnan', '岭南'],
+  ['ganpo', '赣鄱'],
+  ['xiyu', '西域'],
+] as const;
+
+const REGION_TERRAIN_TILE_TYPES = [
+  ['ground', '底地', 'terrain', false],
+  ['ground_alt', '碎地', 'terrain', false],
+  ['road', '横路', 'road', false],
+  ['road_vertical', '竖路', 'road', false],
+  ['road_cross', '路口', 'road', false],
+  ['water', '水面', 'water', true],
+  ['water_edge_left', '左岸', 'water', true],
+  ['water_edge_right', '右岸', 'water', true],
+  ['vegetation', '植被', 'terrain', false],
+  ['courtyard', '院落', 'terrain', false],
+] as const;
+
+const REGION_TERRAIN_TILE_DEFS = REGION_TERRAIN_EDITOR_REGIONS.flatMap(([regionId, regionName]) =>
+  REGION_TERRAIN_TILE_TYPES.map(([tileId, tileName, category, solid]) => ({
+    id: `region_${regionId}_${tileId}`,
+    name: `${regionName}·${tileName}`,
+    category,
+    asset: `/assets/game/terrain/regions/${regionId}/${tileId}.png`,
+    solid,
+  })),
+);
+
+const BACKGROUND_DEFS = [
+  ['bg_region_jiangnan_street_tiles', '底图·江南街景整图', '/assets/game/regions/jiangnan/street_tiles.png', 20, 4],
+  ['bg_region_bashu_street_tiles', '底图·巴蜀街景整图', '/assets/game/regions/bashu/street_tiles.png', 20, 4],
+  ['bg_region_lingnan_street_tiles', '底图·岭南街景整图', '/assets/game/regions/lingnan/street_tiles.png', 20, 4],
+  ['bg_region_ganpo_street_tiles', '底图·赣鄱街景整图', '/assets/game/regions/ganpo/street_tiles.png', 20, 4],
+  ['bg_region_xiyu_street_tiles', '底图·西域街景整图', '/assets/game/regions/xiyu/street_tiles.png', 20, 4],
+  ['bg_npc_dialogue_panel', '底图·NPC 对话面板', '/assets/game/ui/hud_v2_dialogue_panel.png', 23, 15],
+  ['bg_hud_top_bar', '底图·HUD 顶栏', '/assets/game/ui/hud_v2_top_bar.png', 23, 6],
+  ['bg_hud_side_task', '底图·HUD 任务侧栏', '/assets/game/ui/hud_v2_side_task_panel.png', 12, 14],
+  ['bg_cover_jiangnan_dawn', '底图·江南晨雾封面', '/assets/game/ui/cover_jiangnan_dawn_v02.png', 32, 18],
+  ['bg_cover_jiangnan_riverfront', '底图·江南水岸封面', '/assets/game/ui/cover_jiangnan_riverfront_v01.png', 32, 18],
+  ['bg_cover_jiangnan_cinematic', '底图·江南夜景封面', '/assets/game/ui/cover_jiangnan_cinematic_v01.png', 32, 18],
+  ['bg_cover_xueyu_mountain', '底图·雪域山寺封面', '/assets/game/ui/cover_xueyu_mountain_v01.png', 32, 18],
+  ['bg_workshop_jiangnan', '底图·工坊江南', '/assets/game/ui/workshop_region_jiangnan.png', 10, 9],
+  ['bg_workshop_bashu', '底图·工坊巴蜀', '/assets/game/ui/workshop_region_bashu.png', 10, 9],
+  ['bg_workshop_lingnan', '底图·工坊岭南', '/assets/game/ui/workshop_region_lingnan.png', 10, 9],
+  ['bg_workshop_ganpo', '底图·工坊赣鄱', '/assets/game/ui/workshop_region_ganpo.png', 10, 9],
+  ['bg_workshop_xiyu', '底图·工坊西域', '/assets/game/ui/workshop_region_xiyu.png', 10, 11],
+  ['bg_minigame_jiangnan', '底图·小游戏江南', '/assets/game/ui/minigame_region_jiangnan.png', 10, 9],
+  ['bg_minigame_bashu', '底图·小游戏巴蜀', '/assets/game/ui/minigame_region_bashu.png', 10, 9],
+  ['bg_minigame_lingnan', '底图·小游戏岭南', '/assets/game/ui/minigame_region_lingnan.png', 10, 9],
+  ['bg_minigame_ganpo', '底图·小游戏赣鄱', '/assets/game/ui/minigame_region_ganpo.png', 10, 9],
+  ['bg_minigame_xiyu', '底图·小游戏西域', '/assets/game/ui/minigame_region_xiyu.png', 10, 11],
+] as const;
+
 const BUILDING_COMPONENTS: ComponentItem[] = BUILDING_DEFS.map(([id, name]) => ({
   id: `building_${id}`,
   name,
@@ -482,6 +584,9 @@ const MODEL_COMPONENTS: ComponentItem[] = [
 ];
 
 const BASE_PALETTE: PaletteItem[] = [
+  ...BACKGROUND_DEFS.map(([id, name, asset, tileW, tileH]) =>
+    object(id, name, 'background', 'background', asset, tileW, tileH, false, true, 'decoration'),
+  ),
   tile('ground', '素土地', 'terrain', '/assets/game/tiles/ground.png'),
   tile('summer_lush_ground', '夏草地', 'terrain', '/assets/game/weather/terrain/summer_lush_ground.png'),
   tile('ground_stone', '青石地', 'terrain', '/assets/game/tiles/ground_stone.png'),
@@ -499,6 +604,9 @@ const BASE_PALETTE: PaletteItem[] = [
   ...WESTERN_TILE_DEFS.map(([id, name, category, solid]) =>
     tile(id, name, category, `/assets/game/tiles/western_region/${id}.png`, solid),
   ),
+  ...REGION_TERRAIN_TILE_DEFS.map((item) =>
+    tile(item.id, item.name, item.category, item.asset, item.solid),
+  ),
   ...REGION_ART_TILE_DEFS.map((item) =>
     tile(item.id, item.name, item.category, item.asset, item.solid),
   ),
@@ -512,10 +620,20 @@ const BASE_PALETTE: PaletteItem[] = [
     object(id, name, 'building', 'structure', `/assets/game/buildings/western_region/${id}.png`, 3, 3, true, false, interaction),
   ),
   ...REGION_ART_BUILDING_DEFS.map((item) =>
-    object(item.id, item.name, 'building', 'structure', item.asset, 3, 3, true, false, item.interaction),
+    object(
+      item.id,
+      item.name,
+      'building',
+      'structure',
+      item.asset,
+      item.id.endsWith('_building_regional_gate') ? GATE_TILE_W : 3,
+      item.id.endsWith('_building_regional_gate') ? GATE_TILE_H : 3,
+      true,
+      false,
+      item.interaction,
+    ),
   ),
   object('willow', '柳树', 'prop', 'prop', '/assets/game/props/willow.png', 2, 3, true, true, 'decoration'),
-  object('arch_bridge', '石拱桥体', 'prop', 'prop', '/assets/game/props/arch_bridge.png', 4, 3, false, true, 'decoration'),
   object('tea_stall', '茶摊', 'prop', 'prop', '/assets/game/props/tea_stall.png', 3, 2, true, true, 'decoration'),
   object('lantern_post', '灯笼杆', 'prop', 'prop', '/assets/game/props/lantern_post.png', 1, 2, true, true, 'decoration'),
   object('banner', '招幡', 'prop', 'prop', '/assets/game/props/banner.png', 1, 2, true, true, 'decoration'),
@@ -546,6 +664,7 @@ const BASE_PALETTE: PaletteItem[] = [
 ];
 
 const CATEGORY_LABEL: Record<EditorCategory, string> = {
+  background: '底图',
   terrain: '地面',
   road: '道路',
   water: '水体',
@@ -556,6 +675,7 @@ const CATEGORY_LABEL: Record<EditorCategory, string> = {
 };
 
 const LAYER_LABEL: Record<EditorLayer, string> = {
+  background: '底图层',
   terrain: '地面层',
   road: '道路层',
   water: '水体层',
@@ -574,8 +694,8 @@ const COMPONENT_KIND_LABEL: Record<ComponentKind, string> = {
   icon: '行为图标',
 };
 
-const MODEL_CATEGORY_OPTIONS: EditorCategory[] = ['building', 'prop', 'actor', 'marker'];
-const MODEL_LAYER_OPTIONS: EditorLayer[] = ['structure', 'prop', 'actor', 'foreground', 'marker'];
+const MODEL_CATEGORY_OPTIONS: EditorCategory[] = ['background', 'building', 'prop', 'actor', 'marker'];
+const MODEL_LAYER_OPTIONS: EditorLayer[] = ['background', 'structure', 'prop', 'actor', 'foreground', 'marker'];
 const INTERACTION_OPTIONS: Array<{ value: InteractionKind; label: string }> = [
   { value: 'none', label: '无' },
   { value: 'craft', label: '手艺' },
@@ -583,6 +703,7 @@ const INTERACTION_OPTIONS: Array<{ value: InteractionKind; label: string }> = [
   { value: 'gate', label: '出入口' },
   { value: 'npc', label: 'NPC' },
   { value: 'decoration', label: '装饰' },
+  { value: 'activity', label: '活动' },
   { value: 'marker', label: '标记' },
   { value: 'sword_practice', label: '练剑' },
   { value: 'archery_practice', label: '射艺' },
@@ -640,8 +761,10 @@ function object(
 }
 
 function building(id: string, name: string, asset: string, interaction: InteractionKind): PaletteItem {
+  const tileW = id === 'gate' ? GATE_TILE_W : 3;
+  const tileH = id === 'gate' ? GATE_TILE_H : 3;
   return {
-    ...object(id, name, 'building', 'structure', asset, 3, 3, true, false, interaction),
+    ...object(id, name, 'building', 'structure', asset, tileW, tileH, true, false, interaction),
     visualState: 'base',
     variants: {
       base: asset,
@@ -680,6 +803,7 @@ function keyOf(x: number, y: number) {
 
 function layerBase(layer: EditorLayer) {
   return {
+    background: 5,
     terrain: 0,
     road: 20,
     water: 10,
@@ -695,7 +819,7 @@ function directionRow(direction: SpriteDirection) {
   return { down: 0, left: 1, right: 2, up: 3 }[direction];
 }
 
-function resolvedAsset(item: Pick<PaletteItem | PlacedObject, 'asset' | 'variants' | 'visualState'>) {
+function resolvedAsset(item: Pick<RenderableAsset, 'asset' | 'variants' | 'visualState'>) {
   const state = item.visualState ?? 'base';
   return item.variants?.[state] ?? item.variants?.base ?? item.asset;
 }
@@ -740,8 +864,6 @@ const BUILTIN_MAP_TEMPLATES: EditorMapTemplate[] = [
       ...tileRect('pond_water_grass_center', 18, 18, 2, 2),
     ],
     objects: [
-      { itemId: 'arch_bridge', x: 15, y: 4, tileW: 4, tileH: 3 },
-      { itemId: 'arch_bridge', x: 15, y: 13, tileW: 4, tileH: 3 },
       { itemId: 'shop_indigo', x: 3, y: 2 },
       { itemId: 'shop_bamboo', x: 10, y: 2 },
       { itemId: 'craft_paper', x: 22, y: 1, visualState: 'rain' },
@@ -905,7 +1027,15 @@ function objectFromSeed(seed: SerializedObject, palette: PaletteItem[], index: n
   const paletteItem = palette.find((entry) => entry.id === itemId);
   const fallbackCategory =
     seed.category ??
-    (seed.layer === 'structure' ? 'building' : seed.layer === 'actor' ? 'actor' : seed.layer === 'marker' ? 'marker' : 'prop');
+    (seed.layer === 'background'
+      ? 'background'
+      : seed.layer === 'structure'
+        ? 'building'
+        : seed.layer === 'actor'
+          ? 'actor'
+          : seed.layer === 'marker'
+            ? 'marker'
+            : 'prop');
   const base: PaletteItem | null = paletteItem ?? (
     seed.name && seed.asset
       ? {
@@ -948,6 +1078,10 @@ function objectFromSeed(seed: SerializedObject, palette: PaletteItem[], index: n
     direction: seed.direction ?? base.direction,
     animated: seed.animated ?? base.animated,
     frame: seed.frame ?? base.frame,
+    runtimeInteraction: seed.runtimeInteraction ?? base.runtimeInteraction,
+    targetId: seed.targetId ?? base.targetId,
+    npcId: seed.npcId ?? base.npcId,
+    gateKind: seed.gateKind ?? base.gateKind,
     z: seed.z ?? layerBase(seed.layer ?? base.layer) + y,
   };
 }
@@ -972,6 +1106,7 @@ function templateToSnapshot(template: EditorMapTemplate): EditorMapSnapshot {
   return {
     schema: 'artisania-map-editor/v2',
     regionId: template.regionId,
+    subregionId: template.subregionId,
     tileSize: 32,
     size: template.size,
     modelDefinitions: template.customModels,
@@ -986,8 +1121,253 @@ function normalizeRegionId(regionId: SerializedRegionId | undefined): EditorRegi
   return 'jiangnan';
 }
 
+const REGION_BASE_TILE_BY_ID: Record<EditorRegionId, string> = {
+  jiangnan: 'region_jiangnan_ground',
+  bashu: 'region_bashu_ground',
+  lingnan: 'region_lingnan_ground',
+  qiandian: 'meadow_grass',
+  jingchu: 'summer_lush_ground',
+  ganpo: 'region_ganpo_ground',
+  huizhou: 'ground_stone',
+  jingji: 'courtyard_brick',
+  sanjin: 'packed_earth',
+  xueyu: 'snow_ground_open',
+  xiyu: 'desert_sand',
+};
+
+const REGION_ROAD_TILE_REGIONS = new Set<EditorRegionId>(['jiangnan', 'bashu', 'lingnan', 'ganpo']);
+const RUNTIME_MAP_SOURCE_PREFIX = 'runtime:';
+
+const INTERACTION_VALUE_SET = new Set<InteractionKind>(INTERACTION_OPTIONS.map((option) => option.value));
+
+function normalizeEditorInteraction(value: string | undefined): InteractionKind {
+  if (!value) return 'decoration';
+  if (INTERACTION_VALUE_SET.has(value as InteractionKind)) return value as InteractionKind;
+  if (value === 'subregionGate') return 'gate';
+  return 'decoration';
+}
+
+function roadTileIdsForRegion(regionId: EditorRegionId) {
+  if (regionId === 'xiyu') {
+    return {
+      horizontal: 'caravan_track_horizontal',
+      vertical: 'caravan_track_vertical',
+      cross: 'caravan_crossroad',
+    };
+  }
+  if (REGION_ROAD_TILE_REGIONS.has(regionId)) {
+    return {
+      horizontal: `region_${regionId}_road`,
+      vertical: `region_${regionId}_road_vertical`,
+      cross: `region_${regionId}_road_cross`,
+    };
+  }
+  return {
+    horizontal: 'road',
+    vertical: 'road_vertical',
+    cross: 'road_cross',
+  };
+}
+
+function baseTilesForSnapshot(snapshot: Pick<EditorMapSnapshot, 'regionId' | 'size'>): SerializedTile[] {
+  const regionId = normalizeRegionId(snapshot.regionId);
+  const itemId = REGION_BASE_TILE_BY_ID[regionId] ?? 'ground';
+  return tileRect(itemId, 0, 0, snapshot.size.w, snapshot.size.h);
+}
+
+function roadTilesFromPaths(snapshot: Pick<EditorMapSnapshot, 'regionId' | 'roads' | 'size'>): SerializedTile[] {
+  const regionId = normalizeRegionId(snapshot.regionId);
+  const roadIds = roadTileIdsForRegion(regionId);
+  const tiles = new Map<string, SerializedTile & { orientation?: 'horizontal' | 'vertical' | 'cross' }>();
+
+  for (const road of snapshot.roads ?? []) {
+    if (road.points.length === 0) continue;
+    for (let pointIndex = 0; pointIndex < Math.max(road.points.length - 1, 1); pointIndex += 1) {
+      const start = road.points[pointIndex] ?? road.points[0];
+      const end = road.points[pointIndex + 1] ?? start;
+      const dx = Math.sign(end.x - start.x);
+      const dy = Math.sign(end.y - start.y);
+      const steps = Math.max(Math.abs(end.x - start.x), Math.abs(end.y - start.y), 0);
+      const orientation = Math.abs(end.x - start.x) >= Math.abs(end.y - start.y) ? 'horizontal' : 'vertical';
+
+      for (let step = 0; step <= steps; step += 1) {
+        const x = start.x + dx * step;
+        const y = start.y + dy * step;
+        if (x < 0 || y < 0 || x >= snapshot.size.w || y >= snapshot.size.h) continue;
+        const key = keyOf(x, y);
+        const previous = tiles.get(key);
+        const nextOrientation = previous && previous.orientation !== orientation ? 'cross' : orientation;
+        const itemId = nextOrientation === 'cross'
+          ? roadIds.cross
+          : nextOrientation === 'vertical'
+            ? roadIds.vertical
+            : roadIds.horizontal;
+        tiles.set(key, { itemId, x, y, layer: 'road', interaction: 'none', orientation: nextOrientation });
+      }
+    }
+  }
+
+  return Array.from(tiles.values(), ({ orientation, ...tile }) => tile);
+}
+
+function activityIconIdForObject(object: SerializedObject) {
+  const token = `${object.itemId} ${object.name ?? ''} ${object.targetId ?? ''}`.toLowerCase();
+  if (/archery|bow|shoot/.test(token)) return 'archery_practice';
+  if (/sword|blade|forge|iron/.test(token)) return 'sword_practice';
+  if (/silver|ore|mine|coal|jade|pigment|stone|copper/.test(token)) return 'mining';
+  if (/tea/.test(token)) return 'tea_brewing';
+  if (/farm|rice|field|crop/.test(token)) return 'farming';
+  if (/cook|food|kitchen|vinegar/.test(token)) return 'cooking';
+  if (/paper|ink|study|book|scholar/.test(token)) return 'study';
+  if (/wood|carpenter|timber/.test(token)) return 'carpentry';
+  if (/weav|loom|textile|silk|brocade|embroidery|batik|carpet/.test(token)) return 'weaving';
+  if (/fish|lake|river|water/.test(token)) return 'fishing';
+  if (/rest|inn|bath/.test(token)) return 'resting';
+  if (/travel|horse|caravan|post|road|gate/.test(token)) return 'travel';
+  return 'trading';
+}
+
+function runtimeObjectFallback(object: SerializedObject): Partial<SerializedObject> {
+  const interaction = normalizeEditorInteraction(object.interaction ?? object.runtimeInteraction);
+  if (object.itemId === 'player_spawn') {
+    return {
+      name: object.name ?? 'Player Spawn',
+      category: 'marker',
+      layer: 'marker',
+      asset: '/assets/game/characters/player_walk.png',
+      interaction: 'marker',
+      animated: false,
+      sheetCols: 4,
+      sheetRows: 4,
+    };
+  }
+  if (interaction === 'npc' || object.itemId.startsWith('npc-')) {
+    return {
+      name: object.name ?? object.npcId ?? object.itemId,
+      category: 'actor',
+      layer: 'actor',
+      asset: '/assets/game/characters/npc_tourist_walk.png',
+      interaction: 'npc',
+      direction: 'down',
+      animated: true,
+      sheetCols: 4,
+      sheetRows: 4,
+    };
+  }
+  if (interaction === 'industry' || object.itemId.startsWith('industry_')) {
+    return {
+      name: object.name ?? object.itemId,
+      category: 'building',
+      layer: 'structure',
+      asset: '/assets/game/buildings/industry_product.png',
+      interaction: 'industry',
+    };
+  }
+  if (interaction === 'craft' || object.itemId.startsWith('craft_')) {
+    return {
+      name: object.name ?? object.itemId,
+      category: 'building',
+      layer: 'structure',
+      asset: '/assets/game/buildings/craft_house.png',
+      interaction: 'craft',
+    };
+  }
+  if (interaction === 'activity' || object.itemId.startsWith('activity_')) {
+    const iconId = activityIconIdForObject(object);
+    return {
+      name: object.name ?? object.itemId,
+      category: 'marker',
+      layer: 'marker',
+      asset: `/assets/game/icons/actions/${iconId}.png`,
+      interaction: 'activity',
+      solid: false,
+      allowSameCellStack: true,
+    };
+  }
+  return {
+    name: object.name ?? object.itemId,
+    category: object.category ?? 'prop',
+    layer: object.layer ?? 'prop',
+    asset: object.asset ?? '/assets/game/effects/marker.png',
+    interaction,
+  };
+}
+
+function runtimeObjectToEditorObject(object: SerializedObject): SerializedObject {
+  const fallback = object.itemId === 'player_spawn' || !BASE_PALETTE.some((item) => item.id === object.itemId)
+    ? runtimeObjectFallback(object)
+    : {};
+  const runtimeInteraction = object.runtimeInteraction ?? (object.interaction === 'activity' ? 'activity' : undefined);
+  return {
+    ...fallback,
+    ...object,
+    interaction: normalizeEditorInteraction(object.interaction ?? object.runtimeInteraction ?? fallback.interaction),
+    runtimeInteraction,
+    gateKind: object.gateKind ?? (object.runtimeInteraction === 'subregionGate' ? 'subregion' : undefined),
+  };
+}
+
+function prepareEditorSnapshot(snapshot: EditorMapSnapshot): EditorMapSnapshot {
+  const explicitTiles = snapshot.tiles ?? [];
+  const tiles = explicitTiles.length > 0
+    ? explicitTiles
+    : [...baseTilesForSnapshot(snapshot), ...roadTilesFromPaths(snapshot)];
+  return {
+    ...snapshot,
+    tiles,
+    objects: (snapshot.objects ?? []).map(runtimeObjectToEditorObject),
+  };
+}
+
+function runtimeSnapshotToEditorSnapshot(snapshot: RuntimeMapEditorSnapshot): EditorMapSnapshot {
+  return {
+    schema: snapshot.schema,
+    regionId: snapshot.regionId as SerializedRegionId,
+    subregionId: snapshot.subregionId,
+    tileSize: snapshot.tileSize,
+    size: snapshot.size,
+    modelDefinitions: snapshot.modelDefinitions as Array<Partial<PaletteItem>> | undefined,
+    roads: snapshot.roads,
+    tiles: snapshot.tiles as SerializedTile[] | undefined,
+    objects: snapshot.objects as SerializedObject[] | undefined,
+  };
+}
+
+const RUNTIME_MAP_SOURCES = RUNTIME_MAP_EDITOR_SNAPSHOTS.map((snapshot, index) => {
+  const regionId = normalizeRegionId(snapshot.regionId as SerializedRegionId);
+  const region = REGION_INDEX[regionId];
+  const subregion = region?.subregions.find((item) => item.id === snapshot.subregionId);
+  const sourceKey = snapshot.subregionId ?? `${regionId}-${index}`;
+  const objectCount = snapshot.objects?.length ?? 0;
+  const roadCount = snapshot.roads?.length ?? 0;
+  return {
+    id: `${RUNTIME_MAP_SOURCE_PREFIX}${sourceKey}`,
+    name: `${region?.name ?? regionId} · ${subregion?.name ?? snapshot.subregionId ?? sourceKey}`,
+    description: `${snapshot.size.w}x${snapshot.size.h} · ${objectCount} objects · ${roadCount} roads`,
+    snapshot,
+  };
+});
+
+const DEFAULT_MAP_SOURCE_ID = RUNTIME_MAP_SOURCES[0]?.id ?? `builtin:${BUILTIN_MAP_TEMPLATES[0].id}`;
+const MAP_EDITOR_ASSET_VERSION = 'map-elements-recut-20260620';
+
+function editorAssetUrl(asset: string) {
+  if (!asset || asset.startsWith('data:') || asset.startsWith('blob:')) return asset;
+  return `${asset}${asset.includes('?') ? '&' : '?'}v=${MAP_EDITOR_ASSET_VERSION}`;
+}
+
+function initialSelectedMapSourceId() {
+  if (typeof window === 'undefined') return DEFAULT_MAP_SOURCE_ID;
+  const search = new URLSearchParams(window.location.search);
+  const requested = search.get('mapSource') ?? search.get('map');
+  if (!requested) return DEFAULT_MAP_SOURCE_ID;
+  const isRuntimeSource = RUNTIME_MAP_SOURCES.some((source) => source.id === requested);
+  const isBuiltinSource = BUILTIN_MAP_TEMPLATES.some((template) => `builtin:${template.id}` === requested);
+  return isRuntimeSource || isBuiltinSource ? requested : DEFAULT_MAP_SOURCE_ID;
+}
+
 function spriteFrameStyle(
-  item: Pick<PaletteItem | PlacedObject, 'asset' | 'sheetCols' | 'sheetRows' | 'frame' | 'direction' | 'animated'>,
+  item: Pick<RenderableAsset, 'asset' | 'sheetCols' | 'sheetRows' | 'frame' | 'direction' | 'animated'>,
   animTick: number,
 ) {
   const cols = item.sheetCols ?? 1;
@@ -995,19 +1375,28 @@ function spriteFrameStyle(
   const row = item.direction ? directionRow(item.direction) : Math.floor((item.frame ?? 0) / cols);
   const col = item.animated ? animTick % cols : (item.frame ?? 0) % cols;
   return {
-    backgroundImage: `url(${item.asset})`,
+    backgroundImage: `url(${editorAssetUrl(item.asset)})`,
     backgroundSize: `${cols * 100}% ${rows * 100}%`,
     backgroundPosition: `${cols === 1 ? 0 : (col / (cols - 1)) * 100}% ${rows === 1 ? 0 : (row / (rows - 1)) * 100}%`,
   };
 }
 
-export function MapEditor() {
+function MapLayoutEditor({
+  onOpenNpcEditor,
+  onBackToMenu,
+}: {
+  onOpenNpcEditor: () => void;
+  onBackToMenu?: () => void;
+}) {
+  const gameState = useGameStore((store) => store.state);
   const [regionId, setRegionId] = useState<EditorRegionId>('jiangnan');
+  const [subregionId, setSubregionId] = useState('');
   const [mapW, setMapW] = useState(DEFAULT_W);
   const [mapH, setMapH] = useState(DEFAULT_H);
   const [tool, setTool] = useState<EditorTool>('paint');
   const [category, setCategory] = useState<EditorCategory>('building');
   const [selectedItemId, setSelectedItemId] = useState('shop_indigo');
+  const [appearanceItemId, setAppearanceItemId] = useState('gate');
   const [tiles, setTiles] = useState<Record<string, TilePaint>>({});
   const [objects, setObjects] = useState<PlacedObject[]>([]);
   const [customModels, setCustomModels] = useState<PaletteItem[]>([]);
@@ -1023,7 +1412,8 @@ export function MapEditor() {
   const [customComponentName, setCustomComponentName] = useState('自定义组件');
   const [customComponentAsset, setCustomComponentAsset] = useState('');
   const [savedDrafts, setSavedDrafts] = useState<SavedMapDraft[]>([]);
-  const [selectedMapSourceId, setSelectedMapSourceId] = useState(`builtin:${BUILTIN_MAP_TEMPLATES[0].id}`);
+  const [selectedMapSourceId, setSelectedMapSourceId] = useState(initialSelectedMapSourceId);
+  const autoLoadedMapSourceRef = useRef(false);
 
   useEffect(() => {
     const timer = window.setInterval(() => setAnimTick((tick) => tick + 1), 180);
@@ -1044,17 +1434,28 @@ export function MapEditor() {
   const palette = useMemo(() => [...BASE_PALETTE, ...customModels], [customModels]);
   const selectedItem = palette.find((item) => item.id === selectedItemId) ?? palette[0];
   const selectedObject = objects.find((item) => item.uid === selectedObjectId) ?? null;
-  const activeEdit = selectedObject ?? selectedItem;
   const viewTile = Math.round(DISPLAY_TILE * editorZoom);
   const selectedCellStack = selectedCell ? objectsAt(selectedCell.x, selectedCell.y, objects) : [];
+  const selectedTileKey = selectedCell ? keyOf(selectedCell.x, selectedCell.y) : null;
+  const selectedTilePaint = tool === 'select' && !selectedObject && selectedTileKey ? tiles[selectedTileKey] ?? null : null;
+  const activeEdit = selectedObject ?? selectedTilePaint ?? selectedItem;
+  const propertyEdit = selectedObject ?? selectedItem;
+  const activeEditId = selectedObject?.id ?? selectedTilePaint?.itemId ?? selectedItem.id;
+  const appearanceTargetKind = selectedObject ? 'object' : selectedTilePaint ? 'tile' : null;
   const selectedModelLayer = modelDraft.layers.find((layer) => layer.id === modelDraft.selectedLayerId) ?? null;
+  const subregionOptions = REGION_INDEX[regionId]?.subregions ?? [];
   const exportData = useMemo(
-    () => buildExport({ regionId, mapW, mapH, tiles, objects, customModels }),
-    [regionId, mapW, mapH, tiles, objects, customModels],
+    () => buildExport({ regionId, subregionId, mapW, mapH, tiles, objects, customModels }),
+    [regionId, subregionId, mapW, mapH, tiles, objects, customModels],
   );
   const exportText = useMemo(() => JSON.stringify(exportData, null, 2), [exportData]);
   const mapSources = useMemo(
     () => [
+      ...RUNTIME_MAP_SOURCES.map((source) => ({
+        id: source.id,
+        name: `现有地图 · ${source.name}`,
+        description: source.description,
+      })),
       ...BUILTIN_MAP_TEMPLATES.map((template) => ({
         id: `builtin:${template.id}`,
         name: `样板 · ${template.name}`,
@@ -1068,37 +1469,123 @@ export function MapEditor() {
     ],
     [savedDrafts],
   );
-  const selectedMapSource = mapSources.find((source) => source.id === selectedMapSourceId) ?? mapSources[0];
+  const currentMapSummary = `${mapW}x${mapH} · ${objects.length} objects · ${Object.keys(tiles).length} tiles`;
+  const appearanceOptions = useMemo(
+    () => palette.filter((item) => item.kind === (appearanceTargetKind ?? selectedItem.kind)),
+    [appearanceTargetKind, palette, selectedItem.kind],
+  );
+  const selectedAppearanceItem = appearanceOptions.find((item) => item.id === appearanceItemId) ?? appearanceOptions[0] ?? null;
+
+  useEffect(() => {
+    if (!appearanceOptions.length || appearanceOptions.some((item) => item.id === appearanceItemId)) return;
+    setAppearanceItemId(appearanceOptions[0].id);
+  }, [appearanceItemId, appearanceOptions]);
+
+  useEffect(() => {
+    if (autoLoadedMapSourceRef.current) return;
+    const search = new URLSearchParams(window.location.search);
+    const requested = search.get('mapSource') ?? search.get('map');
+    if (!requested || !mapSources.some((source) => source.id === requested)) return;
+    autoLoadedMapSourceRef.current = true;
+    setSelectedMapSourceId(requested);
+    loadMapSourceById(requested);
+  }, [mapSources]);
 
   function applySnapshot(snapshot: EditorMapSnapshot, label: string) {
-    const nextCustomModels = normalizeCustomModels(snapshot.modelDefinitions);
+    const preparedSnapshot = prepareEditorSnapshot(snapshot);
+    const nextCustomModels = normalizeCustomModels(preparedSnapshot.modelDefinitions);
     const nextPalette = [...BASE_PALETTE, ...nextCustomModels];
-    const nextRegionId = normalizeRegionId(snapshot.regionId);
+    const nextRegionId = normalizeRegionId(preparedSnapshot.regionId);
 
     setRegionId(nextRegionId);
-    setMapW(snapshot.size?.w ?? DEFAULT_W);
-    setMapH(snapshot.size?.h ?? DEFAULT_H);
+    setSubregionId(preparedSnapshot.subregionId ?? '');
+    setMapW(preparedSnapshot.size?.w ?? DEFAULT_W);
+    setMapH(preparedSnapshot.size?.h ?? DEFAULT_H);
     setCustomModels(nextCustomModels);
-    setTiles(hydrateTiles(snapshot.tiles ?? [], nextPalette));
-    setObjects(hydrateObjects(snapshot.objects ?? [], nextPalette));
+    setTiles(hydrateTiles(preparedSnapshot.tiles ?? [], nextPalette));
+    setObjects(hydrateObjects(preparedSnapshot.objects ?? [], nextPalette));
     setSelectedObjectId(null);
     setSelectedCell(null);
     setHover(null);
     setStatus(`已载入「${label}」，可以直接在此基础上继续编辑。`);
   }
 
-  function loadSelectedMapSource() {
-    if (!selectedMapSourceId) return;
-    if (selectedMapSourceId.startsWith('builtin:')) {
-      const templateId = selectedMapSourceId.replace('builtin:', '');
+  function runtimeSourceToActualEditorSnapshot(snapshot: RuntimeMapEditorSnapshot): EditorMapSnapshot {
+    const nextRegionId = normalizeRegionId(snapshot.regionId as SerializedRegionId);
+    const nextSubregionId = snapshot.subregionId ?? REGION_INDEX[nextRegionId]?.subregions[0]?.id ?? nextRegionId;
+    const spec = buildRegionSpec(nextRegionId, {
+      ...gameState,
+      currentRegion: nextRegionId,
+      currentSubregion: nextSubregionId,
+    });
+    if (!spec) return runtimeSnapshotToEditorSnapshot(snapshot);
+    return runtimeSnapshotToEditorSnapshot(buildStreetMapEditorSnapshot(spec));
+  }
+
+  function loadMapSourceById(sourceId: string) {
+    if (!sourceId) return;
+    if (sourceId.startsWith(RUNTIME_MAP_SOURCE_PREFIX)) {
+      const source = RUNTIME_MAP_SOURCES.find((item) => item.id === sourceId);
+      if (source) applySnapshot(runtimeSourceToActualEditorSnapshot(source.snapshot), `${source.name}（实际街景图层）`);
+      return;
+    }
+    if (sourceId.startsWith('builtin:')) {
+      const templateId = sourceId.replace('builtin:', '');
       const template = BUILTIN_MAP_TEMPLATES.find((item) => item.id === templateId);
       if (template) applySnapshot(templateToSnapshot(template), template.name);
       return;
     }
 
-    const draftId = selectedMapSourceId.replace('saved:', '');
+    const draftId = sourceId.replace('saved:', '');
     const draft = savedDrafts.find((item) => item.id === draftId);
     if (draft) applySnapshot(draft.snapshot, draft.name);
+  }
+
+  function loadSelectedMapSource() {
+    loadMapSourceById(selectedMapSourceId);
+  }
+
+  function previewRuntimeMap() {
+    if (!subregionId) {
+      setStatus('请先指定子地区，再预览到游戏运行时。');
+      return;
+    }
+    saveMapLayoutOverride(exportData as RuntimeMapEditorOverrideSnapshot);
+    setStatus(`已预览到运行时 ${regionId}/${subregionId}。这是本地预览层；最终落盘请点“覆盖源地图”。`);
+  }
+
+  async function overwriteSourceMap() {
+    if (!subregionId) {
+      setStatus('请先指定子地区，再覆盖源地图文件。');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/__artisania-dev/map-layouts/${encodeURIComponent(subregionId)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(exportData),
+      });
+      const payload = (await response.json().catch(() => null)) as { ok?: boolean; error?: string; filePath?: string } | null;
+      if (!response.ok || !payload?.ok) {
+        setStatus(`覆盖源地图失败：${payload?.error ?? response.statusText}`);
+        return;
+      }
+
+      removeMapLayoutOverride(regionId, subregionId);
+      setStatus(`已覆盖源地图文件 ${payload.filePath ?? `${subregionId}.json`}。Vite 刷新后游戏会使用新的全局地图设计。`);
+    } catch (error) {
+      setStatus(`覆盖源地图失败：${error instanceof Error ? error.message : '未知错误'}`);
+    }
+  }
+
+  function clearRuntimePreview() {
+    if (!subregionId) {
+      setStatus('请先指定子地区，再清除运行时预览。');
+      return;
+    }
+    removeMapLayoutOverride(regionId, subregionId);
+    setStatus(`已清除 ${regionId}/${subregionId} 的运行时预览层，游戏会回到源地图文件。`);
   }
 
   function persistSavedDrafts(next: SavedMapDraft[]) {
@@ -1108,6 +1595,7 @@ export function MapEditor() {
 
   function saveCurrentDraft() {
     const regionName = REGION_OPTIONS.find((option) => option.value === regionId)?.label ?? regionId;
+    const subregionName = subregionOptions.find((option) => option.id === subregionId)?.name ?? subregionId;
     const now = new Date();
     const activeDraftId = selectedMapSourceId.startsWith('saved:') ? selectedMapSourceId.replace('saved:', '') : null;
     const activeDraft = activeDraftId ? savedDrafts.find((item) => item.id === activeDraftId) : null;
@@ -1124,7 +1612,7 @@ export function MapEditor() {
 
     const draft: SavedMapDraft = {
       id: `draft_${now.getTime()}`,
-      name: `${regionName} ${now.toLocaleString('zh-CN', { hour12: false })}`,
+      name: `${subregionName || regionName} ${now.toLocaleString('zh-CN', { hour12: false })}`,
       savedAt: now.toISOString(),
       snapshot: exportData,
     };
@@ -1136,6 +1624,7 @@ export function MapEditor() {
 
   function chooseItem(item: PaletteItem) {
     setSelectedItemId(item.id);
+    setAppearanceItemId(item.id);
     setDraft(draftFrom(item));
     setSelectedObjectId(null);
     setTool('paint');
@@ -1183,7 +1672,14 @@ export function MapEditor() {
       const stack = objectsAt(x, y, objects);
       const hit = stack[0];
       setSelectedObjectId(hit?.uid ?? null);
-      setStatus(hit ? `已选择 (${x}, ${y})：${hit.name}，共 ${stack.length} 层。` : `(${x}, ${y}) 没有可选择的对象。`);
+      const tilePaint = tiles[keyOf(x, y)];
+      setStatus(
+        hit
+          ? `已选择 (${x}, ${y})：${hit.name}，共 ${stack.length} 层。`
+          : tilePaint
+            ? `已选择 (${x}, ${y})：${tilePaint.name} 地块。`
+            : `(${x}, ${y}) 没有可选择的对象或地块。`,
+      );
       return;
     }
     if (selectedItem.kind === 'tile') {
@@ -1234,6 +1730,43 @@ export function MapEditor() {
   function updateActive(patch: Partial<PlacedObject> & Partial<PaintDraft>) {
     if (selectedObject) updateSelectedObject(patch);
     else updateDraft(patch);
+  }
+
+  function replaceSelectedAppearance() {
+    if (!selectedAppearanceItem) return;
+
+    if (selectedObject && selectedAppearanceItem.kind === 'object') {
+      const nextLayers = selectedAppearanceItem.modelLayers?.map((layer) => ({ ...layer }));
+      updateSelectedObject({
+        id: selectedAppearanceItem.id,
+        name: selectedAppearanceItem.name,
+        asset: selectedAppearanceItem.asset,
+        variants: selectedAppearanceItem.variants,
+        visualState: selectedAppearanceItem.visualState ?? (selectedAppearanceItem.variants ? 'base' : undefined),
+        modelLayers: nextLayers,
+        sheetCols: selectedAppearanceItem.sheetCols,
+        sheetRows: selectedAppearanceItem.sheetRows,
+        frame: selectedAppearanceItem.frame,
+        direction: selectedAppearanceItem.direction,
+        animated: selectedAppearanceItem.animated,
+        isCustomModel: selectedAppearanceItem.isCustomModel,
+      });
+      setStatus(`已将所选元素外观替换为「${selectedAppearanceItem.name}」，原有属性已保留。`);
+      return;
+    }
+
+    if (selectedTileKey && selectedTilePaint && selectedAppearanceItem.kind === 'tile') {
+      setTiles((prev) => ({
+        ...prev,
+        [selectedTileKey]: {
+          ...selectedTilePaint,
+          itemId: selectedAppearanceItem.id,
+          name: selectedAppearanceItem.name,
+          asset: resolvedAsset(selectedAppearanceItem),
+        },
+      }));
+      setStatus(`已将 (${selectedCell?.x}, ${selectedCell?.y}) 地块外观替换为「${selectedAppearanceItem.name}」，原有属性已保留。`);
+    }
   }
 
   function removeObject(uid: string) {
@@ -1349,7 +1882,7 @@ export function MapEditor() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${regionId}-editor-map.json`;
+    link.download = `${subregionId || regionId}-editor-map.json`;
     link.click();
     URL.revokeObjectURL(url);
     setStatus('地图 JSON 已导出。');
@@ -1377,6 +1910,11 @@ export function MapEditor() {
           <span>百工地图工坊</span>
           <b>Editor</b>
         </div>
+        {onBackToMenu && (
+          <button className="map-editor__wide-action" type="button" onClick={onBackToMenu}>
+            返回主菜单
+          </button>
+        )}
         <div className="map-editor__tabs">
           {(Object.keys(CATEGORY_LABEL) as EditorCategory[]).map((key) => (
             <button
@@ -1430,6 +1968,7 @@ export function MapEditor() {
             <button type="button" onClick={() => setEditorZoom((zoom) => Math.min(2, +(zoom + 0.25).toFixed(2)))}>+</button>
           </div>
           <button type="button" onClick={() => setModelComposerOpen(true)}>模型装配器</button>
+          <button type="button" onClick={onOpenNpcEditor}>NPC 对话调校</button>
           <div className="map-editor__status">{status}</div>
           <button type="button" onClick={clearMap}>清空</button>
         </header>
@@ -1448,13 +1987,13 @@ export function MapEditor() {
                 const paint = tiles[keyOf(x, y)];
                 return (
                   <button
-                    className="map-editor__cell"
+                    className={`map-editor__cell ${selectedCell?.x === x && selectedCell.y === y ? 'is-selected' : ''}`}
                     key={`${x}-${y}`}
                     onClick={() => paintAt(x, y)}
                     style={{
                       width: viewTile,
                       height: viewTile,
-                      ...(paint ? { backgroundImage: `url(${paint.asset})` } : null),
+                      ...(paint ? { backgroundImage: `url(${editorAssetUrl(paint.asset)})` } : null),
                     }}
                     type="button"
                     aria-label={`cell ${x},${y}`}
@@ -1469,7 +2008,7 @@ export function MapEditor() {
               .map((obj) => (
                 <button
                   key={obj.uid}
-                  className={`map-editor__object ${selectedObjectId === obj.uid ? 'is-selected' : ''}`}
+                  className={`map-editor__object map-editor__object--${obj.category} ${selectedObjectId === obj.uid ? 'is-selected' : ''}`}
                   onClick={(event) => {
                     if (tool !== 'select') return;
                     event.stopPropagation();
@@ -1516,14 +2055,32 @@ export function MapEditor() {
           </label>
           <div className="map-editor__map-actions">
             <button type="button" onClick={loadSelectedMapSource}>载入编辑</button>
+            <button type="button" onClick={previewRuntimeMap}>预览运行时</button>
+            <button type="button" onClick={overwriteSourceMap}>覆盖源地图</button>
             <button type="button" onClick={saveCurrentDraft}>保存草稿</button>
+            <button type="button" onClick={clearRuntimePreview}>清除预览</button>
           </div>
-          <p className="map-editor__panel-copy">{selectedMapSource?.description}</p>
+          <p className="map-editor__panel-copy">当前画布：{currentMapSummary}</p>
           <label>
             地区
-            <select value={regionId} onChange={(e) => setRegionId(e.target.value as EditorRegionId)}>
+            <select
+              value={regionId}
+              onChange={(e) => {
+                setRegionId(e.target.value as EditorRegionId);
+                setSubregionId('');
+              }}
+            >
               {REGION_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            子地区
+            <select value={subregionId} onChange={(e) => setSubregionId(e.target.value)}>
+              <option value="">未指定</option>
+              {subregionOptions.map((option) => (
+                <option key={option.id} value={option.id}>{option.name}</option>
               ))}
             </select>
           </label>
@@ -1540,21 +2097,46 @@ export function MapEditor() {
         </section>
 
         <section className="map-editor__panel">
-          <h2>{selectedObject ? '对象属性' : '画笔属性'}</h2>
+          <h2>{selectedObject ? '对象属性' : selectedTilePaint ? '地块外观' : '画笔属性'}</h2>
           <div className="map-editor__selected">
             <AssetThumb item={activeEdit} animTick={animTick} />
             <div>
               <b>{activeEdit.name}</b>
-              <span>{activeEdit.id}</span>
+              <span>{activeEditId}</span>
             </div>
           </div>
+          {appearanceTargetKind && (
+            <div className="map-editor__appearance-replace">
+              <label>
+                替换为
+                <select
+                  value={selectedAppearanceItem?.id ?? ''}
+                  onChange={(e) => setAppearanceItemId(e.target.value)}
+                >
+                  {appearanceOptions.map((item) => (
+                    <option key={item.id} value={item.id}>{item.name}</option>
+                  ))}
+                </select>
+              </label>
+              <button
+                className="map-editor__wide-action"
+                type="button"
+                disabled={!selectedAppearanceItem}
+                onClick={replaceSelectedAppearance}
+              >
+                替换外观
+              </button>
+            </div>
+          )}
+          {!selectedTilePaint && (
+            <>
           <div className="map-editor__fields map-editor__fields--two">
             <label>
               宽格
               <input
                 type="number"
                 min={1}
-                max={8}
+                max={80}
                 value={selectedObject?.tileW ?? draft.tileW}
                 onChange={(e) => updateActive({ tileW: Number(e.target.value) })}
               />
@@ -1564,7 +2146,7 @@ export function MapEditor() {
               <input
                 type="number"
                 min={1}
-                max={8}
+                max={60}
                 value={selectedObject?.tileH ?? draft.tileH}
                 onChange={(e) => updateActive({ tileH: Number(e.target.value) })}
               />
@@ -1582,7 +2164,7 @@ export function MapEditor() {
               </label>
             </div>
           )}
-          {activeEdit.variants && (
+          {propertyEdit.variants && (
             <label>
               外观状态
               <select
@@ -1595,7 +2177,7 @@ export function MapEditor() {
               </select>
             </label>
           )}
-          {activeEdit.sheetCols && activeEdit.sheetRows && (
+          {propertyEdit.sheetCols && propertyEdit.sheetRows && (
             <>
               <div className="map-editor__fields map-editor__fields--two">
                 <label>
@@ -1614,7 +2196,7 @@ export function MapEditor() {
                   <input
                     type="number"
                     min={0}
-                    max={(activeEdit.sheetCols ?? 4) - 1}
+                    max={(propertyEdit.sheetCols ?? 4) - 1}
                     value={selectedObject?.frame ?? draft.frame}
                     onChange={(e) => updateActive({ frame: Number(e.target.value), animated: false })}
                   />
@@ -1658,6 +2240,8 @@ export function MapEditor() {
               ))}
             </select>
           </label>
+            </>
+          )}
         </section>
 
         <section className="map-editor__panel">
@@ -1748,7 +2332,7 @@ export function MapEditor() {
                           title={component.asset}
                         >
                           <span className="map-editor__component-thumb">
-                            <img src={component.asset} alt="" draggable={false} />
+                            <img src={editorAssetUrl(component.asset)} alt="" draggable={false} />
                           </span>
                           <span>{component.name}</span>
                         </button>
@@ -1830,11 +2414,11 @@ export function MapEditor() {
                   </label>
                   <label>
                     宽格
-                    <input type="number" min={1} max={12} value={modelDraft.tileW} onChange={(e) => setModelDraft((prev) => ({ ...prev, tileW: Number(e.target.value) }))} />
+                    <input type="number" min={1} max={80} value={modelDraft.tileW} onChange={(e) => setModelDraft((prev) => ({ ...prev, tileW: Number(e.target.value) }))} />
                   </label>
                   <label>
                     高格
-                    <input type="number" min={1} max={12} value={modelDraft.tileH} onChange={(e) => setModelDraft((prev) => ({ ...prev, tileH: Number(e.target.value) }))} />
+                    <input type="number" min={1} max={60} value={modelDraft.tileH} onChange={(e) => setModelDraft((prev) => ({ ...prev, tileH: Number(e.target.value) }))} />
                   </label>
                 </div>
 
@@ -1870,7 +2454,7 @@ export function MapEditor() {
                         onClick={() => setModelDraft((prev) => ({ ...prev, selectedLayerId: layer.id }))}
                         title={layer.asset}
                       >
-                        <img src={layer.asset} alt="" draggable={false} />
+                        <img src={editorAssetUrl(layer.asset)} alt="" draggable={false} />
                         <span>
                           <b>{index + 1}. {layer.name}</b>
                           <small>{COMPONENT_KIND_LABEL[layer.kind ?? 'prop']}</small>
@@ -1950,6 +2534,13 @@ function modelLayersFromDraft(draft: ModelDraft): ModelLayer[] {
   return draft.layers.filter((layer) => layer.asset.trim().length > 0);
 }
 
+export function MapEditor({ onBackToMenu }: { onBackToMenu?: () => void } = {}) {
+  const [mode, setMode] = useState<'map' | 'npc-layout'>('map');
+  return mode === 'npc-layout'
+    ? <NpcDialogLayoutEditor onBackToMap={() => setMode('map')} />
+    : <MapLayoutEditor onOpenNpcEditor={() => setMode('npc-layout')} onBackToMenu={onBackToMenu} />;
+}
+
 function draftFrom(item: PaletteItem): PaintDraft {
   return {
     tileW: item.tileW,
@@ -1975,6 +2566,7 @@ function objectStyle(item: Pick<PlacedObject, 'x' | 'y' | 'tileW' | 'tileH' | 'z
     left: item.x * tileSize,
     top: (item.y + item.tileH) * tileSize,
     width: item.tileW * tileSize,
+    height: item.tileH * tileSize,
     zIndex: item.z,
   };
 }
@@ -1983,28 +2575,28 @@ function AssetThumb({
   item,
   animTick,
 }: {
-  item: Pick<PaletteItem | PlacedObject, 'asset' | 'name' | 'variants' | 'visualState' | 'modelLayers' | 'sheetCols' | 'sheetRows' | 'frame' | 'direction' | 'animated'>;
+  item: RenderableAsset;
   animTick: number;
 }) {
   if (item.modelLayers) return <CompositeAsset layers={item.modelLayers} compact />;
   if (item.sheetCols && item.sheetRows) {
     return <span className="map-editor__sprite-thumb" style={spriteFrameStyle(item, animTick)} aria-label={item.name} />;
   }
-  return <img src={resolvedAsset(item)} alt="" draggable={false} />;
+  return <img src={editorAssetUrl(resolvedAsset(item))} alt="" draggable={false} />;
 }
 
 function PlacedAsset({
   item,
   animTick,
 }: {
-  item: Pick<PaletteItem | PlacedObject, 'asset' | 'name' | 'variants' | 'visualState' | 'modelLayers' | 'sheetCols' | 'sheetRows' | 'frame' | 'direction' | 'animated'>;
+  item: RenderableAsset;
   animTick: number;
 }) {
   if (item.modelLayers) return <CompositeAsset layers={item.modelLayers} />;
   if (item.sheetCols && item.sheetRows) {
     return <span className="map-editor__sprite-object" style={spriteFrameStyle(item, animTick)} aria-label={item.name} />;
   }
-  return <img src={resolvedAsset(item)} alt="" draggable={false} />;
+  return <img src={editorAssetUrl(resolvedAsset(item))} alt="" draggable={false} />;
 }
 
 function CompositeAsset({ layers, compact = false }: { layers: ModelLayer[]; compact?: boolean }) {
@@ -2013,7 +2605,7 @@ function CompositeAsset({ layers, compact = false }: { layers: ModelLayer[]; com
       {layers.slice().reverse().map((layer) => (
         <img
           key={layer.id}
-          src={layer.asset}
+          src={editorAssetUrl(layer.asset)}
           alt=""
           draggable={false}
           style={{
@@ -2038,6 +2630,7 @@ function serializeModel(model: PaletteItem) {
 
 function buildExport({
   regionId,
+  subregionId,
   mapW,
   mapH,
   tiles,
@@ -2045,6 +2638,7 @@ function buildExport({
   customModels,
 }: {
   regionId: EditorRegionId;
+  subregionId?: string;
   mapW: number;
   mapH: number;
   tiles: Record<string, TilePaint>;
@@ -2054,6 +2648,7 @@ function buildExport({
   return {
     schema: 'artisania-map-editor/v2',
     regionId,
+    subregionId: subregionId || undefined,
     tileSize: 32,
     size: { w: mapW, h: mapH },
     modelDefinitions: customModels.map(serializeModel),
